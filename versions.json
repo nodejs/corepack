@@ -1,0 +1,39 @@
+{
+    "_patterns": {
+        "npm": {
+            "url": "https://registry.npmjs.org/npm/-/npm-{}.tgz",
+            "bin": {
+                "npm": "./bin/npm-cli.js",
+                "npx": "./bin/npx-cli.js"
+            }
+        },
+        "pnpm": {
+            "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+            "bin": {
+                "pnpm": "./bin/pnpm.js",
+                "pnpx": "./bin/pnpx.js"
+            }
+        },
+        "yarn1": {
+            "url": "https://registry.yarnpkg.com/yarn/-/yarn-{}.tgz",
+            "bin": {
+                "yarn": "./bin/yarn.js",
+                "yarnpkg": "./bin/yarn.js"
+            }
+        },
+        "yarn2": {
+            "url": "https://raw.githubusercontent.com/yarnpkg/berry/%40yarnpkg/cli/{}/packages/yarnpkg-cli/bin/yarn.js",
+            "bin": ["yarn", "yarnpkg"]
+        }
+    },
+    "npm": {
+        "6.14.1": "npm"
+    },
+    "pnpm": {
+        "4.11.5": "pnpm"
+    },
+    "yarn": {
+        "1.22.4": "yarn1",
+        "2.0.0-rc.29": "yarn2"
+    }
+}
