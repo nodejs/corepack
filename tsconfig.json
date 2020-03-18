@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "esModuleInterop": true,
-      "experimentalDecorators": true,
-      "moduleResolution": "node",
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["dom", "es2017", "esnext.asynciterable"],
-    "module": "es6",
-    "strict": true,
-    "target": "es2017"
-  }
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": true,
+        "lib": ["dom", "es2017", "esnext.asynciterable"],
+        "module": "commonjs",
+        "strict": true,
+        "target": "es2017"
+    }
 }

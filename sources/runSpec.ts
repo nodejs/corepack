@@ -1,4 +1,4 @@
-import {spawn}                                                 from 'child_process';
+import {spawn, StdioOptions}                                                 from 'child_process';
 import {UsageError}                                            from 'clipanion';
 import {createWriteStream, mkdirSync, readdirSync, renameSync} from 'fs';
 import {get}                                                   from 'https';
@@ -13,9 +13,10 @@ import * as fsUtils                                            from './tools/fsU
 import * as httpUtils                                          from './tools/httpUtils';
 import * as semverUtils                                        from './tools/semverUtils';
 
+import {Context}                                               from './main';
 import {getAllVersions}                                        from './registry';
 
-export async function runSpec(spec: {name: string, range: string}, name: string, args: string[]) {
+export async function runSpec(spec: {name: string, range: string}, name: string, args: string[], context: Context) {
     let versions = getInstalledVersions(spec);
     debugUtils.log(`Install folder is ${folderUtils.getInstallFolder()}`);
 
@@ -36,9 +37,26 @@ export async function runSpec(spec: {name: string, range: string}, name: string,
             // will receive SIGINT too since it's part of the same process grp)
         });
 
+        const stdio: StdioOptions = [`pipe`, `pipe`, `pipe`];
+
+        if (context.stdin === process.stdin)
+            stdio[0] = `inherit`;
+        if (context.stdout === process.stdout)
+            stdio[1] = `inherit`;
+        if (context.stderr === process.stderr)
+            stdio[2] = `inherit`;
+
         const sub = spawn(process.execPath, [bin, ...args], {
-            stdio: `inherit`,
+            cwd: context.cwd,
+            stdio,
         });
+
+        if (context.stdin !== process.stdin)
+            context.stdin.pipe(sub.stdin!);
+        if (context.stdout !== process.stdout)
+            sub.stdout!.pipe(context.stdout);
+        if (context.stderr !== process.stderr)
+            sub.stderr!.pipe(context.stderr);
 
         sub.on(`exit`, exitCode => {
             resolve(exitCode !== null ? exitCode : 1);

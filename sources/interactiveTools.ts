@@ -1,5 +1,5 @@
 import {UsageError}                              from 'clipanion';
-import {prompt}                                  from 'enquirer';
+import Enquirer                                  from 'enquirer';
 import {existsSync, readFileSync, writeFileSync} from 'fs';
 import {join}                                    from 'path';
 
@@ -16,7 +16,7 @@ export async function persistPmSpec(preferred: string, target: string, message: 
     const version = semverUtils.maxVersion(pmVersions);
     const newSpec = `${preferred}@^${version}`;
 
-    const res = await prompt([{
+    const res = await Enquirer.prompt([{
         type: `confirm`,
         name: `confirm`,
         message: message.replace(`{}`, newSpec),

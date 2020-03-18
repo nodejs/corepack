@@ -6,9 +6,7 @@ import semver                     from 'semver';
 import {initProjectAndEnableSpec} from './interactiveTools';
 import {enableSpec}               from './interactiveTools';
 
-export async function findSpec(preferred: string): Promise<{name: string, range: string}> {
-    const initialCwd = process.cwd();
-
+export async function findSpec(initialCwd: string, preferred: string): Promise<{name: string, range: string}> {
     while (true) {
         const result = loadSpec(initialCwd);
 
