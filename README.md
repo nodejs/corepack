@@ -31,25 +31,25 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
 2. Node would be distributed slightly differently:
 
-  - Pmm would be included by Node out of the box.
+    - Pmm would be included by Node out of the box.
 
-  - Npm wouldn't be included out of the box anymore
+    - Npm wouldn't be included out of the box anymore
 
-  - However, the Node distribution would include jump binaries that would simply delegate to `pmm <package manager name>`. Pmm would then handle the install logic.
+    - However, the Node distribution would include jump binaries that would simply delegate to `pmm <package manager name>`. Pmm would then handle the install logic.
 
-  - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document such as `pmm install <name@version>` would be replaced by `node --pmm install <name@version>` (or any other variant).
+    - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document such as `pmm install <name@version>` would be replaced by `node --pmm install <name@version>` (or any other variant).
 
 3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries same as now, except that they would be lazily downloaded, without having to be manually installed (because included in the node distribution).
 
 4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `engines.pm` field.
 
-  - Pmm could reasonably provide some kind of basic interface to select it from the command line (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
+    - Pmm could reasonably provide some kind of basic interface to select it from the command line (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
 
 5. Docker users would follow a similar workflow; the default image would run network queries to install the right package manager for the project being installed.
 
-  - Users with strong offline requirements would be able to run the `pmm install <name@version>` command when preparing the image, which would ensure that the specific package manager is made available for later use.
+    - Users with strong offline requirements would be able to run the `pmm install <name@version>` command when preparing the image, which would ensure that the specific package manager is made available for later use.
 
-  - Further network access could be disabled entirely by setting `PMM_ENABLE_NETWORK=0` in the environmen - Pmm would then only use the package managers that got installed by prior `pmm insall` calls.
+    - Further network access could be disabled entirely by setting `PMM_ENABLE_NETWORK=0` in the environmen - Pmm would then only use the package managers that got installed by prior `pmm insall` calls.
 
 6. Package manager maintainers would submit a PR to the Node repository each time they wish for a new version to be made available through pmm. Merging the PR would instantly make the new version available to Node users.
 
