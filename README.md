@@ -33,13 +33,15 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
     - Pmm would be included by Node out of the box.
 
-    - Npm wouldn't be included out of the box anymore
+    - The full npm package wouldn't be included out of the box anymore (this might be an incremental move, with first a major version shipping pmm + npm, and the next one discarding npm).
 
-    - However, the Node distribution would include jump binaries that would simply delegate to `pmm <package manager name>`. Pmm would then handle the install logic.
+    - **However**, the Node distribution would include jump binaries for all three main package managers (`yarn`, `npm`, and `pnpm`) that would simply delegate to `pmm <package manager name>`. Pmm would then handle the install logic by following the logic described in later sections.
 
-    - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document such as `pmm install <name@version>` would be replaced by `node --pmm install <name@version>` (or any other variant).
+    - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document (such as `pmm install <name@version>`) would be replaced by `node --pmm install <name@version>` (or any other variant).
 
-3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries same as now, except that they would be lazily downloaded, without having to be manually installed (because included in the node distribution).
+3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries just like they are used to. The one difference is that the package manager implementations would be lazily downloaded, without having to be manually installed (because included in the node distribution).
+
+    - Projects that don't list the `pm` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `engine.pm` field (cf next section).
 
 4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `engines.pm` field.
 
