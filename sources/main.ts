@@ -8,6 +8,9 @@ export type Context = BaseContext & {
     cwd: string,
 };
 
+export class Cancellation extends Error {
+}
+
 const cli = new Cli<Context>({
     binaryName: `pmm`,
 });
@@ -19,8 +22,16 @@ for (const [binaryName, pmName] of entries) {
 
         @Command.Path(binaryName)
         async execute() {
-            const spec = await findSpec(this.context.cwd, pmName);
-            return await runSpec(spec, binaryName, this.proxy, this.context);
+            try {
+                const spec = await findSpec(this.context.cwd, pmName);
+                return await runSpec(spec, binaryName, this.proxy, this.context);
+            } catch (error) {
+                if (error instanceof Cancellation) {
+                    return 1;
+                } else {
+                    throw error;
+                }
+            }
         }
     }
 

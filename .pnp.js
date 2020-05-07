@@ -79,7 +79,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
       ],
       [
         "clipanion",
-        "npm:2.3.0"
+        "npm:2.3.1"
       ],
       [
         "debug",
@@ -157,7 +157,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/tar", "npm:4.0.3"],
             ["@yarnpkg/fslib", "npm:2.0.0-rc.17"],
             ["@zkochan/cmd-shim", "npm:4.3.0"],
-            ["clipanion", "npm:2.3.0"],
+            ["clipanion", "npm:2.3.1"],
             ["debug", "virtual:5e80053c57cda1d3253d4af3aa412e8b29c48447052f4e08ddd14d74c4cb7759427f4bf81b11cf8e817ab13a5fde0fa4dda74b9f5da6f36022143502d77895b1#npm:4.1.1"],
             ["enquirer", "npm:2.3.4"],
             ["got", "npm:10.6.0"],
@@ -2006,10 +2006,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["clipanion", [
-        ["npm:2.3.0", {
-          "packageLocation": "./.yarn/cache/clipanion-npm-2.3.0-95c59c0cc2-2.zip/node_modules/clipanion/",
+        ["npm:2.3.1", {
+          "packageLocation": "./.yarn/cache/clipanion-npm-2.3.1-ffef67e6d5-2.zip/node_modules/clipanion/",
           "packageDependencies": [
-            ["clipanion", "npm:2.3.0"],
+            ["clipanion", "npm:2.3.1"],
             ["chalk", "npm:2.4.2"]
           ],
           "linkType": "HARD",
@@ -5632,7 +5632,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/tar", "npm:4.0.3"],
             ["@yarnpkg/fslib", "npm:2.0.0-rc.17"],
             ["@zkochan/cmd-shim", "npm:4.3.0"],
-            ["clipanion", "npm:2.3.0"],
+            ["clipanion", "npm:2.3.1"],
             ["debug", "virtual:5e80053c57cda1d3253d4af3aa412e8b29c48447052f4e08ddd14d74c4cb7759427f4bf81b11cf8e817ab13a5fde0fa4dda74b9f5da6f36022143502d77895b1#npm:4.1.1"],
             ["enquirer", "npm:2.3.4"],
             ["got", "npm:10.6.0"],

@@ -1,29 +1,30 @@
-import {UsageError}                              from 'clipanion';
 import Enquirer                                  from 'enquirer';
 import {existsSync, readFileSync, writeFileSync} from 'fs';
-import {join}                                    from 'path';
 
-import * as semverUtils                          from './tools/semverUtils';
-
-import {getAllVersions}                          from './registry';
+import {defaultVersions}                         from './config';
+import {Cancellation}                            from './main';
 
 export async function persistPmSpec(preferred: string, target: string, message: string) {
-    const allVersions = await getAllVersions();
-    if (typeof allVersions[preferred] === `undefined`)
-        throw new Error(`Unknown package manager type ${preferred}`);
-
-    const pmVersions = Object.keys(allVersions[preferred]);
-    const version = semverUtils.maxVersion(pmVersions);
+    const version = defaultVersions.get(preferred)!;
     const newSpec = `${preferred}@^${version}`;
 
-    const res = await Enquirer.prompt([{
-        type: `confirm`,
-        name: `confirm`,
-        message: message.replace(`{}`, newSpec),
-    }]);
+    let res: boolean;
+    try {
+        res = await Enquirer.prompt([{
+            type: `confirm`,
+            name: `confirm`,
+            message: message.replace(`{}`, newSpec),
+        }]);
+    } catch (err) {
+        if (err === ``) {
+            res = false;
+        } else {
+            throw err;
+        }
+    }
 
     if (!res)
-        throw new UsageError(`Execution canceled`)
+        throw new Cancellation();
 
     const content = existsSync(target) ? readFileSync(target, `utf8`) : `{}`;
     const data = JSON.parse(content);

@@ -1622,12 +1622,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clipanion@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "clipanion@npm:2.3.0"
+"clipanion@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "clipanion@npm:2.3.1"
   dependencies:
     chalk: ^2.4.2
-  checksum: 2/be619bacf7e44769da193336a9b0b3f816cbbeb3c35019f1b397a46a919a2c879c979db0a9efc9b1ab4ea3a7c64e744a37245dec14703e71bbc196c2c87b4611
+  checksum: 2/ae94adfb7e1ba0493afab6429eb028fa25b44cfa851975af6e80f54d4ec99de98b19c1a916726e2605cf68e851950653336e030ce30b424ddbf5dc9c715c5e0f
   languageName: node
   linkType: hard
 
@@ -4890,7 +4890,7 @@ fsevents@^2.1.2:
     "@types/tar": ^4.0.3
     "@yarnpkg/fslib": ^2.0.0-rc.17
     "@zkochan/cmd-shim": ^4.3.0
-    clipanion: ^2.3.0
+    clipanion: ^2.3.1
     debug: ^4.1.1
     enquirer: ^2.3.4
     got: ^10.6.0
