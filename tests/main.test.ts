@@ -76,4 +76,4 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
             exitCode: 0,
         });
     });
-}, 30000);
+});
