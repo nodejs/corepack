@@ -1,8 +1,8 @@
-# pmm
+# <img src="./logo.svg" height="25" /> pmm
 
-> A package manager manager - going full circle 🙂
+> A package manager manager - "This seal manages to keep the ball in balance on its nose."
 
-*Note: the `pmm` name (and other names) are temporary placeholders. This document is mostly aims to address the design of the feature.*
+*Note: the `pmm` name (and other names) are temporary placeholders. This document mostly aims to address the design of the feature.*
 
 ## Usage
 
@@ -27,7 +27,7 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
 ## Envisioned workflow
 
-1. Users would install `node` as usual.
+1. Users would install Node as usual.
 
 2. Node would be distributed slightly differently:
 
