@@ -39,25 +39,25 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
     - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document (such as `pmm install <name@version>`) would be replaced by `node --pmm install <name@version>` (or any other variant).
 
-3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries just like they are used to. The one difference is that the package manager implementations would be lazily downloaded, without having to be manually installed (because included in the node distribution).
+3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries just like they are used to. The one difference is that the package manager implementations would be lazily downloaded, without having to be manually installed (because the global jumpers would be included in the Node distribution, cf previous point).
 
-    - Projects that don't list the `pm` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `engine.pm` field (cf next section).
+    - Projects that don't list the `engines.pm` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `engines.pm` field (cf next section).
 
 4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `engines.pm` field.
 
-    - Pmm could reasonably provide some kind of basic interface to select it from the command line (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
+    - Pmm could reasonably provide some kind of basic CLI interface to select a version to upgrade to in a few keystrokes (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
 
-5. Docker users would follow a similar workflow; the default image would run network queries to install the right package manager for the project being installed.
+5. Docker users would follow a similar workflow to other users; the default image would run network queries to install the right package manager for the project being installed.
 
-    - Users with strong offline requirements would be able to run the `pmm install <name@version>` command when preparing the image, which would ensure that the specific package manager is made available for later use.
+    - However, users with strong offline requirements would be able to run the `pmm install <name@version>` command when preparing their images. It would ensure that the requested package manager is made available for later use.
 
-    - Further network access could be disabled entirely by setting `PMM_ENABLE_NETWORK=0` in the environmen - Pmm would then only use the package managers that got installed by prior `pmm insall` calls.
+    - Network access could be disabled entirely by setting `PMM_ENABLE_NETWORK=0` in the environmen - Pmm would then only use the package managers that got installed by prior `pmm install` calls.
 
-6. Package manager maintainers would submit a PR to the Node repository each time they wish for a new version to be made available through pmm. Merging the PR would instantly make the new version available to Node users.
+6. Package manager maintainers would submit a PR to the Node repository each time they wish for a new version to be made available through Pmm (can be easily automated using a GitHub Action on each of our repositories). Merging the PR would instantly make the new version available to Node users (once they upgrade).
 
 ## How does it work?
 
-When any of the embed binaries are called, the tool will find the closest ancestor `package.json` for the current directory. It will then extract the `engines.pm` key, configured as such:
+When any of the embed binaries are called (whether it's `yarn`, `npm`, or `pnpm`), the tool will find the closest ancestor `package.json` for the current directory. It will then extract the `engines.pm` key, configured as such:
 
 ```json
 {
