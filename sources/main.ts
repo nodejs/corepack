@@ -1,6 +1,6 @@
 import {BaseContext, Cli, Command} from 'clipanion';
 
-import {entries}                   from './entries';
+import {entries}                   from './config';
 import {findSpec}                  from './findSpec';
 import {runSpec}                   from './runSpec';
 
@@ -40,7 +40,9 @@ cli.register(ListingCommand);
 
 export {cli};
 
-if (require.main === module) {
+declare const __non_webpack_require__: any;
+
+if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === module) {
     cli.runExit(process.argv.slice(2), {
         ...Cli.defaultContext,
         cwd: process.cwd(),
