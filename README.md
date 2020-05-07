@@ -1,4 +1,4 @@
-# <img src="./logo.svg" height="25" /> pmm
+# <img src="./icon.svg" height="25" /> pmm
 
 > A package manager manager - "This seal manages to keep the ball in balance on its nose."
 
