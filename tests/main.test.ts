@@ -38,7 +38,7 @@ it(`should request for the project to be configured if it doesn't exist`, async 
 
     await xfs.mktempPromise(async cwd => {
         await expect(runCli(cwd, [`yarn`])).resolves.toMatchObject({
-            exitCode: 1,
+            exitCode: 0,
         });
 
         await expect(spy).toHaveBeenCalledTimes(1);
