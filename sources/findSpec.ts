@@ -3,8 +3,8 @@ import {existsSync, readFileSync} from 'fs';
 import {dirname, join, relative}  from 'path';
 import semver                     from 'semver';
 
+import {defaultVersions}          from './config';
 import {initProjectAndEnableSpec} from './interactiveTools';
-import {enableSpec}               from './interactiveTools';
 
 export async function findSpec(initialCwd: string, preferred: string): Promise<{name: string, range: string}> {
     while (true) {
@@ -16,7 +16,7 @@ export async function findSpec(initialCwd: string, preferred: string): Promise<{
             } break;
 
             case `NoSpec`: {
-                await enableSpec(preferred, result.target);
+                return {name: preferred, range: defaultVersions.get(preferred)!};
             } break;
 
             case `Found`: {
