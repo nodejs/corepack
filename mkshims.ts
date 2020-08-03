@@ -1,12 +1,35 @@
 import cmdShim from '@zkochan/cmd-shim';
-import {writeFileSync} from 'fs';
 
-import {entries} from './sources/config';
+import config from './config.json';
+import { SupportedPackageManagers } from 'sources/types';
 
-Promise.all([...entries.keys()].map(async name => {
-    return cmdShim(`${__dirname}/dist/main.js`, `${__dirname}/dist/${name}`, {progArgs: [name]});
-})).then(() => {
+async function main() {
+    for (const packageManager of Object.keys(config.definitions) as SupportedPackageManagers[]) {
+        const binSet = new Set<string>();
+
+        for (const spec of Object.values(config.definitions[packageManager].ranges)) {
+            if (Array.isArray(spec.bin)) {
+                for (const entry of spec.bin) {
+                    binSet.add(entry);
+                }
+            } else {
+                for (const entry of Object.keys(spec.bin)) {
+                    binSet.add(entry);
+                }
+            }
+        }
+
+        for (const binaryName of binSet) {
+            await cmdShim(`${__dirname}/dist/main.js`, `${__dirname}/dist/${binaryName}`, {
+                progArgs: [packageManager, binaryName],
+            });
+        }
+    }
+
     console.log(`All shims have been generated.`);
-}, err => {
+}
+
+main().catch(err => {
     console.error(err.stack);
+    process.exitCode = 1;
 });

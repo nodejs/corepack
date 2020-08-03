@@ -1,7 +1,7 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
 import {PassThrough}         from 'stream';
 
-import {cli}                 from '../sources/main';
+import {main} from '../sources/main';
 
 export async function runCli(cwd: PortablePath, argv: string[]) {
     const stdin = new PassThrough();
@@ -19,7 +19,7 @@ export async function runCli(cwd: PortablePath, argv: string[]) {
         err.push(chunk);
     });
 
-    const exitCode = await cli.run(argv, {
+    const exitCode = await main(argv, {
         cwd: npath.fromPortablePath(cwd),
         stdin,
         stdout,

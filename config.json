@@ -1,0 +1,62 @@
+{
+    "definitions": {
+        "npm": {
+            "default": "6.14.7",
+            "ranges": {
+                "*": {
+                    "url": "https://registry.npmjs.org/npm/-/npm-{}.tgz",
+                    "bin": {
+                        "npm": "./bin/npm-cli.js",
+                        "npx": "./bin/npx-cli.js"
+                    },
+                    "tags": {
+                        "type": "npm",
+                        "package": "npm"
+                    }
+                }
+            }
+        },
+        "pnpm": {
+            "default": "5.4.11",
+            "ranges": {
+                "*": {
+                    "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+                    "bin": {
+                        "pnpm": "./bin/pnpm.js",
+                        "pnpx": "./bin/pnpx.js"
+                    },
+                    "tags": {
+                        "type": "npm",
+                        "package": "pnpm"
+                    }
+                }
+            }
+        },
+        "yarn": {
+            "default": "1.22.4",
+            "ranges": {
+                "<2.0.0-0": {
+                    "url": "https://registry.yarnpkg.com/yarn/-/yarn-{}.tgz",
+                    "bin": {
+                        "yarn": "./bin/yarn.js",
+                        "yarnpkg": "./bin/yarn.js"
+                    },
+                    "tags": {
+                        "type": "npm",
+                        "package": "yarn"
+                    }
+                },
+                ">=2.0.0-0": {
+                    "name": "yarn",
+                    "url": "https://raw.githubusercontent.com/yarnpkg/berry/%40yarnpkg/cli/{}/packages/yarnpkg-cli/bin/yarn.js",
+                    "bin": ["yarn", "yarnpkg"],
+                    "tags": {
+                        "type": "github",
+                        "repository": "yarnpkg/berry",
+                        "pattern": "@yarnpkg-cli/{}"
+                    }
+                }
+            }
+        }
+    }
+}

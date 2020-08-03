@@ -1,61 +1,81 @@
-import {BaseContext, Cli, Command} from 'clipanion';
+import {BaseContext, Cli, Command, UsageError} from 'clipanion';
 
-import {entries}                   from './config';
-import {findSpec}                  from './findSpec';
-import {runSpec}                   from './runSpec';
+import {Engine} from './Engine';
+import * as miscUtils from './miscUtils';
+import * as pmmUtils from './pmmUtils';
+import * as specUtils from './specUtils';
+import {Locator, isSupportedPackageManager} from './types';
 
-export type Context = BaseContext & {
-    cwd: string,
-};
+export type CustomContext = {cwd: string};
+export type Context = BaseContext & CustomContext;
 
-export class Cancellation extends Error {
-}
+export async function main(argv: string[], context: CustomContext & Partial<Context>) {
+    const engine = new Engine();
+    const firstArg = argv[0];
 
-const cli = new Cli<Context>({
-    binaryName: `pmm`,
-});
+    if (isSupportedPackageManager(firstArg)) {
+        const packageManager = firstArg;
+        const binaryName = argv[1];
 
-for (const [binaryName, pmName] of entries) {
-    class BinaryCommand extends Command<Context> {
-        @Command.Proxy()
-        public proxy: string[] = [];
+        // Note: we're playing a bit with Clipanion here, since instead of letting it
+        // decide how to route the commands, we'll instead tweak the init settings
+        // based on the arguments.
+        const cli = new Cli<Context>({binaryName});
+        const defaultVersion = engine.getDefaultVersion(firstArg);
 
-        @Command.Path(binaryName)
-        async execute() {
-            try {
-                const spec = await findSpec(this.context.cwd, pmName);
-                return await runSpec(spec, binaryName, this.proxy, this.context);
-            } catch (error) {
-                if (error instanceof Cancellation) {
-                    return 1;
-                } else {
-                    throw error;
+        const potentialLocator: Locator = {
+            name: packageManager,
+            reference: defaultVersion,
+        };
+
+        class BinaryCommand extends Command<Context> {
+            public proxy: string[] = [];
+
+            async execute() {
+                let descriptor;
+                try {
+                    descriptor = await specUtils.findProjectSpec(this.context.cwd, potentialLocator);
+                } catch (err) {
+                    if (err instanceof miscUtils.Cancellation) {
+                        return 1;
+                    } else {
+                        throw err;
+                    }
                 }
+
+                const resolved = await engine.resolveDescriptor(descriptor);
+                if (resolved === null)
+                    throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
+
+                const installTarget = await engine.ensurePackageManager(resolved);
+                const exitCode = await pmmUtils.runVersion(installTarget, resolved, binaryName, this.proxy, this.context);
+
+                return exitCode;
             }
         }
+
+        BinaryCommand.addPath();
+        BinaryCommand.addOption(`proxy`, Command.Proxy());
+
+        cli.register(BinaryCommand);
+
+        return await cli.run(argv.slice(2), {
+            ...Cli.defaultContext,
+            ...context,
+        });
+    } else {
     }
-
-    cli.register(BinaryCommand);
 }
-
-class ListingCommand extends Command<Context> {
-    @Command.Path(`--list`)
-    async execute() {
-        for (const [entry] of entries) {
-            console.log(entry);
-        }
-    }
-}
-
-cli.register(ListingCommand);
-
-export {cli};
 
 declare const __non_webpack_require__: any;
 
 if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === module) {
-    cli.runExit(process.argv.slice(2), {
-        ...Cli.defaultContext,
+    main(process.argv.slice(2), {
         cwd: process.cwd(),
+    }).then(exitCode => {
+        process.exitCode = exitCode;
+    }, err => {
+        console.error(err.stack);
+        process.exitCode = 1;
     });
 }

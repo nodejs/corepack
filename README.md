@@ -6,15 +6,20 @@
 
 ## Usage
 
-The best way to experiment with this workflow is to use the Docker image:
+Any of the following will work:
+
+### Docker 
 
 1. `docker build -t pmm https://github.com/arcanis/pmm.git\#master:docker`
 2. `docker run -it pmm /bin/sh`
+
 3. Do whatever you want! The `node` / `npm` / `yarn` / `pnpm` binaries are there, via pmm. To take a look at the different workflows, here are some things you can try:
 
     - Create a new folder, then run `yarn init`.
     - Then try to run `npm install` in this same folder.
     - Then open the package.json, and change the `engines.pm` field to `1.10.0`. Try running `yarn --version`. See how fast it is?
+
+### Manual build
 
 If you want to do things yourself, you can build the project like this:
 
@@ -24,8 +29,6 @@ If you want to do things yourself, you can build the project like this:
 4. Call `node ./dist/pmm --version` and behold
 
 You can also run the tests with `yarn jest` (still no install needed).
-
-
 
 ## What problem does it solve?
 

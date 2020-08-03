@@ -1,3 +1,5 @@
+const webpack = require(`webpack`);
+
 module.exports = {
     mode: `production`,
     devtool: false,
@@ -23,5 +25,12 @@ module.exports = {
     },
     stats: {
         assetsSort: '!size'
-    }
+    },
+    plugins: [
+        new webpack.BannerPlugin({
+            entryOnly: true,
+            banner: `#!/usr/bin/env node\n/* eslint-disable */`,
+            raw: true,
+        }),
+    ],
 };

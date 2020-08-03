@@ -8,6 +8,7 @@
         "forceConsistentCasingInFileNames": true,
         "lib": ["dom", "es2017", "esnext.asynciterable"],
         "module": "commonjs",
+        "resolveJsonModule": true,
         "strict": true,
         "target": "es2017"
     }
