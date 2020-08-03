@@ -15,7 +15,7 @@ import { Context } from './main';
 const execFileP = promisify(execFile);
 
 const NL_REGEXP = /\n/;
-const REFS_TAGS_REGEXP = /^refs\/tags\//;
+const REFS_TAGS_REGEXP = /^[a-f0-9]+\trefs\/tags\/(.*)\^\{\}$/;
 
 export async function fetchAvailableVersions(spec: TagSpec) {
     switch (spec.type) {
@@ -26,19 +26,28 @@ export async function fetchAvailableVersions(spec: TagSpec) {
 
         case `git`: {
             const {stdout} = await execFileP(`git`, [`ls-remote`, `--tags`, spec.repository]);
-            const lines = stdout.split(NL_REGEXP).slice(0, -1).map(line => line.replace(REFS_TAGS_REGEXP, ``));
+            const lines = stdout.split(NL_REGEXP);
 
-            const regexp = new RegExp(spec.pattern);
+            const regexp = new RegExp(`^${spec.pattern.replace(`{}`, `(.*)`)}$`);
 
             const results = [];
             for (const line of lines) {
-                const match = line.match(regexp);
-                if (match) {
-                    results.push(match[1]);
-                }
+                const lv1 = line.match(REFS_TAGS_REGEXP);
+                if (!lv1)
+                    continue;
+
+                const lv2 = lv1[1].match(regexp);
+                if (!lv2)
+                    continue;
+
+                results.push(lv2[1]);
             }
 
             return results;
+        } break;
+
+        default: {
+            throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
         } break;
     }
 }

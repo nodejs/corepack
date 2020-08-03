@@ -51,9 +51,9 @@
                     "url": "https://raw.githubusercontent.com/yarnpkg/berry/%40yarnpkg/cli/{}/packages/yarnpkg-cli/bin/yarn.js",
                     "bin": ["yarn", "yarnpkg"],
                     "tags": {
-                        "type": "github",
-                        "repository": "yarnpkg/berry",
-                        "pattern": "@yarnpkg-cli/{}"
+                        "type": "git",
+                        "repository": "https://github.com/yarnpkg/berry.git",
+                        "pattern": "@yarnpkg/cli/{}"
                     }
                 }
             }
