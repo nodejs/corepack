@@ -31,10 +31,10 @@ jobs:
         git add . && git commit -m 'Updates pmm'
         ./configure
         DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
-        tar xvf node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz
+        mv node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz node-pmm-${{matrix.platform[0]}}-x64.tar.gz
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
         name: node-pmm-${{matrix.platform[0]}}-x64
-        path: node/node-v15.0.0-nightlyYYYY-MM-DDXXXX-${{matrix.platform[0]}}-x64
+        path: node/node-pmm-${{matrix.platform[0]}}-x64.tar.gz
