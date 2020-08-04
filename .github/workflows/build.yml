@@ -21,14 +21,14 @@ jobs:
         node-version: 14.x
 
     - run: |
-      yarn pack
-      git clone -b mael/pmm --depth=1 git@github.com:arcanis/node node
-      cd node
-      rm -rf deps/pmm
-      tar xvf ../package.tgz
-      mv package deps/pmm
-      ./configure
-      DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
+        yarn pack
+        git clone -b mael/pmm --depth=1 git@github.com:arcanis/node node
+        cd node
+        rm -rf deps/pmm
+        tar xvf ../package.tgz
+        mv package deps/pmm
+        ./configure
+        DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
