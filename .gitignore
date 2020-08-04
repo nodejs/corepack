@@ -2,3 +2,4 @@
 !/.yarn/cache
 !/.yarn/releases
 /dist
+/shims

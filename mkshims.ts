@@ -20,7 +20,7 @@ async function main() {
         }
 
         for (const binaryName of binSet) {
-            await cmdShim(`${__dirname}/dist/main.js`, `${__dirname}/dist/${binaryName}`, {
+            await cmdShim(`${__dirname}/dist/main.js`, `${__dirname}/shims/${binaryName}`, {
                 progArgs: [packageManager, binaryName],
             });
         }

@@ -13,4 +13,4 @@ RUN which node && node --version
 
 RUN wget https://github.com/arcanis/pmm/archive/master.tar.gz -O - | tar -xz --strip-components=1 -C /opt/pmm && cd /opt/pmm && node ./.yarn/releases/yarn-*.js build
 
-ENV PATH="/opt/pmm/dist:$PATH"
+ENV PATH="/opt/pmm/shims:$PATH"
