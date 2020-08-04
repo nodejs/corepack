@@ -20,9 +20,10 @@ jobs:
       with:
         node-version: 14.x
 
-    - run: |
+    - name: 'Build Node with pmm master'
+      run: |
         yarn pack
-        git clone -b mael/pmm --depth=1 git@github.com:arcanis/node node
+        git clone -b mael/pmm --depth=1 https://github.com/arcanis/node.git node
         cd node
         rm -rf deps/pmm
         tar xvf ../package.tgz
