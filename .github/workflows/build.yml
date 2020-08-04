@@ -23,11 +23,11 @@ jobs:
     - name: 'Build Node with pmm master'
       run: |
         yarn pack
-        git clone -b mael/pmm --depth=1 https://github.com/arcanis/node.git node
-        cd node
-        rm -rf deps/pmm
-        tar xvf ../package.tgz
-        mv package deps/pmm
+        git clone -b mael/pmm --depth=1 https://github.com/arcanis/node.git node && cd node
+        git config user.name 'John Doe'
+        git config user.email 'john@example.org'
+        rm -rf deps/pmm && tar xvf ../package.tgz && mv package deps/pmm
+        git add . && git commit -m 'Updates pmm'
         ./configure
         DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
 
