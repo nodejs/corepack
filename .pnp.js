@@ -56,6 +56,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
+            ["terser-webpack-plugin", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.1.0"],
             ["ts-loader", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:8.0.2"],
             ["ts-node", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:8.10.2"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=5b02a2"],
@@ -89,6 +90,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
+            ["terser-webpack-plugin", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.1.0"],
             ["ts-loader", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:8.0.2"],
             ["ts-node", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:8.10.2"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=5b02a2"],
@@ -6590,10 +6592,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["terser-webpack-plugin", [
-        ["virtual:4c4663c980153d0a6f2ab1c816b52911c1444f187571fd6526ff24ef9f3e6696e22ffa9bd35e1adeed2d29fad8eaa757836563aca430fe051f4580b14e7fc38d#npm:3.1.0", {
-          "packageLocation": "./.yarn/$$virtual/terser-webpack-plugin-virtual-35209d0481/0/cache/terser-webpack-plugin-npm-3.1.0-86bea3e531-f185038d64.zip/node_modules/terser-webpack-plugin/",
+        ["virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.1.0", {
+          "packageLocation": "./.yarn/$$virtual/terser-webpack-plugin-virtual-cf8e56af46/0/cache/terser-webpack-plugin-npm-3.1.0-86bea3e531-f185038d64.zip/node_modules/terser-webpack-plugin/",
           "packageDependencies": [
-            ["terser-webpack-plugin", "virtual:4c4663c980153d0a6f2ab1c816b52911c1444f187571fd6526ff24ef9f3e6696e22ffa9bd35e1adeed2d29fad8eaa757836563aca430fe051f4580b14e7fc38d#npm:3.1.0"],
+            ["terser-webpack-plugin", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.1.0"],
             ["@types/webpack", null],
             ["cacache", "npm:15.0.5"],
             ["find-cache-dir", "npm:3.3.1"],
@@ -7052,7 +7054,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["pkg-dir", "npm:4.2.0"],
             ["schema-utils", "npm:2.7.0"],
             ["tapable", "npm:2.0.0-beta.11"],
-            ["terser-webpack-plugin", "virtual:4c4663c980153d0a6f2ab1c816b52911c1444f187571fd6526ff24ef9f3e6696e22ffa9bd35e1adeed2d29fad8eaa757836563aca430fe051f4580b14e7fc38d#npm:3.1.0"],
+            ["terser-webpack-plugin", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.1.0"],
             ["watchpack", "npm:2.0.0-beta.13"],
             ["webpack-cli", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:3.3.11"],
             ["webpack-sources", "npm:2.0.0-beta.8"]

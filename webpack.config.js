@@ -1,3 +1,4 @@
+const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require(`webpack`);
 
 module.exports = {
@@ -25,6 +26,14 @@ module.exports = {
     },
     stats: {
         assetsSort: '!size'
+    },
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                extractComments: false,
+            }),
+        ],
     },
     plugins: [
         new webpack.BannerPlugin({

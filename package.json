@@ -25,6 +25,7 @@
     "semver": "^7.1.3",
     "supports-color": "^7.1.0",
     "tar": "^6.0.1",
+    "terser-webpack-plugin": "^3.1.0",
     "ts-loader": "^8.0.2",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7",
@@ -34,13 +35,29 @@
   "scripts": {
     "build": "rm -rf dist && yarn webpack && yarn ts-node ./mkshims.ts",
     "pmm": "ts-node ./sources/main.ts",
-    "prepack": "yarn build"
+    "prepack": "yarn build",
+    "postpack": "rm -rf dist shims"
   },
   "files": [
     "shims",
     "dist"
   ],
   "publishConfig": {
-    "bin": "./dist/main.js"
+    "bin": "./dist/main.js",
+    "executableFiles": [
+      "./shims/npm",
+      "./shims/npm.ps1",
+      "./shims/npx",
+      "./shims/npx.ps1",
+      "./shims/pnpm",
+      "./shims/pnpm.ps1",
+      "./shims/pnpx",
+      "./shims/pnpx.ps1",
+      "./shims/yarn",
+      "./shims/yarn.ps1",
+      "./shims/yarnpkg",
+      "./shims/yarnpkg.ps1",
+      "./dist/main.js"
+    ]
   }
 }
