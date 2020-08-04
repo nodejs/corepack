@@ -1,16 +1,17 @@
 name: Build
 
 on:
-  push:
-    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest]
+        platform:
+        - [linux, ubuntu-latest]
+        - [darwin, macos-latest]
 
-    runs-on: ${{matrix.platform}}
+    runs-on: ${{matrix.platform[1]}}
 
     steps:
     - uses: actions/checkout@v2
@@ -30,9 +31,10 @@ jobs:
         git add . && git commit -m 'Updates pmm'
         ./configure
         DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
+        tar xvf node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: binary
-        path: node/node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz
+        name: node-pmm-${{matrix.platform[0]}}-x64
+        path: node/node-v15.0.0-nightlyYYYY-MM-DDXXXX-${{matrix.platform[0]}}-x64
