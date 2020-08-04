@@ -8,6 +8,10 @@
 
 Any of the following will work:
 
+### Prebuilt node
+
+We have a few prebuilt Node binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable. It's likely the easiest way to get started!
+
 ### Docker 
 
 1. `docker build -t pmm https://github.com/arcanis/pmm.git\#master:docker`
