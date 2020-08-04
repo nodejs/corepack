@@ -6,7 +6,10 @@ module.exports = {
     devtool: false,
     target: `node`,
     entry: {
-        [`main`]: `./sources/main.ts`,
+        [`pmm`]: `./sources/main.ts`,
+    },
+    output: {
+        libraryTarget: `commonjs`,
     },
     resolve: {
         extensions: [`.ts`, `.js`],
@@ -28,7 +31,6 @@ module.exports = {
         assetsSort: '!size'
     },
     optimization: {
-        minimize: true,
         minimizer: [
             new TerserPlugin({
                 extractComments: false,

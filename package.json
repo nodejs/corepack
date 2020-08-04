@@ -17,7 +17,7 @@
     "@types/semver": "^7.1.0",
     "@types/tar": "^4.0.3",
     "@yarnpkg/fslib": "^2.1.0",
-    "@zkochan/cmd-shim": "^4.3.0",
+    "@zkochan/cmd-shim": "^5.0.0",
     "clipanion": "^2.4.4",
     "debug": "^4.1.1",
     "enquirer": "^2.3.6",
@@ -39,12 +39,19 @@
     "postpack": "rm -rf dist shims"
   },
   "files": [
-    "shims",
-    "dist"
+    "dist",
+    "shims"
   ],
   "publishConfig": {
-    "bin": "./dist/main.js",
+    "bin": "./dist/pmm.js",
     "executableFiles": [
+      "./dist/npm.js",
+      "./dist/npx.js",
+      "./dist/pnpm.js",
+      "./dist/pnpx.js",
+      "./dist/yarn.js",
+      "./dist/yarnpkg.js",
+      "./dist/pmm.js",
       "./shims/npm",
       "./shims/npm.ps1",
       "./shims/npx",
@@ -56,8 +63,7 @@
       "./shims/yarn",
       "./shims/yarn.ps1",
       "./shims/yarnpkg",
-      "./shims/yarnpkg.ps1",
-      "./dist/main.js"
+      "./shims/yarnpkg.ps1"
     ]
   }
 }

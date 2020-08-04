@@ -2,5 +2,4 @@
 !/.yarn/cache
 !/.yarn/releases
 /dist
-/shims
 /package.tgz

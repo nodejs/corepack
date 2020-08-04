@@ -1,7 +1,8 @@
 import cmdShim from '@zkochan/cmd-shim';
+import fs from 'fs';
 
 import config from './config.json';
-import { SupportedPackageManagers } from 'sources/types';
+import {SupportedPackageManagers} from 'sources/types';
 
 async function main() {
     for (const packageManager of Object.keys(config.definitions) as SupportedPackageManagers[]) {
@@ -20,9 +21,16 @@ async function main() {
         }
 
         for (const binaryName of binSet) {
-            await cmdShim(`${__dirname}/dist/main.js`, `${__dirname}/shims/${binaryName}`, {
-                progArgs: [packageManager, binaryName],
-            });
+            const entryPath = `${__dirname}/dist/${binaryName}.js`;
+            const entryScript = [
+                `#!/usr/bin/env node\n`,
+                `require('./pmm').runMain(['${packageManager}', '${binaryName}', ...process.argv.slice(2)]);\n`,
+            ].join(``);
+
+            fs.writeFileSync(entryPath, entryScript);
+            fs.chmodSync(entryPath, 0o755);
+
+            await cmdShim(entryPath, `${__dirname}/shims/${binaryName}`, {});
         }
     }
 
@@ -30,6 +38,6 @@ async function main() {
 }
 
 main().catch(err => {
-    console.error(err.stack);
+    console.log(err.stack);
     process.exitCode = 1;
 });

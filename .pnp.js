@@ -48,7 +48,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@yarnpkg/fslib", "npm:2.1.0"],
-            ["@zkochan/cmd-shim", "npm:4.3.0"],
+            ["@zkochan/cmd-shim", "npm:5.0.0"],
             ["clipanion", "npm:2.4.4"],
             ["debug", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:4.1.1"],
             ["enquirer", "npm:2.3.6"],
@@ -82,7 +82,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@yarnpkg/fslib", "npm:2.1.0"],
-            ["@zkochan/cmd-shim", "npm:4.3.0"],
+            ["@zkochan/cmd-shim", "npm:5.0.0"],
             ["clipanion", "npm:2.4.4"],
             ["debug", "virtual:71bbb194be682982c57fef4c42fdb0de462ca1dd8c4b1226e67e4bcb89217a41ef38361787eb997b3a31459f64165652df0bb56d6e7f89df5c10468f6d1264c3#npm:4.1.1"],
             ["enquirer", "npm:2.3.6"],
@@ -1413,12 +1413,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@zkochan/cmd-shim", [
-        ["npm:4.3.0", {
-          "packageLocation": "./.yarn/cache/@zkochan-cmd-shim-npm-4.3.0-00786a1c45-63f13d2755.zip/node_modules/@zkochan/cmd-shim/",
+        ["npm:5.0.0", {
+          "packageLocation": "./.yarn/cache/@zkochan-cmd-shim-npm-5.0.0-9e90407ba0-1435bc6cbe.zip/node_modules/@zkochan/cmd-shim/",
           "packageDependencies": [
-            ["@zkochan/cmd-shim", "npm:4.3.0"],
-            ["is-windows", "npm:1.0.2"],
-            ["make-dir", "npm:3.0.2"]
+            ["@zkochan/cmd-shim", "npm:5.0.0"],
+            ["is-windows", "npm:1.0.2"]
           ],
           "linkType": "HARD",
         }]

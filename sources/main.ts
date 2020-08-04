@@ -67,10 +67,8 @@ export async function main(argv: string[], context: CustomContext & Partial<Cont
     }
 }
 
-declare const __non_webpack_require__: any;
-
-if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === module) {
-    main(process.argv.slice(2), {
+export function runMain(argv: string[]) {
+    main(argv, {
         cwd: process.cwd(),
     }).then(exitCode => {
         process.exitCode = exitCode;
@@ -78,4 +76,10 @@ if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === mod
         console.error(err.stack);
         process.exitCode = 1;
     });
+}
+
+declare const __non_webpack_require__: any;
+
+if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === module) {
+    runMain(process.argv.slice(2));
 }
