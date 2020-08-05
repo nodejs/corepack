@@ -12,6 +12,12 @@ Any of the following will work:
 
 We have a few prebuilt Node binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable. It's likely the easiest way to get started!
 
+1. Go to [this page](https://github.com/arcanis/pmm/actions?query=workflow%3ABuild)
+2. Open the latest build (the one at the top)
+3. Download the right artifact (Linux or Darwin)
+4. Unzip the artifact, then untar it
+5. Add the `node-v15.0.0-nightlyYYYY-MM-DDXXXX-linux-x64/bin` directory to your `$PATH`
+
 ### Docker 
 
 1. `docker build -t pmm https://github.com/arcanis/pmm.git\#master:docker`
