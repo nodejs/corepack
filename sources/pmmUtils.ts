@@ -93,7 +93,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url}`);
     
     return await fsUtils.mutex(installFolder, async () => {
-        const tmpFolder = folderUtils.getTemporaryFolder();
+        // Creating a temporary folder inside the install folder means that we
+        // are sure it'll be in the same drive as the destination, so we can
+        // just move it there atomically once we are done
+
+        const tmpFolder = folderUtils.getTemporaryFolder(installFolder);
         const stream = await httpUtils.fetchUrlStream(url);
 
         const parsedUrl = new URL(url);

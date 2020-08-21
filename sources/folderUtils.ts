@@ -6,11 +6,11 @@ export function getInstallFolder() {
     return join(homedir(), `.node/pmm`);
 }
 
-export function getTemporaryFolder() {
+export function getTemporaryFolder(target: string = tmpdir()) {
     while (true) {
         const rnd = Math.random() * 0x100000000;
         const hex = rnd.toString(16).padStart(8, `0`);
-        const path = join(tmpdir(), `pmm-${hex}`);
+        const path = join(target, `pmm-${process.pid}-${hex}`);
 
         try {
             mkdirSync(path);

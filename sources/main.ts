@@ -80,6 +80,6 @@ export function runMain(argv: string[]) {
 
 declare const __non_webpack_require__: any;
 
-if (typeof __non_webpack_require__ !== `undefined` || process.mainModule === module) {
+if (typeof __non_webpack_require__ === `undefined` && process.mainModule === module) {
     runMain(process.argv.slice(2));
 }
