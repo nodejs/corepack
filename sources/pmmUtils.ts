@@ -97,7 +97,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
         // are sure it'll be in the same drive as the destination, so we can
         // just move it there atomically once we are done
 
-        const tmpFolder = folderUtils.getTemporaryFolder(installFolder);
+        const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
         const stream = await httpUtils.fetchUrlStream(url);
 
         const parsedUrl = new URL(url);

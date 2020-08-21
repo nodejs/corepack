@@ -7,6 +7,8 @@ export function getInstallFolder() {
 }
 
 export function getTemporaryFolder(target: string = tmpdir()) {
+    mkdirSync(target, {recursive: true});
+
     while (true) {
         const rnd = Math.random() * 0x100000000;
         const hex = rnd.toString(16).padStart(8, `0`);
