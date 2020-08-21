@@ -119,6 +119,7 @@ export async function persistPmSpec(updateTarget: string, locator: Locator, mess
         res = await Enquirer.prompt([{
             type: `confirm`,
             name: `confirm`,
+            initial: true,
             message: message.replace(`{}`, newSpec),
         }]);
     } catch (err) {
