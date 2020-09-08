@@ -7,6 +7,23 @@ import Enquirer from 'enquirer';
 import * as miscUtils from './miscUtils';
 import {SupportedPackageManagers, SupportedPackageManagerSet, Descriptor, Locator} from './types';
 
+export function parseSpec(raw: unknown, source?: string): Descriptor {
+    if (typeof raw !== `string`)
+        throw new UsageError(`Invalid package manager specification in ${source}; expected a semver range`);
+
+    const match = raw.match(/^(?!_)(.+)@(.+)$/);
+    if (match === null || !semver.validRange(match[2]))
+        throw new UsageError(`Invalid package manager specification in ${source}; expected a semver range`);
+
+    if (!SupportedPackageManagerSet.has(match[1]))
+        throw new UsageError(`Unsupported package manager specification (${match})`);
+
+    return {
+        name: match[1] as SupportedPackageManagers,
+        range: match[2],
+    };
+}
+
 /**
  * Locates the active project's package manager specification.
  * 
@@ -48,12 +65,12 @@ export async function findProjectSpec(initialCwd: string, locator: Locator): Pro
     }
 }
 
-type LoadSpecResult =
+export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
     | {type: `Found`, spec: Descriptor};
 
-async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
+export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     let nextCwd = initialCwd;
     let currCwd = ``;
 
@@ -83,25 +100,13 @@ async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     if (selection === null)
         return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
 
-    const pmSpec = selection.data.packageManager;
-    if (typeof pmSpec === `undefined`)
+    const rawPmSpec = selection.data.packageManager;
+    if (typeof rawPmSpec === `undefined`)
         return {type: `NoSpec`, target: selection.manifestPath};
-    if (typeof pmSpec !== `string`)
-        throw new UsageError(`Invalid package manager specification in ${path.relative(initialCwd, selection.manifestPath)}; expected a semver range`);
-
-    const match = pmSpec.match(/^(?!_)(.+)@(.+)$/);
-    if (match === null || !semver.validRange(match[2]))
-        throw new UsageError(`Invalid package manager specification in ${path.relative(initialCwd, selection.manifestPath)}; expected a semver range`);
-
-    if (!SupportedPackageManagerSet.has(match[1]))
-        throw new UsageError(`Unsupported package manager specification (${match})`);
-
+    
     return {
         type: `Found`,
-        spec: {
-            name: match[1] as SupportedPackageManagers,
-            range: match[2],
-        },
+        spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
     };
 }
 

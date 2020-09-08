@@ -1,16 +1,17 @@
 import {BaseContext, Cli, Command, UsageError} from 'clipanion';
 
+import {HydrateCommand} from './commands/Hydrate';
+import {PackCommand} from './commands/Pack';
 import {Engine} from './Engine';
 import * as miscUtils from './miscUtils';
 import * as pmmUtils from './pmmUtils';
 import * as specUtils from './specUtils';
 import {Locator, isSupportedPackageManager} from './types';
 
-export type CustomContext = {cwd: string};
+export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
 
 export async function main(argv: string[], context: CustomContext & Partial<Context>) {
-    const engine = new Engine();
     const firstArg = argv[0];
 
     if (isSupportedPackageManager(firstArg)) {
@@ -21,7 +22,7 @@ export async function main(argv: string[], context: CustomContext & Partial<Cont
         // decide how to route the commands, we'll instead tweak the init settings
         // based on the arguments.
         const cli = new Cli<Context>({binaryName});
-        const defaultVersion = engine.getDefaultVersion(firstArg);
+        const defaultVersion = context.engine.getDefaultVersion(firstArg);
 
         const potentialLocator: Locator = {
             name: packageManager,
@@ -43,11 +44,11 @@ export async function main(argv: string[], context: CustomContext & Partial<Cont
                     }
                 }
 
-                const resolved = await engine.resolveDescriptor(descriptor);
+                const resolved = await context.engine.resolveDescriptor(descriptor);
                 if (resolved === null)
                     throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-                const installTarget = await engine.ensurePackageManager(resolved);
+                const installTarget = await context.engine.ensurePackageManager(resolved);
                 const exitCode = await pmmUtils.runVersion(installTarget, resolved, binaryName, this.proxy, this.context);
 
                 return exitCode;
@@ -64,12 +65,24 @@ export async function main(argv: string[], context: CustomContext & Partial<Cont
             ...context,
         });
     } else {
+        const cli = new Cli<Context>({binaryName: `pmm`});
+
+        cli.register(Command.Entries.Help as any);
+
+        cli.register(HydrateCommand);
+        cli.register(PackCommand);
+
+        return await cli.run(argv, {
+            ...Cli.defaultContext,
+            ...context,
+        });
     }
 }
 
 export function runMain(argv: string[]) {
     main(argv, {
         cwd: process.cwd(),
+        engine: new Engine(),
     }).then(exitCode => {
         process.exitCode = exitCode;
     }, err => {
