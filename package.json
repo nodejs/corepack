@@ -2,9 +2,7 @@
   "name": "@arcanis/pmm",
   "version": "0.1.0",
   "bin": "./sources/main.ts",
-  "engines": {
-    "pm": "yarn@^2.0.0-rc.29"
-  },
+  "packageManager": "yarn@^2.0.0-rc.29",
   "devDependencies": {
     "@babel/core": "^7.11.0",
     "@babel/plugin-proposal-class-properties": "^7.10.4",

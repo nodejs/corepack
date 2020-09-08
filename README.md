@@ -27,7 +27,7 @@ We have a few prebuilt Node binaries (based on the [following branch](https://gi
 
     - Create a new folder, then run `yarn init`.
     - Then try to run `npm install` in this same folder.
-    - Then open the package.json, and change the `engines.pm` field to `1.10.0`. Try running `yarn --version`. See how fast it is?
+    - Then open the package.json, and change the `packageManager` field to `1.10.0`. Try running `yarn --version`. See how fast it is?
 
 ### Manual build
 
@@ -68,9 +68,9 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
 3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries just like they are used to. The one difference is that the package manager implementations would be lazily downloaded, without having to be manually installed (because the global jumpers would be included in the Node distribution, cf previous point).
 
-    - Projects that don't list the `engines.pm` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `engines.pm` field (cf next section).
+    - Projects that don't list the `packageManager` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `packageManager` field (cf next section).
 
-4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `engines.pm` field.
+4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `packageManager` field.
 
     - Pmm could reasonably provide some kind of basic CLI interface to select a version to upgrade to in a few keystrokes (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
 
@@ -84,13 +84,11 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
 ## How does it work?
 
-When any of the embed binaries are called (whether it's `yarn`, `npm`, or `pnpm`), the tool will find the closest ancestor `package.json` for the current directory. It will then extract the `engines.pm` key, configured as such:
+When any of the embed binaries are called (whether it's `yarn`, `npm`, or `pnpm`), the tool will find the closest ancestor `package.json` for the current directory. It will then extract the `packageManager` key, configured as such:
 
 ```json
 {
-  "engines": {
-    "pm": "yarn@^2.0.0"
-  }
+  "packageManager": "yarn@^2.0.0"
 }
 ```
 

@@ -83,13 +83,7 @@ async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     if (selection === null)
         return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
 
-    const engines = selection.data.engines;
-    if (typeof engines === `undefined`)
-        return {type: `NoSpec`, target: selection.manifestPath};
-    if (typeof engines !== `object` || engines === null)
-        throw new UsageError(`Invalid 'engines' field in ${path.relative(initialCwd, selection.manifestPath)}; expected an object`);
-
-    const pmSpec = engines.pm;
+    const pmSpec = selection.data.packageManager;
     if (typeof pmSpec === `undefined`)
         return {type: `NoSpec`, target: selection.manifestPath};
     if (typeof pmSpec !== `string`)
@@ -138,9 +132,7 @@ export async function persistPmSpec(updateTarget: string, locator: Locator, mess
         : `{}`;
 
     const data = JSON.parse(content);
-
-    data.engines = data.engines || {};
-    data.engines.pm = newSpec;
+    data.packageManager = newSpec;
 
     const serialized = JSON.stringify(data, null, 2);
     await fs.promises.writeFile(updateTarget, `${serialized}\n`);
