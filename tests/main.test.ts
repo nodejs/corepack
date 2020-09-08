@@ -1,8 +1,12 @@
-import {Filename, ppath, xfs} from '@yarnpkg/fslib';
+import {Filename, ppath, xfs, PortablePath} from '@yarnpkg/fslib';
 import Enquirer               from 'enquirer';
 
 import config                 from '../config.json';
 import {runCli}               from './_runCli';
+
+beforeEach(async () => {
+    process.env.PMM_HOME = await xfs.mktempPromise();
+});
 
 for (const [name, version] of [[`yarn`, `1.22.4`], [`yarn`, `2.0.0-rc.30`], [`pnpm`, `4.11.6`], [`npm`, `6.14.2`]]) {
     it(`should use the right package manager version for a given project (${name}@${version})`, async () => {
@@ -74,5 +78,56 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
             stdout: `${config.definitions.npm.default}\n`,
             exitCode: 0,
         });
+    });
+});
+
+it(`should support disabling the network accesses from the environment`, async () => {
+    process.env.PMM_ENABLE_NETWORK = `0`;
+
+    try {
+        await xfs.mktempPromise(async cwd => {
+            await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+                packageManager: `yarn@2.2.2`,
+            });
+
+            await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+                stdout: expect.stringContaining(`Network access disabled by the environment`),
+                exitCode: 1,
+            });
+        });
+    } finally {
+        delete process.env.PMM_ENABLE_NETWORK;
+    }
+});
+
+it(`should support hydrating package managers from cached archives`, async () => {
+    await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
+            exitCode: 0,
+        });
+
+        // Use a new cache
+        process.env.PMM_HOME = await xfs.mktempPromise();
+
+        // Disable the network to make sure we don't succeed by accident
+        process.env.PMM_ENABLE_NETWORK = `0`;
+
+        try {
+            await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+                packageManager: `yarn@2.2.2`,
+            });
+
+            await expect(runCli(cwd, [`hydrate`, `pmm-yarn-2.2.2.tgz`])).resolves.toMatchObject({
+                stdout: ``,
+                exitCode: 0,
+            });
+
+            await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+                stdout: `2.2.2\n`,
+                exitCode: 0,
+            });
+        } finally {
+            delete process.env.PMM_ENABLE_NETWORK;
+        }
     });
 });

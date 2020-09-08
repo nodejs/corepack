@@ -3,7 +3,7 @@ import {homedir, tmpdir} from 'os';
 import {join}            from 'path';
 
 export function getInstallFolder() {
-    return join(homedir(), `.node/pmm`);
+    return process.env.PMM_HOME ?? join(homedir(), `.node/pmm`);
 }
 
 export function getTemporaryFolder(target: string = tmpdir()) {

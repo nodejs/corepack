@@ -1,7 +1,11 @@
+import {UsageError} from 'clipanion';
 import https, {RequestOptions} from 'https';
 import {IncomingMessage} from 'http';
 
 export function fetchUrlStream(url: string, options: RequestOptions = {}) {
+    if (process.env.PMM_ENABLE_NETWORK === `0`)
+        throw new UsageError(`Network access disabled by the environment; can't reach ${url}`);
+
     return new Promise<IncomingMessage>((resolve, reject) => {
         const request = https.get(url, options, response => {
             const statusCode = response.statusCode ?? 500;

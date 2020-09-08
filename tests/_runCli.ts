@@ -1,6 +1,7 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
 import {PassThrough}         from 'stream';
 
+import {Engine} from '../sources/Engine';
 import {main} from '../sources/main';
 
 export async function runCli(cwd: PortablePath, argv: string[]) {
@@ -21,6 +22,7 @@ export async function runCli(cwd: PortablePath, argv: string[]) {
 
     const exitCode = await main(argv, {
         cwd: npath.fromPortablePath(cwd),
+        engine: new Engine(),
         stdin,
         stdout,
         stderr,

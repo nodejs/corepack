@@ -23,8 +23,8 @@ export class HydrateCommand extends Command<Context> {
     @Command.Path(`hydrate`)
     async execute() {
         const installFolder = folderUtils.getInstallFolder();
-        const fileName = path.resolve(this.context.cwd);
+        const fileName = path.resolve(this.context.cwd, this.fileName);
 
-        await tar.x({file: fileName, strip: 1, cwd: installFolder});
+        await tar.x({file: fileName, cwd: installFolder});
     }
 }
