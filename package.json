@@ -1,7 +1,13 @@
 {
   "name": "corepack",
-  "version": "0.2.0",
-  "bin": "./sources/main.ts",
+  "version": "0.3.0",
+  "bin": {
+    "corepack": "./dist/corepack.js",
+    "pnpm": "./dist/pnpm.js",
+    "pnpx": "./dist/pnpx.js",
+    "yarn": "./dist/yarn.js",
+    "yarnpkg": "./dist/yarnpkg.js"
+  },
   "packageManager": "yarn@^2.0.0-rc.29",
   "devDependencies": {
     "@babel/core": "^7.11.0",
@@ -46,7 +52,6 @@
     "shims"
   ],
   "publishConfig": {
-    "bin": "./dist/corepack.js",
     "executableFiles": [
       "./dist/npm.js",
       "./dist/npx.js",
