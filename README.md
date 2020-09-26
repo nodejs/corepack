@@ -1,16 +1,42 @@
-# <img src="./icon.svg" height="25" /> pmm
+# <img src="./icon.svg" height="25" /> corepack
 
-> A package manager manager - "This seal manages to keep the ball in balance on its nose."
+Corepack is a zero-runtime-dependency Node script that acts as a bridge between Node projects and the package managers they are intended to be used with during development.
 
-*Note: the `pmm` name (and other names) are temporary placeholders. This document mostly aims to address the design of the feature.*
+**Important:** At the moment, Corepack only covers Yarn and pnpm. Given that we have little control on the npm project, we prefer to focus on the Yarn and pnpm use cases. As a result, Corepack doesn't have any effect at all on the way you use npm.
 
-## Usage
+## How to Install
 
-Any of the following will work:
+### Default Installs
 
-### Prebuilt node
+Corepack isn't intended to be installed manually. While it's certainly possible, we're working with the Node TSC to provide Corepack by default starting from Node 15, thus ensuring that all package managers can be used with little to no friction.
 
-We have a few prebuilt Node binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable. It's likely the easiest way to get started!
+### Manual Installs
+
+<details>
+<summary>Click here to see how to install Corepack using npm</summary>
+
+First uninstall your global Yarn and pnpm binaries (just leave npm). In general, you'd do this by running the following command:
+
+```
+npm uninstall -g yarn pnpm
+```
+
+Then install Corepack:
+
+```
+npm install -g corepack
+```
+
+We do acknowledge the irony of using npm to install Corepack, which is why the preferred option is to use the Corepack version that will be distributed along with Node itself.
+
+</details>
+
+### Prebuilt Binaries
+
+<details>
+<summary>Click here to see how to download prebuilt Corepack Node distributions</summary>
+
+We have a few prebuilt Node binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable.
 
 1. Go to [this page](https://github.com/arcanis/pmm/actions?query=workflow%3ABuild)
 2. Open the latest build (the one at the top)
@@ -18,20 +44,57 @@ We have a few prebuilt Node binaries (based on the [following branch](https://gi
 4. Unzip the artifact, then untar it
 5. Add the `node-v15.0.0-nightlyYYYY-MM-DDXXXX-linux-x64/bin` directory to your `$PATH`
 
-### Docker 
+</details>
 
-1. `docker build -t pmm https://github.com/arcanis/pmm.git\#master:docker`
-2. `docker run -it pmm /bin/sh`
+## Usage
 
-3. Do whatever you want! The `node` / `npm` / `yarn` / `pnpm` binaries are there, via pmm. To take a look at the different workflows, here are some things you can try:
+Just use your package managers as you usually would. Run `yarn install` in Yarn projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack will catch these calls, and depending on the situation:
 
-    - Create a new folder, then run `yarn init`.
-    - Then try to run `npm install` in this same folder.
-    - Then open the package.json, and change the `packageManager` field to `1.10.0`. Try running `yarn --version`. See how fast it is?
+- **If the local project is configured for the package manager you're using**, Corepack will silently download and cache the latest compatible version.
 
-### Manual build
+- **If the local project is configured for a different package manager**, Corepack will request you to run the command again using the right package manager - thus avoiding corruptions of your install artifacts.
 
-If you want to do things yourself, you can build the project like this:
+- **If the local project isn't configured for any package manager**, Corepack will assume that you know what you're doing, and will use whatever package manager version has been pinned as "known good release". Check the relevant section for more details.
+
+## Known Good Releases
+
+When running Yarn or pnpm within projects that don't list a supported package manager, Corepack will default to a set of Known Good Releases. In a way, you can compare this to Node, where each version ships with a specific version of npm.
+
+The Known Good Releases can be updated system-wide using the `--activate` flag from the `corepack prepare` and `corepack hydrate` commands.
+
+## Offline Workflow
+
+The utility commands detailed in the next section.
+
+- Either you can use the network while building your container image, in which case you'll simply run `corepack prepare --cache-only <name>` to make sure that your image includes the Last Known Good release for the specified package manager.
+
+  - If you want to have *all* Last Known Good releases for all package managers, just use the `--all` flag which will do just that.
+
+- Or you're publishing your project to a system where the network is unavailable, in which case you'll preemptively generate a package manager archive from your local computer (using `corepack prepare`) before storing it somewhere your container will be able to access (for example within your repository). After that, it's just a matter of running `corepack hydrate <path/to/corepack>` to setup the cache.
+
+## Utility Commands
+
+### `corepack prepare [name@version]`
+
+| Option | Description |
+| --- | --- |
+| `--all` | Prepare the "Last Known Good" version of all supported package managers |
+| `--cache-only` | Just populate the cache, don't generate an archive |
+| `--activate` | Also update the "Last Known Good" release |
+
+This command will download the given package manager (or the one configured for the local project if no argument is passed in parameter) and store it within the Corepack cache. Unless the `--cache-only` flag is set, an archive will also be generated that can be used by the `corepack hydrate` command.
+
+### `corepack hydrate <path/to/corepack.tgz>`
+
+| Option | Description |
+| --- | --- |
+| `--activate` | Also update the "Last Known Good" release |
+
+This command will retrieve the given package manager from the specified archive and will install it within the Corepack cache, ready to be used without further network interaction.
+
+## Contributing
+
+If you want to build corepack yourself things yourself, you can build the project like this:
 
 1. Clone this repository
 2. Run `yarn build` (no need for `yarn install`)
@@ -40,81 +103,9 @@ If you want to do things yourself, you can build the project like this:
 
 You can also run the tests with `yarn jest` (still no install needed).
 
-## What problem does it solve?
+## Design
 
-Various problems arise from npm being the only package manager shipped by default:
-
-- Projects using popular package management solutions other than npm (particularly Yarn and pnpm) require additional installation step that must often be repeated when switching between Node versions. This lead to a significant part of the Node userbase effectively being a second-class citizen, which sounds unfortunate.
-
-- Because one package manager currently holds a special treatment, users are more likely to pick it even if they would choose another solution should they have the choice (it really depends on how they balance the tradeoffs, but sometimes they value simplicity over purely technical factors). This artificial barrier hurts our community by making it harder to pick the right tool for the job.
-
-- Having a single official package manager means that all the keys belong to a single player which can do whatever it pleases with it (even the Node project only has a limited influence over it, since removing the unique package manager would be poorly accepted by the community). Spreading these responsibilities over multiple projects gives less power to each, ensuring that everyone behave well.
-
-Discussion thread: https://github.com/nodejs/node/issues/15244
-
-## Envisioned workflow
-
-1. Users would install Node as usual.
-
-2. Node would be distributed slightly differently:
-
-    - Pmm would be included by Node out of the box.
-
-    - The full npm package wouldn't be included out of the box anymore (this might be an incremental move, with first a major version shipping pmm + npm, and the next one discarding npm).
-
-    - **However**, the Node distribution would include jump binaries for all three main package managers (`yarn`, `npm`, and `pnpm`) that would simply delegate to `pmm <package manager name>`. Pmm would then handle the install logic by following the logic described in later sections.
-
-    - Pmm could potentially be distributed as a Node subcommand rather than a standalone binary. In this case, commands in this document (such as `pmm install <name@version>`) would be replaced by `node --pmm install <name@version>` (or any other variant).
-
-3. Regular users would keep using the `yarn` / `npm` / `pnpm` global binaries just like they are used to. The one difference is that the package manager implementations would be lazily downloaded, without having to be manually installed (because the global jumpers would be included in the Node distribution, cf previous point).
-
-    - Projects that don't list the `packageManager` field would allow any package manager, and Pmm would install them based on predefined versions. Those versions will be frozen in time within Pmm itself to "known good values". For example, the default npm version could be 6.14.5, and the default Yarn one 1.22.4. Users that would want to upgrade to higher versions would just have to update the `packageManager` field (cf next section).
-
-4. Project authors would most of the time only have to care about the binaries as well, but they would be able to upgrade package manager versions simply by changing the versions set in the `packageManager` field.
-
-    - Pmm could reasonably provide some kind of basic CLI interface to select a version to upgrade to in a few keystrokes (similar to what `emsdk` does for the [emscripten toolchain](https://github.com/emscripten-core/emsdk#how-do-i-check-for-updates-to-the-emscripten-sdk), or what [nvm](https://github.com/nvm-sh/nvm) does for Node releases).
-
-5. Docker users would follow a similar workflow to other users; the default image would run network queries to install the right package manager for the project being installed.
-
-    - However, users with strong offline requirements would be able to run the `pmm install <name@version>` command when preparing their images. It would ensure that the requested package manager is made available for later use.
-
-    - Network access could be disabled entirely by setting `PMM_ENABLE_NETWORK=0` in the environmen - Pmm would then only use the package managers that got installed by prior `pmm install` calls.
-
-6. Package manager maintainers would submit a PR to the Node repository each time they wish for a new version to be made available through Pmm (can be easily automated using a GitHub Action on each of our repositories). Merging the PR would instantly make the new version available to Node users (once they upgrade).
-
-## How does it work?
-
-When any of the embed binaries are called (whether it's `yarn`, `npm`, or `pnpm`), the tool will find the closest ancestor `package.json` for the current directory. It will then extract the `packageManager` key, configured as such:
-
-```json
-{
-  "packageManager": "yarn@^2.0.0"
-}
-```
-
-The tool will then check whether it got called via the right binary endpoint (`npm` or `npx` when the package manager is configured for npm, `yarn` when configured for Yarn, etc), and will report an error otherwise. This ensures that we can't accidentally call, say, pnpm on an npm project (which would otherwise lead to diverging environments since the lockfiles and features wouldn't be the same depending on the interpreting package managers).
-
-If the check succeeded, the tool will check whether a compatible package manager has been installed (they're all stored on the disk in the local user's home folder). If not, it will install the latest matching release (based on the information dynamically retrieved from [`versions.json`](/versions.json)). Once it has ensured that a version exists, it'll forward the call to it.
-
-## Frequently asked questions
-
-**Why not just ask the user which package manager they want to use when installing Node?**
-
-Whether to use npm or Yarn or pnpm isn't up to the user but to each individual project. Different projects leverage different features from different package managers. For example one project might rely on the Yarn workspaces, whereas another has setup their repository with pnpm in mind.
-
-**How would things work with global packages?**
-
-Nothing would change in the context of this particular proposal. Npm would keep installing its globals alongside Node, and Yarn would keep installing them into the user's home directory.
-
-**Why not just keep only npm?**
-
-While npm is favored by the majority of the ecosystem, a significant portion decided to use different tools. Their use cases deserve to be heard rather than be discarded simply because a slightly higher percentage of users happens not to directly benefit from it. Additionally, keeping powers balanced is important - even more so given that npm is a corporate entity with little oversight.
-
-From the npm perspective, a project such as Pmm would also have its benefits: projects regularly break when upgrading from one Node version to another because of npm being upgraded as well. By pinning the package manager version, they would ensure that their users only upgrade when they are ready to, decreasing accidental frustration.
-
-## Known issues
-
-- The `pnpx` and `npx` binaries can only be called from within pnpm and npm projects, respectively. This is because otherwise we cannot infer the package manager version from the local manifest, as it would list another package manager instead. Fixing that is possible if we include "global installs" features inside pmm (so that we would fallback to the global `npx` in those circumstances). It seemed out of scope for the initial prototype, but we certainly can discuss it in an issue.
+Various tidbits about Corepack's design are explained in more details in [DESIGN.md](/DESIGN.md).
 
 ## License (MIT)
 

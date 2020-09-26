@@ -21,20 +21,20 @@ jobs:
       with:
         node-version: 14.x
 
-    - name: 'Build Node with pmm master'
+    - name: 'Build Node with corepack master'
       run: |
         yarn pack
         git clone -b mael/pmm --depth=1 https://github.com/arcanis/node.git node && cd node
         git config user.name 'John Doe'
         git config user.email 'john@example.org'
-        rm -rf deps/pmm && tar xvf ../package.tgz && mv package deps/pmm
-        git add . && git commit -m 'Updates pmm'
+        rm -rf deps/corepack && tar xvf ../package.tgz && mv package deps/corepack
+        git add . && git commit -m 'Updates corepack'
         ./configure
         DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
-        mv node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz node-pmm-${{matrix.platform[0]}}-x64.tar.gz
+        mv node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz node-corepack-${{matrix.platform[0]}}-x64.tar.gz
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: node-pmm-${{matrix.platform[0]}}-x64
-        path: node/node-pmm-${{matrix.platform[0]}}-x64.tar.gz
+        name: node-corepack-${{matrix.platform[0]}}-x64
+        path: node/node-corepack-${{matrix.platform[0]}}-x64.tar.gz

@@ -1,5 +1,5 @@
 {
-  "name": "@arcanis/pmm",
+  "name": "corepack",
   "version": "0.1.0",
   "bin": "./sources/main.ts",
   "packageManager": "yarn@^2.0.0-rc.29",
@@ -14,11 +14,16 @@
     "@types/node": "^13.9.2",
     "@types/semver": "^7.1.0",
     "@types/tar": "^4.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^4.2.0",
+    "@yarnpkg/eslint-config": "^0.1.0",
     "@yarnpkg/fslib": "^2.1.0",
     "@zkochan/cmd-shim": "^5.0.0",
     "clipanion": "^2.4.4",
     "debug": "^4.1.1",
     "enquirer": "^2.3.6",
+    "eslint": "^7.10.0",
+    "eslint-plugin-arca": "^0.9.5",
     "jest": "^25.1.0",
     "semver": "^7.1.3",
     "supports-color": "^7.1.0",
@@ -32,7 +37,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && yarn webpack && yarn ts-node ./mkshims.ts",
-    "pmm": "ts-node ./sources/main.ts",
+    "corepack": "ts-node ./sources/main.ts",
     "prepack": "yarn build",
     "postpack": "rm -rf dist shims"
   },
@@ -41,7 +46,7 @@
     "shims"
   ],
   "publishConfig": {
-    "bin": "./dist/pmm.js",
+    "bin": "./dist/corepack.js",
     "executableFiles": [
       "./dist/npm.js",
       "./dist/npx.js",
@@ -49,7 +54,7 @@
       "./dist/pnpx.js",
       "./dist/yarn.js",
       "./dist/yarnpkg.js",
-      "./dist/pmm.js",
+      "./dist/corepack.js",
       "./shims/npm",
       "./shims/npm.ps1",
       "./shims/npx",

@@ -1,3 +1,3 @@
 import makeDebug from 'debug';
 
-export const log = makeDebug(`pmm`);
+export const log = makeDebug(`corepack`);

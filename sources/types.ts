@@ -1,29 +1,29 @@
 export type BinSpec = {[key: string]: string};
-export type BinList = string[];
+export type BinList = Array<string>;
 
 export enum SupportedPackageManagers {
-    Npm = `npm`,
-    Pnpm = `pnpm`,
-    Yarn = `yarn`,
+  Npm = `npm`,
+  Pnpm = `pnpm`,
+  Yarn = `yarn`,
 }
 
 export const SupportedPackageManagerSet = new Set<string>(
-    Object.values(SupportedPackageManagers),
+  Object.values(SupportedPackageManagers),
 );
 
 export function isSupportedPackageManager(value: string): value is SupportedPackageManagers {
-    return SupportedPackageManagerSet.has(value);
+  return SupportedPackageManagerSet.has(value);
 }
 
 export interface NpmTagSpec {
-    type: `npm`;
-    package: string;
+  type: `npm`;
+  package: string;
 }
 
 export interface GitTagSpec {
-    type: `git`;
-    repository: string;
-    pattern: string;
+  type: `git`;
+  repository: string;
+  pattern: string;
 }
 
 export type TagSpec =
@@ -34,23 +34,24 @@ export type TagSpec =
  * Defines how the package manager is meant to be downloaded and accessed.
  */
 export interface PackageManagerSpec {
-    url: string;
-    bin: BinSpec | BinList;
-    tags: TagSpec;
-};
+  url: string;
+  bin: BinSpec | BinList;
+  tags: TagSpec;
+}
 
 /**
  * The data structure found in config.json
  */
 export interface Config {
-    definitions: {
-        [name in SupportedPackageManagers]?: {
-            default: string;
-            ranges: {
-                [range: string]: PackageManagerSpec;
-            };
-        };
+  definitions: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    [name in SupportedPackageManagers]?: {
+      default: string;
+      ranges: {
+        [range: string]: PackageManagerSpec;
+      };
     };
+  };
 }
 
 /**
@@ -58,28 +59,28 @@ export interface Config {
  * manager to use for the active project.
  */
 export interface Descriptor {
-    /**
+  /**
      * The name of the package manager required.
      */
-    name: SupportedPackageManagers;
+  name: SupportedPackageManagers;
 
-    /**
+  /**
      * The range of versions allowed.
      */
-    range: string;
+  range: string;
 }
 
 /**
- * 
+ *
  */
 export interface Locator {
-    /**
+  /**
      * The name of the package manager required.
      */
-    name: SupportedPackageManagers;
+  name: SupportedPackageManagers;
 
-    /**
+  /**
      * The exact version required.
      */
-    reference: string;
+  reference: string;
 }

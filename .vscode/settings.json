@@ -1,3 +1,9 @@
 {
-  "typescript.tsdk": ".vscode/pnpify/typescript/lib"
+  "typescript.tsdk": "/Users/mael.nison/pmpm/.yarn/sdks/typescript/lib",
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "eslint.nodePath": ".yarn/sdks",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
