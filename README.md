@@ -17,17 +17,20 @@ Corepack isn't intended to be installed manually. While it's certainly possible,
 
 First uninstall your global Yarn and pnpm binaries (just leave npm). In general, you'd do this by running the following command:
 
-```
+```shell
 npm uninstall -g yarn pnpm
+
+# That should be enough, but if you installed Yarn without going through npm it might
+# be more tedious - for example, you might need to run `brew uninstall yarn` as well.
 ```
 
 Then install Corepack:
 
-```
+```shell
 npm install -g corepack
 ```
 
-We do acknowledge the irony of using npm to install Corepack, which is why the preferred option is to use the Corepack version that will be distributed along with Node itself.
+We do acknowledge the irony and overhead of using npm to install Corepack, which is at least part of why the preferred option is to use the Corepack version that will be distributed along with Node itself.
 
 </details>
 
