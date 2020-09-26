@@ -1,6 +1,6 @@
 {
   "name": "corepack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "bin": "./sources/main.ts",
   "packageManager": "yarn@^2.0.0-rc.29",
   "devDependencies": {
