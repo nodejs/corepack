@@ -28,8 +28,11 @@ jobs:
         git config user.name 'John Doe'
         git config user.email 'john@example.org'
         rm -rf deps/corepack && tar xvf ../package.tgz && mv package deps/corepack
-        git add . && git commit -m 'Updates corepack'
-        git show --name-status
+        git add .
+        if ! git diff-index --quiet HEAD; then
+          git commit -m 'Updates corepack'
+          git show --name-status
+        fi
         ./configure
         DISTTYPE=nightly DATESTRING=YYYY-MM-DD COMMIT=XXXX make binary -j8
         mv node-v15.0.0-nightlyYYYY-MM-DDXXXX-*.tar.gz node-corepack-${{matrix.platform[0]}}-x64.tar.gz
