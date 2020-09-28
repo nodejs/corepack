@@ -3,3 +3,5 @@
 !/.yarn/releases
 /dist
 /package.tgz
+
+/shims
