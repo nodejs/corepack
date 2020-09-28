@@ -4,3 +4,5 @@
 !/.yarn/sdks
 /dist
 /package.tgz
+
+/shims
