@@ -2233,7 +2233,11 @@ __metadata:
     webpack: next
     webpack-cli: ^3.3.11
   bin:
-    corepack: ./sources/main.ts
+    corepack: ./dist/corepack.js
+    pnpm: ./dist/pnpm.js
+    pnpx: ./dist/pnpx.js
+    yarn: ./dist/yarn.js
+    yarnpkg: ./dist/yarnpkg.js
   languageName: unknown
   linkType: soft
 

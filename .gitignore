@@ -1,5 +1,6 @@
 /.yarn/*
 !/.yarn/cache
 !/.yarn/releases
+!/.yarn/sdks
 /dist
 /package.tgz
