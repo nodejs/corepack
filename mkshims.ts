@@ -30,7 +30,7 @@ async function main() {
       fs.writeFileSync(entryPath, entryScript);
       fs.chmodSync(entryPath, 0o755);
 
-      await cmdShim(entryPath, `${__dirname}/shims/${binaryName}`, {});
+      await cmdShim(entryPath, `${__dirname}/shims/${binaryName}`, {createCmdFile: true});
     }
   }
 
