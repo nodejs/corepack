@@ -10,17 +10,21 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version:
+        - 14.x
+        platform:
+        - ubuntu-latest
+        - macos-latest
 
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.platform}}
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Node.js ${{ matrix.node-version }}
+    - name: Install Node.js ${{matrix.node-version}}
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{matrix.node-version}}
 
     - run: yarn install --immutable
     - run: yarn build # We need the stubs to run the tests
