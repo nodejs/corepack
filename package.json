@@ -20,6 +20,7 @@
     "@types/node": "^13.9.2",
     "@types/semver": "^7.1.0",
     "@types/tar": "^4.0.3",
+    "@types/which": "^1.3.2",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^4.2.0",
     "@yarnpkg/eslint-config": "^0.1.0",
@@ -73,5 +74,8 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
+  },
+  "dependencies": {
+    "which": "^2.0.2"
   }
 }
