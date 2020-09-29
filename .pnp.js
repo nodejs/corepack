@@ -53,7 +53,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@yarnpkg/eslint-config", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:0.1.0"],
             ["@yarnpkg/fslib", "npm:2.1.0"],
             ["@zkochan/cmd-shim", "npm:5.0.0"],
-            ["clipanion", "npm:2.4.4"],
+            ["clipanion", "npm:2.6.2"],
             ["debug", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.1.1"],
             ["enquirer", "npm:2.3.6"],
             ["eslint", "npm:7.10.0"],
@@ -2376,10 +2376,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["clipanion", [
-        ["npm:2.4.4", {
-          "packageLocation": "./.yarn/cache/clipanion-npm-2.4.4-58c51b89cd-e31970cfc2.zip/node_modules/clipanion/",
+        ["npm:2.6.2", {
+          "packageLocation": "./.yarn/cache/clipanion-npm-2.6.2-65049fe240-d162deedd0.zip/node_modules/clipanion/",
           "packageDependencies": [
-            ["clipanion", "npm:2.4.4"]
+            ["clipanion", "npm:2.6.2"]
           ],
           "linkType": "HARD",
         }]
@@ -2582,7 +2582,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@yarnpkg/eslint-config", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:0.1.0"],
             ["@yarnpkg/fslib", "npm:2.1.0"],
             ["@zkochan/cmd-shim", "npm:5.0.0"],
-            ["clipanion", "npm:2.4.4"],
+            ["clipanion", "npm:2.6.2"],
             ["debug", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.1.1"],
             ["enquirer", "npm:2.3.6"],
             ["eslint", "npm:7.10.0"],

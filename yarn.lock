@@ -2046,10 +2046,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clipanion@npm:^2.4.4":
-  version: 2.4.4
-  resolution: "clipanion@npm:2.4.4"
-  checksum: e31970cfc24722c6decae89f0ba7615f5aca146a66de92cbdf9edd547fb6579749495b07dcfd2e35a6783b9e599f6c0dad0f801b1c849311a8b1cb5a1cb40a6e
+"clipanion@npm:^2.6.2":
+  version: 2.6.2
+  resolution: "clipanion@npm:2.6.2"
+  checksum: d162deedd0bd297f0881ef2814cf00409d2c67383589345cf8ae0ae6d9eee2e7235313b392dd3ec9df85490e4875dd52c085997e4161a6c8aa4ec0a2c78f8f36
   languageName: node
   linkType: hard
 
@@ -2225,7 +2225,7 @@ __metadata:
     "@yarnpkg/eslint-config": ^0.1.0
     "@yarnpkg/fslib": ^2.1.0
     "@zkochan/cmd-shim": ^5.0.0
-    clipanion: ^2.4.4
+    clipanion: ^2.6.2
     debug: ^4.1.1
     enquirer: ^2.3.6
     eslint: ^7.10.0

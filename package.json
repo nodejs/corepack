@@ -26,7 +26,7 @@
     "@yarnpkg/eslint-config": "^0.1.0",
     "@yarnpkg/fslib": "^2.1.0",
     "@zkochan/cmd-shim": "^5.0.0",
-    "clipanion": "^2.4.4",
+    "clipanion": "^2.6.2",
     "debug": "^4.1.1",
     "enquirer": "^2.3.6",
     "eslint": "^7.10.0",
