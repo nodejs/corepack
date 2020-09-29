@@ -7,7 +7,6 @@
   "eslint.nodePath": ".yarn/sdks",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll": true,
     "source.fixAll.eslint": true
   }
 }
