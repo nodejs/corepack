@@ -12,8 +12,8 @@ export function parseSpec(raw: unknown, source?: string): Descriptor {
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
   const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || !semver.validRange(match[2]))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver range`);
+  if (match === null || !semver.valid(match[2]))
+    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version`);
 
   if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
@@ -109,7 +109,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 }
 
 export async function persistPmSpec(updateTarget: string, locator: Locator, message: string) {
-  const newSpec = `${locator.name}@^${locator.reference}`;
+  const newSpec = `${locator.name}@${locator.reference}`;
 
   let res: boolean;
   try {
