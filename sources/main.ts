@@ -95,8 +95,6 @@ export function runMain(argv: Array<string>) {
   });
 }
 
-declare const __non_webpack_require__: any;
-
-if (typeof __non_webpack_require__ === `undefined` && process.mainModule === module)
+// Using `eval` to be sure that Webpack doesn't transform it
+if (process.mainModule === eval(`module`))
   runMain(process.argv.slice(2));
-

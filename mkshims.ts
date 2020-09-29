@@ -1,24 +1,14 @@
-import cmdShim                    from '@zkochan/cmd-shim';
-import fs                         from 'fs';
-import {SupportedPackageManagers} from 'sources/types';
+import cmdShim                      from '@zkochan/cmd-shim';
+import fs                           from 'fs';
 
-import config                     from './config.json';
+import {Engine}                     from './sources/Engine';
+import {SupportedPackageManagerSet} from './sources/types';
+
+const engine = new Engine();
 
 async function main() {
-  for (const packageManager of Object.keys(config.definitions) as Array<SupportedPackageManagers>) {
-    const binSet = new Set<string>();
-
-    for (const spec of Object.values(config.definitions[packageManager].ranges)) {
-      if (Array.isArray(spec.bin)) {
-        for (const entry of spec.bin) {
-          binSet.add(entry);
-        }
-      } else {
-        for (const entry of Object.keys(spec.bin)) {
-          binSet.add(entry);
-        }
-      }
-    }
+  for (const packageManager of SupportedPackageManagerSet) {
+    const binSet = engine.getBinariesFor(packageManager);
 
     for (const binaryName of binSet) {
       const entryPath = `${__dirname}/dist/${binaryName}.js`;
