@@ -1,9 +1,10 @@
-import {Command, UsageError} from 'clipanion';
-import fs                    from 'fs';
-import path                  from 'path';
-import which                 from 'which';
+import {Command, UsageError}                                   from 'clipanion';
+import fs                                                      from 'fs';
+import path                                                    from 'path';
+import which                                                   from 'which';
 
-import {Context}             from '../main';
+import {Context}                                               from '../main';
+import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
 
 export class DisableCommand extends Command<Context> {
   static usage = Command.Usage({
@@ -18,58 +19,59 @@ export class DisableCommand extends Command<Context> {
       `$0 disable`,
     ], [
       `Disable all shims, removing them from the specified directory`,
-      `$0 disable --bin-folder /path/to/bin`,
+      `$0 disable --install-directory /path/to/bin`,
     ], [
       `Disable the Yarn shim only`,
       `$0 disable yarn`,
     ]],
   });
 
-  @Command.String(`--target`)
-  binFolder?: string;
+  @Command.String(`--install-directory`)
+  installDirectory?: string;
 
   @Command.Rest()
   names: Array<string> = [];
 
   @Command.Path(`disable`)
   async execute() {
-    let binFolder = this.binFolder;
+    let installDirectory = this.installDirectory;
 
     // Node always call realpath on the module it executes, so we already
     // lost track of how the binary got called. To find it back, we need to
     // iterate over the PATH variable.
-    if (typeof binFolder === `undefined`)
-      binFolder = path.dirname(await which(`corepack`));
+    if (typeof installDirectory === `undefined`)
+      installDirectory = path.dirname(await which(`corepack`));
 
     if (process.platform === `win32`) {
-      return this.executeWin32(binFolder);
+      return this.executeWin32(installDirectory);
     } else {
-      return this.executePosix(binFolder);
+      return this.executePosix(installDirectory);
     }
   }
 
-  async executePosix(binFolder: string) {
-    // We use `eval` so that Webpack doesn't statically transform it.
-    const stubFolder = path.dirname(eval(`__dirname`));
+  async executePosix(installDirectory: string) {
+    const names = this.names.length === 0
+      ? SupportedPackageManagerSet
+      : this.names;
 
-    for (const name of this.names) {
-      const file = path.join(binFolder, name);
-      const symlink = path.relative(binFolder, path.join(stubFolder, name));
+    for (const name of new Set(names)) {
+      if (!isSupportedPackageManager(name))
+        throw new UsageError(`Invalid package manager name '${name}'`);
 
-      if (fs.existsSync(file)) {
-        const currentSymlink = await fs.promises.readlink(file);
-        if (currentSymlink !== symlink) {
+      for (const binName of this.context.engine.getBinariesFor(name)) {
+        const file = path.join(installDirectory, binName);
+        try {
           await fs.promises.unlink(file);
-        } else {
-          return;
+        } catch (err) {
+          if (err.code !== `ENOENT`) {
+            throw err;
+          }
         }
       }
-
-      await fs.promises.symlink(symlink, file);
     }
   }
 
-  async executeWin32(target: string) {
+  async executeWin32(installDirectory: string) {
     throw new UsageError(`This command isn't available on Windows at this time`);
   }
 }

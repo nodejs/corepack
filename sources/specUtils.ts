@@ -1,11 +1,11 @@
-import {UsageError}                                                                from 'clipanion';
-import Enquirer                                                                    from 'enquirer';
-import fs                                                                          from 'fs';
-import path                                                                        from 'path';
-import semver                                                                      from 'semver';
+import {UsageError}                                     from 'clipanion';
+import Enquirer                                         from 'enquirer';
+import fs                                               from 'fs';
+import path                                             from 'path';
+import semver                                           from 'semver';
 
-import * as miscUtils                                                              from './miscUtils';
-import {SupportedPackageManagers, SupportedPackageManagerSet, Descriptor, Locator} from './types';
+import * as miscUtils                                   from './miscUtils';
+import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 export function parseSpec(raw: unknown, source?: string): Descriptor {
   if (typeof raw !== `string`)
@@ -15,11 +15,11 @@ export function parseSpec(raw: unknown, source?: string): Descriptor {
   if (match === null || !semver.validRange(match[2]))
     throw new UsageError(`Invalid package manager specification in ${source}; expected a semver range`);
 
-  if (!SupportedPackageManagerSet.has(match[1]))
+  if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
 
   return {
-    name: match[1] as SupportedPackageManagers,
+    name: match[1],
     range: match[2],
   };
 }
@@ -52,16 +52,14 @@ export async function findProjectSpec(initialCwd: string, locator: Locator): Pro
       case `NoSpec`: {
         // A locator is a valid descriptor (but not the other way around)
         return {name: locator.name, range: locator.reference};
-      } break;
-
+      }
       case `Found`: {
         if (result.spec.name !== locator.name) {
           throw new UsageError(`This project is configured to use ${result.spec.name}`);
         } else {
           return result.spec;
         }
-      } break;
-    }
+      }    }
   }
 }
 

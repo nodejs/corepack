@@ -7,12 +7,12 @@ export enum SupportedPackageManagers {
   Yarn = `yarn`,
 }
 
-export const SupportedPackageManagerSet = new Set<string>(
+export const SupportedPackageManagerSet = new Set<SupportedPackageManagers>(
   Object.values(SupportedPackageManagers),
 );
 
 export function isSupportedPackageManager(value: string): value is SupportedPackageManagers {
-  return SupportedPackageManagerSet.has(value);
+  return SupportedPackageManagerSet.has(value as SupportedPackageManagers);
 }
 
 export interface NpmTagSpec {

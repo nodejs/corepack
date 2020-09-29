@@ -5,6 +5,7 @@
         "esModuleInterop": true,
         "experimentalDecorators": true,
         "moduleResolution": "node",
+        "noEmit": true,
         "forceConsistentCasingInFileNames": true,
         "lib": ["dom", "es2017", "esnext.asynciterable"],
         "module": "commonjs",

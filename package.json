@@ -40,13 +40,15 @@
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7",
     "webpack": "next",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "which": "^2.0.2"
   },
   "scripts": {
     "build": "rm -rf dist && webpack && ts-node ./mkshims.ts",
     "corepack": "ts-node ./sources/main.ts",
     "prepack": "node ./.yarn/releases/*.*js build",
-    "postpack": "rm -rf dist shims"
+    "postpack": "rm -rf dist shims",
+    "test": "yarn jest"
   },
   "files": [
     "dist",
@@ -74,8 +76,5 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
-  },
-  "dependencies": {
-    "which": "^2.0.2"
   }
 }

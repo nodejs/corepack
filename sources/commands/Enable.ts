@@ -1,9 +1,10 @@
-import {Command, UsageError} from 'clipanion';
-import fs                    from 'fs';
-import path                  from 'path';
-import which                 from 'which';
+import {Command, UsageError}                                   from 'clipanion';
+import fs                                                      from 'fs';
+import path                                                    from 'path';
+import which                                                   from 'which';
 
-import {Context}             from '../main';
+import {Context}                                               from '../main';
+import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
 
 export class EnableCommand extends Command<Context> {
   static usage = Command.Usage({
@@ -25,33 +26,60 @@ export class EnableCommand extends Command<Context> {
     ]],
   });
 
-  @Command.String(`--target`)
-  binFolder?: string;
+  @Command.String(`--install-directory`)
+  installDirectory?: string;
 
   @Command.Rest()
   names: Array<string> = [];
 
   @Command.Path(`enable`)
   async execute() {
-    let binFolder = this.binFolder;
+    let installDirectory = this.installDirectory;
 
     // Node always call realpath on the module it executes, so we already
     // lost track of how the binary got called. To find it back, we need to
     // iterate over the PATH variable.
-    if (typeof binFolder === `undefined`)
-      binFolder = path.dirname(await which(`corepack`));
+    if (typeof installDirectory === `undefined`)
+      installDirectory = path.dirname(await which(`corepack`));
 
     if (process.platform === `win32`) {
-      return this.executeWin32(binFolder);
+      return this.executeWin32(installDirectory);
     } else {
-      return this.executePosix(binFolder);
+      return this.executePosix(installDirectory);
     }
   }
 
-  async executePosix(binFolder: string) {
-    for (const name of this.names) {
-      const file = path.join(binFolder, name);
-      await fs.promises.unlink(file);
+  async executePosix(installDirectory: string) {
+    // We use `eval` so that Webpack doesn't statically transform it.
+    const manifestPath = eval(`require`).resolve(`corepack/package.json`);
+
+    const stubFolder = path.join(path.dirname(manifestPath), `shims`);
+    if (!fs.existsSync(stubFolder))
+      throw new Error(`Assertion failed: The stub folder doesn't exist`);
+
+    const names = this.names.length === 0
+      ? SupportedPackageManagerSet
+      : this.names;
+
+    for (const name of new Set(names)) {
+      if (!isSupportedPackageManager(name))
+        throw new UsageError(`Invalid package manager name '${name}'`);
+
+      for (const binName of this.context.engine.getBinariesFor(name)) {
+        const file = path.join(installDirectory, binName);
+        const symlink = path.relative(installDirectory, path.join(stubFolder, binName));
+
+        if (fs.existsSync(file)) {
+          const currentSymlink = await fs.promises.readlink(file);
+          if (currentSymlink !== symlink) {
+            await fs.promises.unlink(file);
+          } else {
+            return;
+          }
+        }
+
+        await fs.promises.symlink(symlink, file);
+      }
     }
   }
 
