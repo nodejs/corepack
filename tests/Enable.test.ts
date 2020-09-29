@@ -29,6 +29,8 @@ describe(`EnableCommand`, () => {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
           exitCode: 0,
+          stdout: ``,
+          stderr: ``,
         });
       } finally {
         process.env.PATH = PATH;
@@ -53,6 +55,8 @@ describe(`EnableCommand`, () => {
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         exitCode: 0,
+        stdout: ``,
+        stderr: ``,
       });
 
       const sortedEntries = xfs.readdirPromise(cwd).then(entries => {
@@ -77,6 +81,8 @@ describe(`EnableCommand`, () => {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
           exitCode: 0,
+          stdout: ``,
+          stderr: ``,
         });
       } finally {
         process.env.PATH = PATH;
