@@ -75,7 +75,7 @@ export class PrepareCommand extends Command<Context> {
         throw new UsageError(`Failed to successfully resolve '${spec.range}' to a valid ${spec.name} release`);
 
       const baseInstallFolder = folderUtils.getInstallFolder();
-      const installFolder = await this.context.engine.ensurePackageManager(resolved);
+      const installSpec = await this.context.engine.ensurePackageManager(resolved);
 
       if (this.activate)
         await this.context.engine.activatePackageManager(resolved);
@@ -87,7 +87,7 @@ export class PrepareCommand extends Command<Context> {
         ? path.join(this.context.cwd, `corepack-${resolved.name}-${resolved.reference}.tgz`)
         : path.join(this.context.cwd, `corepack-${resolved.name}.tgz`);
 
-      await tar.c({gzip: true, cwd: baseInstallFolder, file: fileName}, [path.relative(baseInstallFolder, installFolder)]);
+      await tar.c({gzip: true, cwd: baseInstallFolder, file: fileName}, [path.relative(baseInstallFolder, installSpec.location)]);
 
       if (this.json) {
         this.context.stdout.write(`${JSON.stringify(fileName)}\n`);

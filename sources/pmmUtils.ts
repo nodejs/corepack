@@ -119,22 +119,6 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       sendTo.on(`finish`, resolve);
     });
 
-    await fs.promises.mkdir(path.join(tmpFolder, `.bin`));
-
-    if (Array.isArray(spec.bin)) {
-      if (outputFile !== null) {
-        for (const name of spec.bin) {
-          await fsUtils.makeShim(path.join(tmpFolder, `.bin`, name), outputFile);
-        }
-      } else {
-        throw new Error(`Assertion failed`);
-      }
-    } else {
-      for (const [name, dest] of Object.entries(spec.bin)) {
-        fsUtils.makeShim(path.join(tmpFolder, `.bin`, name), path.join(tmpFolder, dest));
-      }
-    }
-
     await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
     await fs.promises.rename(tmpFolder, installFolder);
 
@@ -143,8 +127,21 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   });
 }
 
-export async function runVersion(installTarget: string, locator: Locator, binName: string, args: Array<string>, context: Context) {
-  const binPath = path.join(installTarget, `.bin`, binName);
+export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, locator: Locator, binName: string, args: Array<string>, context: Context) {
+  let binPath: string | null = null;
+  if (Array.isArray(installSpec.spec.bin)) {
+    binPath = path.join(installSpec.location, `${binName}.js`);
+  } else {
+    for (const [name, dest] of Object.entries(installSpec.spec.bin)) {
+      if (name === binName) {
+        binPath = path.join(installSpec.location, dest);
+        break;
+      }
+    }
+  }
+
+  if (!binPath)
+    throw new Error(`Assertion failed: Unable to locate bin path`);
 
   return new Promise<number>((resolve, reject) => {
     process.on(`SIGINT`, () => {
@@ -162,7 +159,7 @@ export async function runVersion(installTarget: string, locator: Locator, binNam
     if (context.stderr === process.stderr)
       stdio[2] = `inherit`;
 
-    const sub = spawn(process.execPath, [binPath, ...args], {
+    const sub = spawn(process.execPath, [binPath!, ...args], {
       cwd: context.cwd,
       stdio,
     });
