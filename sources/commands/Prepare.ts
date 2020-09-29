@@ -11,10 +11,10 @@ export class PrepareCommand extends Command<Context> {
   static usage = Command.Usage({
     description: `Generate a package manager archive`,
     details: `
-            This command generates an archive for the specified package manager, in a format suitable for later hydratation via the \`corepack hydrate\` command.
+      This command generates an archive for the specified package manager, in a format suitable for later hydratation via the \`corepack hydrate\` command.
 
-            If run without parameter, it'll extract the package manager spec from the active project. Otherwise an explicit spec string is required, that Corepack will resolve before installing and packing.
-        `,
+      If run without parameter, it'll extract the package manager spec from the active project. Otherwise an explicit spec string is required, that Corepack will resolve before installing and packing.
+    `,
     examples: [[
       `Generate an archive from the active project`,
       `$0 prepare`,

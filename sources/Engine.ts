@@ -1,17 +1,34 @@
-import {UsageError}                                                                        from 'clipanion';
-import fs                                                                                  from 'fs';
-import path                                                                                from 'path';
-import semver                                                                              from 'semver';
+import {UsageError}                                           from 'clipanion';
+import fs                                                     from 'fs';
+import path                                                   from 'path';
+import semver                                                 from 'semver';
 
-import defaultConfig                                                                       from '../config.json';
+import defaultConfig                                          from '../config.json';
 
-import * as folderUtils                                                                    from './folderUtils';
-import * as pmmUtils                                                                       from './pmmUtils';
-import {Config, Descriptor, Locator, SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import * as folderUtils                                       from './folderUtils';
+import * as pmmUtils                                          from './pmmUtils';
+import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import {Config, Descriptor, Locator}                          from './types';
 
 
 export class Engine {
-  constructor(private config: Config = defaultConfig as Config) {
+  constructor(public config: Config = defaultConfig as Config) {
+  }
+
+  getBinariesFor(name: SupportedPackageManagers) {
+    const binNames = new Set<string>();
+
+    for (const rangeDefinition of Object.values(this.config.definitions[name]!.ranges)) {
+      const bins = Array.isArray(rangeDefinition.bin)
+        ? rangeDefinition.bin
+        : Object.keys(rangeDefinition.bin);
+
+      for (const name of bins) {
+        binNames.add(name);
+      }
+    }
+
+    return binNames;
   }
 
   async getDefaultDescriptors() {

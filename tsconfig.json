@@ -1,15 +1,16 @@
 {
-    "compilerOptions": {
-        "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
-        "esModuleInterop": true,
-        "experimentalDecorators": true,
-        "moduleResolution": "node",
-        "forceConsistentCasingInFileNames": true,
-        "lib": ["dom", "es2017", "esnext.asynciterable"],
-        "module": "commonjs",
-        "resolveJsonModule": true,
-        "strict": true,
-        "target": "es2017"
-    }
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["dom", "es2017", "esnext.asynciterable"],
+    "module": "commonjs",
+    "resolveJsonModule": true,
+    "strict": true,
+    "target": "es2017"
+  }
 }

@@ -22,6 +22,7 @@ module.exports = {
         options: {
           compilerOptions: {
             module: `es6`,
+            noEmit: false,
           },
         },
       },

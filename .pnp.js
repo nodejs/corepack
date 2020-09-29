@@ -47,6 +47,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:13.9.2"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
+            ["@types/which", "npm:1.3.2"],
             ["@typescript-eslint/eslint-plugin", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:2.34.0"],
             ["@typescript-eslint/parser", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.2.0"],
             ["@yarnpkg/eslint-config", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:0.1.0"],
@@ -66,7 +67,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ts-node", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:8.10.2"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=5b02a2"],
             ["webpack", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:5.0.0-beta.23"],
-            ["webpack-cli", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.3.11"]
+            ["webpack-cli", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.3.11"],
+            ["which", "npm:2.0.2"]
           ],
           "linkType": "SOFT",
         }]
@@ -1172,6 +1174,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/tar", "npm:4.0.3"],
             ["@types/minipass", "npm:2.2.0"],
             ["@types/node", "npm:13.9.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@types/which", [
+        ["npm:1.3.2", {
+          "packageLocation": "./.yarn/cache/@types-which-npm-1.3.2-7f927243ae-ffb779f93f.zip/node_modules/@types/which/",
+          "packageDependencies": [
+            ["@types/which", "npm:1.3.2"]
           ],
           "linkType": "HARD",
         }]
@@ -2565,6 +2576,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:13.9.2"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
+            ["@types/which", "npm:1.3.2"],
             ["@typescript-eslint/eslint-plugin", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:2.34.0"],
             ["@typescript-eslint/parser", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.2.0"],
             ["@yarnpkg/eslint-config", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:0.1.0"],
@@ -2584,7 +2596,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ts-node", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:8.10.2"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=5b02a2"],
             ["webpack", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:5.0.0-beta.23"],
-            ["webpack-cli", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.3.11"]
+            ["webpack-cli", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.3.11"],
+            ["which", "npm:2.0.2"]
           ],
           "linkType": "SOFT",
         }]
