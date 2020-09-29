@@ -48,8 +48,8 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
         if (resolved === null)
           throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-        const installTarget = await context.engine.ensurePackageManager(resolved);
-        const exitCode = await pmmUtils.runVersion(installTarget, resolved, binaryName, this.proxy, this.context);
+        const installSpec = await context.engine.ensurePackageManager(resolved);
+        const exitCode = await pmmUtils.runVersion(installSpec, resolved, binaryName, this.proxy, this.context);
 
         return exitCode;
       }

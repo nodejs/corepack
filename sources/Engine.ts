@@ -77,9 +77,14 @@ export class Engine {
     if (typeof range === `undefined`)
       throw new Error(`Assertion failed: Specified resolution (${locator.reference}) isn't supported by any of ${ranges.join(`, `)}`);
 
-    return await pmmUtils.installVersion(folderUtils.getInstallFolder(), locator, {
+    const installedLocation = await pmmUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec: definition.ranges[range],
     });
+
+    return {
+      location: installedLocation,
+      spec: definition.ranges[range],
+    };
   }
 
   async resolveDescriptor(descriptor: Descriptor, {useCache = true}: {useCache?: boolean} = {}) {
