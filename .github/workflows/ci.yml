@@ -2,25 +2,31 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [14.x]
+        node:
+        - 14
+        platform:
+        - ubuntu-latest
+        - macos-latest
 
-    runs-on: ubuntu-latest
+    name: '${{matrix.platform}} w/ Node.js ${{matrix.node}}.x'
+    runs-on: ${{matrix.platform}}
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+    - name: 'Use Node.js ${{matrix.node}}.x'
+      uses: actions/setup-node@master
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{matrix.node}}.x
 
     - run: yarn install --immutable
     - run: yarn build # We need the stubs to run the tests
