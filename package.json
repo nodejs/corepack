@@ -42,9 +42,9 @@
     "webpack-cli": "^3.3.11"
   },
   "scripts": {
-    "build": "rm -rf dist && yarn webpack && yarn ts-node ./mkshims.ts",
+    "build": "rm -rf dist && webpack && ts-node ./mkshims.ts",
     "corepack": "ts-node ./sources/main.ts",
-    "prepack": "yarn build",
+    "prepack": "node ./.yarn/releases/*.*js build",
     "postpack": "rm -rf dist shims"
   },
   "files": [

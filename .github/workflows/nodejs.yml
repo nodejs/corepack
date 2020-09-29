@@ -22,5 +22,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    - run: yarn install --immutable
     - run: yarn eslint
     - run: yarn jest
