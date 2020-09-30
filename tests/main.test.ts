@@ -1,11 +1,11 @@
-import {Filename, ppath, xfs} from '@yarnpkg/fslib';
+import {Filename, ppath, xfs, npath} from '@yarnpkg/fslib';
 
-import config                 from '../config.json';
+import config                        from '../config.json';
 
-import {runCli}               from './_runCli';
+import {runCli}                      from './_runCli';
 
 beforeEach(async () => {
-  process.env.COREPACK_HOME = await xfs.mktempPromise();
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
 for (const [name, version] of [[`yarn`, `1.22.4`], [`yarn`, `2.0.0-rc.30`], [`pnpm`, `4.11.6`], [`npm`, `6.14.2`]]) {
@@ -169,7 +169,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
     });
 
     // Use a new cache
-    process.env.COREPACK_HOME = await xfs.mktempPromise();
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 
     // Disable the network to make sure we don't succeed by accident
     process.env.COREPACK_ENABLE_NETWORK = `0`;
@@ -191,5 +191,23 @@ it(`should support hydrating package managers from cached archives`, async () =>
     } finally {
       delete process.env.COREPACK_ENABLE_NETWORK;
     }
+  });
+});
+
+it(`should support running package managers with bin array`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `yarnpkg`, `--version`])).resolves.toMatchObject({
+      stdout: `2.2.2\n`,
+      exitCode: 0,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      stdout: `2.2.2\n`,
+      exitCode: 0,
+    });
   });
 });
