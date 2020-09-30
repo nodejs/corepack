@@ -130,7 +130,13 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, locator: Locator, binName: string, args: Array<string>, context: Context) {
   let binPath: string | null = null;
   if (Array.isArray(installSpec.spec.bin)) {
-    binPath = path.join(installSpec.location, `${binName}.js`);
+    if (installSpec.spec.bin.some(bin => bin === binName)) {
+      const parsedUrl = new URL(installSpec.spec.url);
+      const ext = path.posix.extname(parsedUrl.pathname);
+      if (ext === `.js`) {
+        binPath = path.join(installSpec.location, path.posix.basename(parsedUrl.pathname));
+      }
+    }
   } else {
     for (const [name, dest] of Object.entries(installSpec.spec.bin)) {
       if (name === binName) {
@@ -141,7 +147,7 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   }
 
   if (!binPath)
-    throw new Error(`Assertion failed: Unable to locate bin path`);
+    throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
   return new Promise<number>((resolve, reject) => {
     process.on(`SIGINT`, () => {

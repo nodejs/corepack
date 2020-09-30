@@ -193,3 +193,21 @@ it(`should support hydrating package managers from cached archives`, async () =>
     }
   });
 });
+
+it(`should support running package managers with bin array`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `yarnpkg`, `--version`])).resolves.toMatchObject({
+      stdout: `2.2.2\n`,
+      exitCode: 0,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      stdout: `2.2.2\n`,
+      exitCode: 0,
+    });
+  });
+});
