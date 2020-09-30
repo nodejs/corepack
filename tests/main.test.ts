@@ -55,6 +55,23 @@ it(`should request for the project to be configured if it doesn't exist`, async 
   });
 });
 
+it(`shouldn't request for the project to be configured if using a transparent command`, async () => {
+  // @ts-ignore
+  const spy = jest.spyOn(Enquirer, `prompt`, `get`)
+  // @ts-ignore
+    .mockReturnValue(() => Promise.resolve(true));
+
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`yarn`, `init`])).resolves.toMatchObject({
+      exitCode: 0,
+    });
+
+    await expect(spy).toHaveBeenCalledTimes(0);
+
+    expect(xfs.existsSync(ppath.join(cwd, `package.json` as Filename))).toEqual(true);
+  });
+});
+
 it(`should use the pinned version when local projects don't list any spec`, async () => {
   // Note that we don't prevent using any package manager. This ensures that
   // projects will receive as little disruption as possible (for example, we
