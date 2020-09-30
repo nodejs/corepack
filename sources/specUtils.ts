@@ -10,8 +10,8 @@ export function parseSpec(raw: unknown, source?: string): Descriptor {
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
   const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || !semver.validRange(match[2]))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver range`);
+  if (match === null || !semver.valid(match[2]))
+    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version`);
 
   if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
