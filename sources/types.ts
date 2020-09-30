@@ -46,7 +46,26 @@ export interface Config {
   definitions: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [name in SupportedPackageManagers]?: {
+      /**
+       * Defines the version that needs to be used when running commands within
+       * projects that don't list any preference.
+       */
       default: string;
+
+      /**
+       * Defines a set of commands that are fine to run even if the user isn't
+       * in a project configured for the specified package manager. For instance,
+       * we would use that to be able to run "pnpx" even inside Yarn projects.
+       */
+      transparent: {
+        default?: string;
+        commands: Array<Array<string>>;
+      };
+
+      /**
+       * Defines how to retrieve the package manager's sources, depending on
+       * the chosen version.
+       */
       ranges: {
         [range: string]: PackageManagerSpec;
       };

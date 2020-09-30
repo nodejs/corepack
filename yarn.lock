@@ -2227,7 +2227,6 @@ __metadata:
     "@zkochan/cmd-shim": ^5.0.0
     clipanion: ^2.6.2
     debug: ^4.1.1
-    enquirer: ^2.3.6
     eslint: ^7.10.0
     eslint-plugin-arca: ^0.9.5
     jest: ^25.1.0
@@ -2552,7 +2551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enquirer@npm:^2.3.5, enquirer@npm:^2.3.6":
+"enquirer@npm:^2.3.5":
   version: 2.3.6
   resolution: "enquirer@npm:2.3.6"
   dependencies:

@@ -1,5 +1,4 @@
 import {Filename, ppath, xfs} from '@yarnpkg/fslib';
-import Enquirer               from 'enquirer';
 
 import config                 from '../config.json';
 
@@ -24,7 +23,7 @@ for (const [name, version] of [[`yarn`, `1.22.4`], [`yarn`, `2.0.0-rc.30`], [`pn
   });
 }
 
-it(`shouldn't allow to use Yarn for npm-configured projects`, async () => {
+it(`shouldn't allow using regular Yarn commands on npm-configured projects`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `npm@6.14.2`,
@@ -36,21 +35,22 @@ it(`shouldn't allow to use Yarn for npm-configured projects`, async () => {
   });
 });
 
-it(`should request for the project to be configured if it doesn't exist`, async () => {
-  // @ts-ignore
-  const spy = jest.spyOn(Enquirer, `prompt`, `get`)
-  // @ts-ignore
-    .mockReturnValue(() => Promise.resolve(true));
-
+it(`should allow using transparent commands on npm-configured projects`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`yarn`, `yarn`])).resolves.toMatchObject({
-      exitCode: 0,
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `npm@6.14.2`,
     });
 
-    await expect(spy).toHaveBeenCalledTimes(1);
+    await expect(runCli(cwd, [`yarn`, `yarn`, `dlx`, `cat@0.2.0`, __filename])).resolves.toMatchObject({
+      exitCode: 0,
+    });
+  });
+});
 
-    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toEqual({
-      packageManager: expect.stringMatching(/^yarn@/),
+it(`should transparently use the preconfigured version when there is no local project`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
     });
   });
 });

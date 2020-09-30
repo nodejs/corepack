@@ -1,10 +1,8 @@
 import {UsageError}                                     from 'clipanion';
-import Enquirer                                         from 'enquirer';
 import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
-import * as miscUtils                                   from './miscUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 export function parseSpec(raw: unknown, source?: string): Descriptor {
@@ -40,26 +38,31 @@ export function parseSpec(raw: unknown, source?: string): Descriptor {
  * project using the default package managers, and configure it so that we
  * don't need to ask again in the future.
  */
-export async function findProjectSpec(initialCwd: string, locator: Locator): Promise<Descriptor> {
+export async function findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+  // A locator is a valid descriptor (but not the other way around)
+  const fallbackLocator = {name: locator.name, range: locator.reference};
+
   while (true) {
     const result = await loadSpec(initialCwd);
 
     switch (result.type) {
-      case `NoProject`: {
-        await initProjectAndSpec(result.target, locator);
+      case `NoProject`:
+      case `NoSpec`: {
+        return fallbackLocator;
       } break;
 
-      case `NoSpec`: {
-        // A locator is a valid descriptor (but not the other way around)
-        return {name: locator.name, range: locator.reference};
-      }
       case `Found`: {
         if (result.spec.name !== locator.name) {
-          throw new UsageError(`This project is configured to use ${result.spec.name}`);
+          if (transparent) {
+            return fallbackLocator;
+          } else {
+            throw new UsageError(`This project is configured to use ${result.spec.name}`);
+          }
         } else {
           return result.spec;
         }
-      }    }
+      } break;
+    }
   }
 }
 
@@ -106,45 +109,4 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     type: `Found`,
     spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
   };
-}
-
-export async function persistPmSpec(updateTarget: string, locator: Locator, message: string) {
-  const newSpec = `${locator.name}@${locator.reference}`;
-
-  let res: boolean;
-  try {
-    res = await Enquirer.prompt([{
-      type: `confirm`,
-      name: `confirm`,
-      initial: true,
-      message: message.replace(`{}`, newSpec),
-    }]);
-  } catch (err) {
-    if (err === ``) {
-      res = false;
-    } else {
-      throw err;
-    }
-  }
-
-  if (!res)
-    throw new miscUtils.Cancellation();
-
-  const content = fs.existsSync(updateTarget)
-    ? await fs.promises.readFile(updateTarget, `utf8`)
-    : `{}`;
-
-  const data = JSON.parse(content);
-  data.packageManager = newSpec;
-
-  const serialized = JSON.stringify(data, null, 2);
-  await fs.promises.writeFile(updateTarget, `${serialized}\n`);
-}
-
-export async function initProjectAndSpec(updateTarget: string, locator: Locator) {
-  return await persistPmSpec(updateTarget, locator, `No configured project yet; set it to {}?`);
-}
-
-export async function initSpec(updateTarget: string, locator: Locator) {
-  return await persistPmSpec(updateTarget, locator, `No configured local package manager yet; set it to {}?`);
 }
