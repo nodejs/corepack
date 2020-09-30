@@ -8,7 +8,7 @@
     "yarn": "./dist/yarn.js",
     "yarnpkg": "./dist/yarnpkg.js"
   },
-  "packageManager": "yarn@^2.0.0-rc.29",
+  "packageManager": "yarn@2.0.0-rc.29",
   "devDependencies": {
     "@babel/core": "^7.11.0",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
@@ -28,7 +28,6 @@
     "@zkochan/cmd-shim": "^5.0.0",
     "clipanion": "^2.4.4",
     "debug": "^4.1.1",
-    "enquirer": "^2.3.6",
     "eslint": "^7.10.0",
     "eslint-plugin-arca": "^0.9.5",
     "jest": "^25.1.0",
