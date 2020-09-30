@@ -9,7 +9,7 @@ import {runCli}                                               from './_runCli';
 const engine = new Engine();
 
 beforeEach(async () => {
-  process.env.COREPACK_HOME = await xfs.mktempPromise();
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
 async function makeBin(cwd: PortablePath, name: Filename) {
