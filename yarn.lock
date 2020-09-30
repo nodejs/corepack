@@ -403,6 +403,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/plugin-proposal-nullish-coalescing-operator@npm:^7.10.4":
+  version: 7.10.4
+  resolution: "@babel/plugin-proposal-nullish-coalescing-operator@npm:7.10.4"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.10.4
+    "@babel/plugin-syntax-nullish-coalescing-operator": ^7.8.0
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 5a20d8bcbf2926dde3e9edcf847eaa5485d0d0fea76d0683ef1cafb11e0c35e46620391916283e1a9c0f76351e8c5ecccebf0d3a6bdf24559c5ad381433a0e3a
+  languageName: node
+  linkType: hard
+
 "@babel/plugin-syntax-bigint@npm:^7.0.0":
   version: 7.8.3
   resolution: "@babel/plugin-syntax-bigint@npm:7.8.3"
@@ -422,6 +434,17 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 61a68e950b42ab211b20483692b899daa7fe5622568ebdca427dff5f5bb7fba7c62da15f69219e2b5758429bfa11fa6891c6bb1cab24b242f007da0c461288d3
+  languageName: node
+  linkType: hard
+
+"@babel/plugin-syntax-nullish-coalescing-operator@npm:^7.8.0":
+  version: 7.8.3
+  resolution: "@babel/plugin-syntax-nullish-coalescing-operator@npm:7.8.3"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.8.0
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 4ba03753759a2d9783b792c060147a20f474f76c42edf77cbf89c6669f9f22ffb3cbba4facdd8ce651129db6089a81feca1f7e42da75244eabedecba37bd20be
   languageName: node
   linkType: hard
 
@@ -2212,6 +2235,7 @@ __metadata:
     "@babel/core": ^7.11.0
     "@babel/plugin-proposal-class-properties": ^7.10.4
     "@babel/plugin-proposal-decorators": ^7.10.5
+    "@babel/plugin-proposal-nullish-coalescing-operator": ^7.10.4
     "@babel/plugin-transform-modules-commonjs": ^7.8.3
     "@babel/preset-typescript": ^7.10.4
     "@types/debug": ^4.1.5

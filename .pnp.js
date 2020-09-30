@@ -40,6 +40,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/core", "npm:7.11.0"],
             ["@babel/plugin-proposal-class-properties", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@babel/plugin-proposal-decorators", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.5"],
+            ["@babel/plugin-proposal-nullish-coalescing-operator", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@babel/plugin-transform-modules-commonjs", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.8.3"],
             ["@babel/preset-typescript", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@types/debug", "npm:4.1.5"],
@@ -487,6 +488,23 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@babel/plugin-proposal-nullish-coalescing-operator", [
+        ["virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4", {
+          "packageLocation": "./.yarn/$$virtual/@babel-plugin-proposal-nullish-coalescing-operator-virtual-bd98b5d760/0/cache/@babel-plugin-proposal-nullish-coalescing-operator-npm-7.10.4-dd7a5fdb9c-5a20d8bcbf.zip/node_modules/@babel/plugin-proposal-nullish-coalescing-operator/",
+          "packageDependencies": [
+            ["@babel/plugin-proposal-nullish-coalescing-operator", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
+            ["@babel/core", "npm:7.11.0"],
+            ["@babel/helper-plugin-utils", "npm:7.10.4"],
+            ["@babel/plugin-syntax-nullish-coalescing-operator", "virtual:bd98b5d760bf6764f08ba70bbf309191487113e76cad7ab625345d176aafe8794d4418a3d1cce882bd210ecae1f155ab0c4932e4314122ae5026a8a5bdfb6d0e#npm:7.8.3"],
+            ["@types/babel__core", null]
+          ],
+          "packagePeers": [
+            "@babel/core",
+            "@types/babel__core"
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@babel/plugin-syntax-bigint", [
         ["virtual:c35bc3215fec2d22c38f8c1112d7d34c3c55792cf1e9e148aa8755cb2680310d8e91f690f866e8073fe05de053b0487b1209bda10126d6a4d518f8f822a23126#npm:7.8.3", {
           "packageLocation": "./.yarn/$$virtual/@babel-plugin-syntax-bigint-virtual-cb6879adb0/0/cache/@babel-plugin-syntax-bigint-npm-7.8.3-b05d971e6c-8c9b610377.zip/node_modules/@babel/plugin-syntax-bigint/",
@@ -510,6 +528,22 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/plugin-syntax-decorators", "virtual:72293648614c39774a4cf1e4ded10a635904ab4c28af2d0c3c8f3613b21acce955ee4672c9a75e7f64b9530675759a6044da365075b4ec16112457d0657b5b0f#npm:7.10.4"],
             ["@babel/core", "npm:7.11.0"],
             ["@babel/helper-plugin-utils", "npm:7.10.4"],
+            ["@types/babel__core", null]
+          ],
+          "packagePeers": [
+            "@babel/core",
+            "@types/babel__core"
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@babel/plugin-syntax-nullish-coalescing-operator", [
+        ["virtual:bd98b5d760bf6764f08ba70bbf309191487113e76cad7ab625345d176aafe8794d4418a3d1cce882bd210ecae1f155ab0c4932e4314122ae5026a8a5bdfb6d0e#npm:7.8.3", {
+          "packageLocation": "./.yarn/$$virtual/@babel-plugin-syntax-nullish-coalescing-operator-virtual-3353bb767f/0/cache/@babel-plugin-syntax-nullish-coalescing-operator-npm-7.8.3-8a723173b5-4ba0375375.zip/node_modules/@babel/plugin-syntax-nullish-coalescing-operator/",
+          "packageDependencies": [
+            ["@babel/plugin-syntax-nullish-coalescing-operator", "virtual:bd98b5d760bf6764f08ba70bbf309191487113e76cad7ab625345d176aafe8794d4418a3d1cce882bd210ecae1f155ab0c4932e4314122ae5026a8a5bdfb6d0e#npm:7.8.3"],
+            ["@babel/core", "npm:7.11.0"],
+            ["@babel/helper-plugin-utils", "npm:7.8.3"],
             ["@types/babel__core", null]
           ],
           "packagePeers": [
@@ -2568,6 +2602,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/core", "npm:7.11.0"],
             ["@babel/plugin-proposal-class-properties", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@babel/plugin-proposal-decorators", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.5"],
+            ["@babel/plugin-proposal-nullish-coalescing-operator", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@babel/plugin-transform-modules-commonjs", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.8.3"],
             ["@babel/preset-typescript", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.10.4"],
             ["@types/debug", "npm:4.1.5"],
