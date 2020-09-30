@@ -26,18 +26,35 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
     const cli = new Cli<Context>({binaryName});
     const defaultVersion = await context.engine.getDefaultVersion(firstArg);
 
-    const potentialLocator: Locator = {
-      name: packageManager,
-      reference: defaultVersion,
-    };
-
     class BinaryCommand extends Command<Context> {
       public proxy: Array<string> = [];
 
       async execute() {
+        const definition = context.engine.config.definitions[packageManager]!;
+
+        // If all leading segments match one of the patterns defined in the `transparent`
+        // key, we tolerate calling this binary even if the local project isn't explicitly
+        // configured for it, and we use the special default version if requested.
+        let isTransparentCommand = false;
+        for (const transparentPath of definition.transparent.commands) {
+          if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === this.proxy[index])) {
+            isTransparentCommand = true;
+            break;
+          }
+        }
+
+        const fallbackReference = isTransparentCommand
+          ? definition.transparent.default ?? defaultVersion
+          : defaultVersion;
+
+        const fallbackLocator: Locator = {
+          name: packageManager,
+          reference: fallbackReference,
+        };
+
         let descriptor;
         try {
-          descriptor = await specUtils.findProjectSpec(this.context.cwd, potentialLocator);
+          descriptor = await specUtils.findProjectSpec(this.context.cwd, fallbackLocator, {transparent: isTransparentCommand});
         } catch (err) {
           if (err instanceof miscUtils.Cancellation) {
             return 1;

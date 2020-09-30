@@ -40,26 +40,39 @@ export function parseSpec(raw: unknown, source?: string): Descriptor {
  * project using the default package managers, and configure it so that we
  * don't need to ask again in the future.
  */
-export async function findProjectSpec(initialCwd: string, locator: Locator): Promise<Descriptor> {
+export async function findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+  // A locator is a valid descriptor (but not the other way around)
+  const fallbackLocator = {name: locator.name, range: locator.reference};
+
   while (true) {
     const result = await loadSpec(initialCwd);
 
     switch (result.type) {
       case `NoProject`: {
-        await initProjectAndSpec(result.target, locator);
+        if (transparent) {
+          return fallbackLocator;
+        } else {
+          await initProjectAndSpec(result.target, locator);
+        }
       } break;
 
       case `NoSpec`: {
         // A locator is a valid descriptor (but not the other way around)
-        return {name: locator.name, range: locator.reference};
-      }
+        return fallbackLocator;
+      } break;
+
       case `Found`: {
         if (result.spec.name !== locator.name) {
-          throw new UsageError(`This project is configured to use ${result.spec.name}`);
+          if (transparent) {
+            return fallbackLocator;
+          } else {
+            throw new UsageError(`This project is configured to use ${result.spec.name}`);
+          }
         } else {
           return result.spec;
         }
-      }    }
+      } break;
+    }
   }
 }
 
