@@ -3,19 +3,16 @@ import fs                                                 from 'fs';
 import path                                               from 'path';
 import semver                                             from 'semver';
 import tar                                                from 'tar';
-import {promisify}                                        from 'util';
 
 import * as debugUtils                                    from './debugUtils';
 import * as folderUtils                                   from './folderUtils';
 import * as fsUtils                                       from './fsUtils';
+import * as gitUtils                                      from './gitUtils';
 import * as httpUtils                                     from './httpUtils';
 import {Context}                                          from './main';
 import {TagSpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
-const execFileP = promisify(execFile);
-
-const NL_REGEXP = /\n/;
-const REFS_TAGS_REGEXP = /^[a-f0-9]+\trefs\/tags\/(.*)\^\{\}$/;
+const REFS_TAGS_REGEXP = /^refs\/tags\/(.*)(?:\^\{\})?$/;
 
 export async function fetchAvailableVersions(spec: TagSpec) {
   switch (spec.type) {
@@ -25,14 +22,13 @@ export async function fetchAvailableVersions(spec: TagSpec) {
     } break;
 
     case `git`: {
-      const {stdout} = await execFileP(`git`, [`ls-remote`, `--tags`, spec.repository]);
-      const lines = stdout.split(NL_REGEXP);
+      const refs = await gitUtils.lsRemote(spec.repository);
 
       const regexp = new RegExp(`^${spec.pattern.replace(`{}`, `(.*)`)}$`);
 
       const results = [];
-      for (const line of lines) {
-        const lv1 = line.match(REFS_TAGS_REGEXP);
+      for (const ref of refs) {
+        const lv1 = ref.match(REFS_TAGS_REGEXP);
         if (!lv1)
           continue;
 
