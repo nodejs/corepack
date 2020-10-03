@@ -32,4 +32,4 @@ jobs:
     - run: yarn install --immutable
     - run: yarn build # We need the stubs to run the tests
     - run: yarn eslint
-    - run: yarn jest
+    - run: NOCK_ENV=replay yarn jest
