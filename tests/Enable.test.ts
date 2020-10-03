@@ -1,9 +1,10 @@
-import {Filename, ppath, xfs, npath, PortablePath}            from '@yarnpkg/fslib';
+import {Filename, ppath, xfs, npath}                          from '@yarnpkg/fslib';
 import {delimiter}                                            from 'path';
 
 import {Engine}                                               from '../sources/Engine';
 import {SupportedPackageManagerSet, SupportedPackageManagers} from '../sources/types';
 
+import {makeBin, getBinaryNames}                              from './_binHelpers';
 import {runCli}                                               from './_runCli';
 
 const engine = new Engine();
@@ -12,17 +13,10 @@ beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
-async function makeBin(cwd: PortablePath, name: Filename) {
-  const path = ppath.join(cwd, name);
-
-  await xfs.writeFilePromise(path, ``);
-  await xfs.chmodPromise(path, 0o755);
-}
-
 describe(`EnableCommand`, () => {
   it(`should add the binaries in the folder found in the PATH`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await makeBin(cwd, `corepack` as Filename);
+      const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
       const PATH = process.env.PATH;
       try {
@@ -38,10 +32,10 @@ describe(`EnableCommand`, () => {
         return entries.sort();
       });
 
-      const expectedEntries = [`corepack`];
+      const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
       for (const packageManager of SupportedPackageManagerSet)
         for (const binName of engine.getBinariesFor(packageManager))
-          expectedEntries.push(binName);
+          expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
     });
@@ -49,7 +43,7 @@ describe(`EnableCommand`, () => {
 
   it(`should add the binaries to the specified folder when using --install-directory`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await makeBin(cwd, `corepack` as Filename);
+      const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         exitCode: 0,
@@ -59,10 +53,10 @@ describe(`EnableCommand`, () => {
         return entries.sort();
       });
 
-      const expectedEntries = [`corepack`];
+      const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
       for (const packageManager of SupportedPackageManagerSet)
         for (const binName of engine.getBinariesFor(packageManager))
-          expectedEntries.push(binName);
+          expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
     });
@@ -70,7 +64,7 @@ describe(`EnableCommand`, () => {
 
   it(`should add binaries only for the requested package managers`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await makeBin(cwd, `corepack` as Filename);
+      const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
       const PATH = process.env.PATH;
       try {
@@ -86,9 +80,9 @@ describe(`EnableCommand`, () => {
         return entries.sort();
       });
 
-      const expectedEntries = [`corepack`];
+      const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
       for (const binName of engine.getBinariesFor(SupportedPackageManagers.Yarn))
-        expectedEntries.push(binName);
+        expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
     });
