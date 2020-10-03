@@ -1,3 +1,4 @@
 module.exports = {
-  testTimeout: 30000,
+  setupFilesAfterEnv: [`./tests/setupTests.js`],
+  testTimeout: 120000,
 };

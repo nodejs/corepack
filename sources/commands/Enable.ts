@@ -1,3 +1,4 @@
+import cmdShim                                                 from '@zkochan/cmd-shim';
 import {Command, UsageError}                                   from 'clipanion';
 import fs                                                      from 'fs';
 import path                                                    from 'path';
@@ -42,14 +43,6 @@ export class EnableCommand extends Command<Context> {
     if (typeof installDirectory === `undefined`)
       installDirectory = path.dirname(await which(`corepack`));
 
-    if (process.platform === `win32`) {
-      return this.executeWin32(installDirectory);
-    } else {
-      return this.executePosix(installDirectory);
-    }
-  }
-
-  async executePosix(installDirectory: string) {
     // We use `eval` so that Webpack doesn't statically transform it.
     const manifestPath = eval(`require`).resolve(`corepack/package.json`);
 
@@ -66,24 +59,35 @@ export class EnableCommand extends Command<Context> {
         throw new UsageError(`Invalid package manager name '${name}'`);
 
       for (const binName of this.context.engine.getBinariesFor(name)) {
-        const file = path.join(installDirectory, binName);
-        const symlink = path.relative(installDirectory, path.join(stubFolder, binName));
-
-        if (fs.existsSync(file)) {
-          const currentSymlink = await fs.promises.readlink(file);
-          if (currentSymlink !== symlink) {
-            await fs.promises.unlink(file);
-          } else {
-            return;
-          }
+        if (process.platform === `win32`) {
+          await this.generateWin32Link(installDirectory, stubFolder, binName);
+        } else {
+          await this.generatePosixLink(installDirectory, stubFolder, binName);
         }
-
-        await fs.promises.symlink(symlink, file);
       }
     }
   }
 
-  async executeWin32(target: string) {
-    throw new UsageError(`This command isn't available on Windows at this time`);
+  async generatePosixLink(installDirectory: string, stubFolder: string, binName: string) {
+    const file = path.join(installDirectory, binName);
+    const symlink = path.relative(installDirectory, path.join(stubFolder, binName));
+
+    if (fs.existsSync(file)) {
+      const currentSymlink = await fs.promises.readlink(file);
+      if (currentSymlink !== symlink) {
+        await fs.promises.unlink(file);
+      } else {
+        return;
+      }
+    }
+
+    await fs.promises.symlink(symlink, file);
+  }
+
+  async generateWin32Link(installDirectory: string, stubFolder: string, binName: string) {
+    const file = path.join(installDirectory, binName);
+    await cmdShim(path.join(stubFolder, binName), file, {
+      createCmdFile: true,
+    });
   }
 }

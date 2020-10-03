@@ -59,6 +59,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint", "npm:7.10.0"],
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:25.1.0"],
+            ["nock", "npm:13.0.4"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
@@ -2621,6 +2622,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint", "npm:7.10.0"],
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:25.1.0"],
+            ["nock", "npm:13.0.4"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
@@ -5267,6 +5269,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["lodash.set", [
+        ["npm:4.3.2", {
+          "packageLocation": "./.yarn/cache/lodash.set-npm-4.3.2-7586c942c2-4dfedacae1.zip/node_modules/lodash.set/",
+          "packageDependencies": [
+            ["lodash.set", "npm:4.3.2"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["lodash.sortby", [
         ["npm:4.7.0", {
           "packageLocation": "./.yarn/cache/lodash.sortby-npm-4.7.0-fda8ab950d-43cde11276.zip/node_modules/lodash.sortby/",
@@ -5673,6 +5684,19 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/nice-try-npm-1.0.5-963856b16f-330f190bf6.zip/node_modules/nice-try/",
           "packageDependencies": [
             ["nice-try", "npm:1.0.5"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["nock", [
+        ["npm:13.0.4", {
+          "packageLocation": "./.yarn/cache/nock-npm-13.0.4-d232d43721-cc76d95178.zip/node_modules/nock/",
+          "packageDependencies": [
+            ["nock", "npm:13.0.4"],
+            ["debug", "virtual:f97e87ce5c078d09fc4187e51128c0b4e6d65e6ffc1d9c4aa1addf154ab797eb9b519b8b4202754bea5d95fe88e15fd3426b3e05808bd29b6ed4b061efc87658#npm:4.1.1"],
+            ["json-stringify-safe", "npm:5.0.1"],
+            ["lodash.set", "npm:4.3.2"],
+            ["propagate", "npm:2.0.1"]
           ],
           "linkType": "HARD",
         }]
@@ -6308,6 +6332,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["prompts", "npm:2.3.2"],
             ["kleur", "npm:3.0.3"],
             ["sisteransi", "npm:1.0.5"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["propagate", [
+        ["npm:2.0.1", {
+          "packageLocation": "./.yarn/cache/propagate-npm-2.0.1-2074bf76d3-dd67518106.zip/node_modules/propagate/",
+          "packageDependencies": [
+            ["propagate", "npm:2.0.1"]
           ],
           "linkType": "HARD",
         }]

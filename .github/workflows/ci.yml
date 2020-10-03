@@ -16,6 +16,7 @@ jobs:
         platform:
         - ubuntu-latest
         - macos-latest
+        - windows-latest
 
     name: '${{matrix.platform}} w/ Node.js ${{matrix.node}}.x'
     runs-on: ${{matrix.platform}}
@@ -31,4 +32,5 @@ jobs:
     - run: yarn install --immutable
     - run: yarn build # We need the stubs to run the tests
     - run: yarn eslint
-    - run: yarn jest
+    - run: NOCK_ENV=replay yarn jest
+      shell: bash

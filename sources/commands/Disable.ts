@@ -42,14 +42,6 @@ export class DisableCommand extends Command<Context> {
     if (typeof installDirectory === `undefined`)
       installDirectory = path.dirname(await which(`corepack`));
 
-    if (process.platform === `win32`) {
-      return this.executeWin32(installDirectory);
-    } else {
-      return this.executePosix(installDirectory);
-    }
-  }
-
-  async executePosix(installDirectory: string) {
     const names = this.names.length === 0
       ? SupportedPackageManagerSet
       : this.names;
@@ -59,19 +51,36 @@ export class DisableCommand extends Command<Context> {
         throw new UsageError(`Invalid package manager name '${name}'`);
 
       for (const binName of this.context.engine.getBinariesFor(name)) {
-        const file = path.join(installDirectory, binName);
-        try {
-          await fs.promises.unlink(file);
-        } catch (err) {
-          if (err.code !== `ENOENT`) {
-            throw err;
-          }
+        if (process.platform === `win32`) {
+          await this.removeWin32Link(installDirectory, binName);
+        } else {
+          await this.removePosixLink(installDirectory, binName);
         }
       }
     }
   }
 
-  async executeWin32(installDirectory: string) {
-    throw new UsageError(`This command isn't available on Windows at this time`);
+  async removePosixLink(installDirectory: string, binName: string) {
+    const file = path.join(installDirectory, binName);
+    try {
+      await fs.promises.unlink(file);
+    } catch (err) {
+      if (err.code !== `ENOENT`) {
+        throw err;
+      }
+    }
+  }
+
+  async removeWin32Link(installDirectory: string, binName: string) {
+    for (const ext of [``, `.ps1`, `.cmd`]) {
+      const file = path.join(installDirectory, `${binName}${ext}`);
+      try {
+        await fs.promises.unlink(file);
+      } catch (err) {
+        if (err.code !== `ENOENT`) {
+          throw err;
+        }
+      }
+    }
   }
 }
