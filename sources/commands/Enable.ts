@@ -46,8 +46,8 @@ export class EnableCommand extends Command<Context> {
     // We use `eval` so that Webpack doesn't statically transform it.
     const manifestPath = eval(`require`).resolve(`corepack/package.json`);
 
-    const stubFolder = path.join(path.dirname(manifestPath), `shims`);
-    if (!fs.existsSync(stubFolder))
+    const distFolder = path.join(path.dirname(manifestPath), `dist`);
+    if (!fs.existsSync(distFolder))
       throw new Error(`Assertion failed: The stub folder doesn't exist`);
 
     const names = this.names.length === 0
@@ -60,17 +60,17 @@ export class EnableCommand extends Command<Context> {
 
       for (const binName of this.context.engine.getBinariesFor(name)) {
         if (process.platform === `win32`) {
-          await this.generateWin32Link(installDirectory, stubFolder, binName);
+          await this.generateWin32Link(installDirectory, distFolder, binName);
         } else {
-          await this.generatePosixLink(installDirectory, stubFolder, binName);
+          await this.generatePosixLink(installDirectory, distFolder, binName);
         }
       }
     }
   }
 
-  async generatePosixLink(installDirectory: string, stubFolder: string, binName: string) {
+  async generatePosixLink(installDirectory: string, distFolder: string, binName: string) {
     const file = path.join(installDirectory, binName);
-    const symlink = path.relative(installDirectory, path.join(stubFolder, binName));
+    const symlink = path.relative(installDirectory, path.join(distFolder, `${binName}.js`));
 
     if (fs.existsSync(file)) {
       const currentSymlink = await fs.promises.readlink(file);
@@ -84,9 +84,9 @@ export class EnableCommand extends Command<Context> {
     await fs.promises.symlink(symlink, file);
   }
 
-  async generateWin32Link(installDirectory: string, stubFolder: string, binName: string) {
+  async generateWin32Link(installDirectory: string, distFolder: string, binName: string) {
     const file = path.join(installDirectory, binName);
-    await cmdShim(path.join(stubFolder, binName), file, {
+    await cmdShim(path.join(distFolder, `${binName}.js`), file, {
       createCmdFile: true,
     });
   }

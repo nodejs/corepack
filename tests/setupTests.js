@@ -8,7 +8,7 @@ const v8 = require(`v8`);
 
 const getNockFile = () => path.join(__dirname, `nock/${crypto.createHash(`md5`).update(expect.getState().currentTestName).digest(`hex`)}.dat`);
 
-switch (process.env.NOCK_ENV) {
+switch (process.env.NOCK_ENV || ``) {
   case `record`: {
     nock.recorder.rec({
       // eslint-disable-next-line @typescript-eslint/camelcase
