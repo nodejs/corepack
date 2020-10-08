@@ -69,15 +69,31 @@ The Known Good Releases can be updated system-wide using the `--activate` flag f
 
 The utility commands detailed in the next section.
 
-- Either you can use the network while building your container image, in which case you'll simply run `corepack prepare --cache-only <name>` to make sure that your image includes the Last Known Good release for the specified package manager.
+- Either you can use the network while building your container image, in which case you'll simply run `corepack prepare` to make sure that your image includes the Last Known Good release for the specified package manager.
 
   - If you want to have *all* Last Known Good releases for all package managers, just use the `--all` flag which will do just that.
 
-- Or you're publishing your project to a system where the network is unavailable, in which case you'll preemptively generate a package manager archive from your local computer (using `corepack prepare`) before storing it somewhere your container will be able to access (for example within your repository). After that, it's just a matter of running `corepack hydrate <path/to/corepack>` to setup the cache.
+- Or you're publishing your project to a system where the network is unavailable, in which case you'll preemptively generate a package manager archive from your local computer (using `corepack prepare -o`) before storing it somewhere your container will be able to access (for example within your repository). After that it'll just be a matter of running `corepack hydrate <path/to/corepack.tgz>` to setup the cache.
 
 ## Utility Commands
 
-### `corepack prepare [name@version]`
+### `corepack enable [... name]`
+
+| Option | Description |
+| --- | --- |
+| `--install-directory` | Add the shims to the specified location |
+
+This command will detect where Node is installed and will create shims next to it for each of the specified package managers (or all of them if the command is called without parameters). Note that the npm shims will not be installed unless explicitly requested, as npm is currently distributed with Node through other means.
+
+### `corepack disable [... name]`
+
+| Option | Description |
+| --- | --- |
+| `--install-directory` | Remove the shims to the specified location |
+
+This command will detect where Node is installed and will remove the shims from there.
+
+### `corepack prepare [... name@version]`
 
 | Option | Description |
 | --- | --- |

@@ -1,11 +1,11 @@
-import cmdShim                                                 from '@zkochan/cmd-shim';
-import {Command, UsageError}                                   from 'clipanion';
-import fs                                                      from 'fs';
-import path                                                    from 'path';
-import which                                                   from 'which';
+import cmdShim                                                           from '@zkochan/cmd-shim';
+import {Command, UsageError}                                             from 'clipanion';
+import fs                                                                from 'fs';
+import path                                                              from 'path';
+import which                                                             from 'which';
 
-import {Context}                                               from '../main';
-import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
+import {Context}                                                         from '../main';
+import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
 export class EnableCommand extends Command<Context> {
   static usage = Command.Usage({
@@ -20,7 +20,7 @@ export class EnableCommand extends Command<Context> {
       `$0 enable`,
     ], [
       `Enable all shims, putting them in the specified directory`,
-      `$0 enable --bin-folder /path/to/folder`,
+      `$0 enable --install-directory /path/to/folder`,
     ], [
       `Enable the Yarn shim only`,
       `$0 enable yarn`,
@@ -51,7 +51,7 @@ export class EnableCommand extends Command<Context> {
       throw new Error(`Assertion failed: The stub folder doesn't exist`);
 
     const names = this.names.length === 0
-      ? SupportedPackageManagerSet
+      ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
     for (const name of new Set(names)) {

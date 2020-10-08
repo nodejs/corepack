@@ -11,6 +11,13 @@ export const SupportedPackageManagerSet = new Set<SupportedPackageManagers>(
   Object.values(SupportedPackageManagers),
 );
 
+export const SupportedPackageManagerSetWithoutNpm = new Set<SupportedPackageManagers>(
+  Object.values(SupportedPackageManagers),
+);
+
+// npm is distributed with Node as a builtin; we don't want Corepack to override it unless the npm team is on board
+SupportedPackageManagerSetWithoutNpm.delete(SupportedPackageManagers.Npm);
+
 export function isSupportedPackageManager(value: string): value is SupportedPackageManagers {
   return SupportedPackageManagerSet.has(value as SupportedPackageManagers);
 }

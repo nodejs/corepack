@@ -1,10 +1,10 @@
-import {Command, UsageError}                                   from 'clipanion';
-import fs                                                      from 'fs';
-import path                                                    from 'path';
-import which                                                   from 'which';
+import {Command, UsageError}                                             from 'clipanion';
+import fs                                                                from 'fs';
+import path                                                              from 'path';
+import which                                                             from 'which';
 
-import {Context}                                               from '../main';
-import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
+import {Context}                                                         from '../main';
+import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
 export class DisableCommand extends Command<Context> {
   static usage = Command.Usage({
@@ -43,7 +43,7 @@ export class DisableCommand extends Command<Context> {
       installDirectory = path.dirname(await which(`corepack`));
 
     const names = this.names.length === 0
-      ? SupportedPackageManagerSet
+      ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
     for (const name of new Set(names)) {
