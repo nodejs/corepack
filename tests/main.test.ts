@@ -185,8 +185,40 @@ it(`should support hydrating package managers from cached archives`, async () =>
         packageManager: `yarn@2.2.2`,
       });
 
-      await expect(runCli(cwd, [`hydrate`, `corepack-yarn-2.2.2.tgz`])).resolves.toMatchObject({
-        stdout: `Hydrated yarn@2.2.2\n`,
+      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
+        stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
+        exitCode: 0,
+      });
+
+      await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `2.2.2\n`,
+        exitCode: 0,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_NETWORK;
+    }
+  });
+});
+
+it(`should support hydrating multiple package managers from cached archives`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `pnpm@5.8.0`, `-o`])).resolves.toMatchObject({
+      exitCode: 0,
+    });
+
+    // Use a new cache
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+
+    // Disable the network to make sure we don't succeed by accident
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+    try {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@2.2.2`,
+      });
+
+      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
+        stdout: `Hydrating yarn@2.2.2...\nHydrating pnpm@5.8.0...\nAll done!\n`,
         exitCode: 0,
       });
 
