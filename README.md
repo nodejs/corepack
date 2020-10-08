@@ -82,10 +82,10 @@ The utility commands detailed in the next section.
 | Option | Description |
 | --- | --- |
 | `--all` | Prepare the "Last Known Good" version of all supported package managers |
-| `--cache-only` | Just populate the cache, don't generate an archive |
+| `-o,--output` | Also generate an archive containing the package managers |
 | `--activate` | Also update the "Last Known Good" release |
 
-This command will download the given package manager (or the one configured for the local project if no argument is passed in parameter) and store it within the Corepack cache. Unless the `--cache-only` flag is set, an archive will also be generated that can be used by the `corepack hydrate` command.
+This command will download the given package managers (or the one configured for the local project if no argument is passed in parameter) and store it within the Corepack cache. If the `-o,--output` flag is set (optionally with a path as parameter), an archive will also be generated that can be used by the `corepack hydrate` command.
 
 ### `corepack hydrate <path/to/corepack.tgz>`
 

@@ -11,24 +11,27 @@ export class PrepareCommand extends Command<Context> {
   static usage = Command.Usage({
     description: `Generate a package manager archive`,
     details: `
-      This command generates an archive for the specified package manager, in a format suitable for later hydratation via the \`corepack hydrate\` command.
+      This command makes sure that the specified package managers are installed in the local cache. Calling this command explicitly unless you operate in an environment without network access (in which case you'd have to call \`prepare\` while building your image, to make sure all tools are available for later use).
 
-      If run without parameter, it'll extract the package manager spec from the active project. Otherwise an explicit spec string is required, that Corepack will resolve before installing and packing.
+      When the \`-o,--output\` flag is set, Corepack will also compress the resulting package manager into a format suitable for \`corepack hydrate\`, and will store it at the specified location on the disk.
     `,
     examples: [[
-      `Generate an archive from the active project`,
+      `Prepare the package manager from the active project`,
       `$0 prepare`,
     ], [
-      `Generate an archive from a specific Yarn version`,
+      `Prepare a specific Yarn version`,
       `$0 prepare yarn@2.2.2`,
+    ], [
+      `Generate an archive for a specific Yarn version`,
+      `$0 prepare yarn@2.2.2 -o`,
+    ], [
+      `Generate a named archive`,
+      `$0 prepare yarn@2.2.2 --output=yarn.tgz`,
     ]],
   });
 
-  @Command.String({required: false})
-  spec?: string;
-
-  @Command.Boolean(`--cache-only`)
-  cacheOnly: boolean = false;
+  @Command.Rest()
+  specs: Array<string> = [];
 
   @Command.Boolean(`--activate`)
   activate: boolean = false;
@@ -36,17 +39,22 @@ export class PrepareCommand extends Command<Context> {
   @Command.Boolean(`--all`)
   all: boolean = false;
 
+  @Command.String(`-o,--output`, {tolerateBoolean: true})
+  output?: string | boolean;
+
   @Command.Boolean(`--json`)
   json: boolean = false;
 
   @Command.Path(`prepare`)
   async execute() {
-    if (this.all && typeof this.spec !== `undefined`)
+    if (this.all && this.specs.length > 0)
       throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
 
     const specs = this.all
       ? await this.context.engine.getDefaultDescriptors()
-      : [this.spec];
+      : this.specs;
+
+    const installLocations: Array<string> = [];
 
     for (const request of specs) {
       let spec: Descriptor;
@@ -74,25 +82,41 @@ export class PrepareCommand extends Command<Context> {
       if (resolved === null)
         throw new UsageError(`Failed to successfully resolve '${spec.range}' to a valid ${spec.name} release`);
 
-      const baseInstallFolder = folderUtils.getInstallFolder();
+      if (!this.json) {
+        if (this.activate) {
+          this.context.stdout.write(`Preparing ${spec.name}@${spec.range} for immediate activation...\n`);
+        } else {
+          this.context.stdout.write(`Preparing ${spec.name}@${spec.range}...\n`);
+        }
+      }
+
       const installSpec = await this.context.engine.ensurePackageManager(resolved);
+      installLocations.push(installSpec.location);
 
-      if (this.activate)
+      if (this.activate) {
         await this.context.engine.activatePackageManager(resolved);
+      }
+    }
 
-      if (this.cacheOnly)
-        continue;
+    if (this.output) {
+      const outputName = typeof this.output === `string`
+        ? this.output
+        : `corepack.tgz`;
 
-      const fileName = typeof request !== `undefined`
-        ? path.join(this.context.cwd, `corepack-${resolved.name}-${resolved.reference}.tgz`)
-        : path.join(this.context.cwd, `corepack-${resolved.name}.tgz`);
+      const baseInstallFolder = folderUtils.getInstallFolder();
+      const outputPath = path.resolve(this.context.cwd, outputName);
 
-      await tar.c({gzip: true, cwd: baseInstallFolder, file: fileName}, [path.relative(baseInstallFolder, installSpec.location)]);
+      if (!this.json)
+        this.context.stdout.write(`Packing the selected tools in ${path.basename(outputPath)}...\n`);
+
+      await tar.c({gzip: true, cwd: baseInstallFolder, file: path.resolve(outputPath)}, installLocations.map(location => {
+        return path.relative(baseInstallFolder, location);
+      }));
 
       if (this.json) {
-        this.context.stdout.write(`${JSON.stringify(fileName)}\n`);
+        this.context.stdout.write(`${JSON.stringify(outputPath)}\n`);
       } else {
-        this.context.stdout.write(`Packed ${fileName}\n`);
+        this.context.stdout.write(`All done!\n`);
       }
     }
   }
