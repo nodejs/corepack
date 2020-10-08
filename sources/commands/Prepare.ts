@@ -11,30 +11,36 @@ export class PrepareCommand extends Command<Context> {
   static usage = Command.Usage({
     description: `Generate a package manager archive`,
     details: `
-      This command generates an archive for the specified package manager, in a format suitable for later hydratation via the \`corepack hydrate\` command.
+      This command makes sure that the specified package managers are installed in the local cache. Calling this command explicitly unless you operate in an environment without network access (in which case you'd have to call \`prepare\` while building your image, to make sure all tools are available for later use).
 
-      If run without parameter, it'll extract the package manager spec from the active project. Otherwise an explicit spec string is required, that Corepack will resolve before installing and packing.
+      When the \`-o,--output\` flag is set, Corepack will also compress the resulting package manager into a format suitable for \`corepack hydrate\`, and will store it at the specified location on the disk.
     `,
     examples: [[
-      `Generate an archive from the active project`,
+      `Prepare the package manager from the active project`,
       `$0 prepare`,
     ], [
-      `Generate an archive from a specific Yarn version`,
+      `Prepare a specific Yarn version`,
       `$0 prepare yarn@2.2.2`,
+    ], [
+      `Generate an archive for a specific Yarn version`,
+      `$0 prepare yarn@2.2.2 -o`,
+    ], [
+      `Generate a named archive`,
+      `$0 prepare yarn@2.2.2 --output=yarn.tgz`,
     ]],
   });
 
   @Command.String({required: false})
   spec?: string;
 
-  @Command.Boolean(`--cache-only`)
-  cacheOnly: boolean = false;
-
   @Command.Boolean(`--activate`)
   activate: boolean = false;
 
   @Command.Boolean(`--all`)
   all: boolean = false;
+
+  @Command.String(`-o,--output`, {tolerateBoolean: true})
+  output?: string | boolean;
 
   @Command.Boolean(`--json`)
   json: boolean = false;
@@ -80,12 +86,14 @@ export class PrepareCommand extends Command<Context> {
       if (this.activate)
         await this.context.engine.activatePackageManager(resolved);
 
-      if (this.cacheOnly)
+      if (!this.output)
         continue;
 
-      const fileName = typeof request !== `undefined`
-        ? path.join(this.context.cwd, `corepack-${resolved.name}-${resolved.reference}.tgz`)
-        : path.join(this.context.cwd, `corepack-${resolved.name}.tgz`);
+      const fileName = typeof this.output === `string`
+        ? this.output
+        : typeof request !== `undefined`
+          ? path.join(this.context.cwd, `corepack-${resolved.name}-${resolved.reference}.tgz`)
+          : path.join(this.context.cwd, `corepack-${resolved.name}.tgz`);
 
       await tar.c({gzip: true, cwd: baseInstallFolder, file: fileName}, [path.relative(baseInstallFolder, installSpec.location)]);
 
