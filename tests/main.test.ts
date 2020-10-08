@@ -181,13 +181,13 @@ it(`should support hydrating package managers from cached archives`, async () =>
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `yarn@2.2.2`,
-      });
-
       await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
         stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
         exitCode: 0,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@2.2.2`,
       });
 
       await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
@@ -213,17 +213,26 @@ it(`should support hydrating multiple package managers from cached archives`, as
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `yarn@2.2.2`,
-      });
-
       await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
         stdout: `Hydrating yarn@2.2.2...\nHydrating pnpm@5.8.0...\nAll done!\n`,
         exitCode: 0,
       });
 
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@2.2.2`,
+      });
+
       await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
+        exitCode: 0,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `pnpm@5.8.0`,
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `pnpm`, `--version`])).resolves.toMatchObject({
+        stdout: `5.8.0\n`,
         exitCode: 0,
       });
     } finally {

@@ -47,7 +47,7 @@ export class PrepareCommand extends Command<Context> {
 
   @Command.Path(`prepare`)
   async execute() {
-    if (this.all && this.specs.length === 0)
+    if (this.all && this.specs.length > 0)
       throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
 
     const specs = this.all
