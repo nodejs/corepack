@@ -1,11 +1,11 @@
-import {Filename, ppath, xfs, npath} from '@yarnpkg/fslib';
-import {delimiter}                   from 'path';
+import {Filename, ppath, xfs, npath}          from '@yarnpkg/fslib';
+import {delimiter}                            from 'path';
 
-import {Engine}                      from '../sources/Engine';
-import {SupportedPackageManagerSet}  from '../sources/types';
+import {Engine}                               from '../sources/Engine';
+import {SupportedPackageManagerSetWithoutNpm} from '../sources/types';
 
-import {makeBin, getBinaryNames}     from './_binHelpers';
-import {runCli}                      from './_runCli';
+import {makeBin, getBinaryNames}              from './_binHelpers';
+import {runCli}                               from './_runCli';
 
 const engine = new Engine();
 
@@ -19,7 +19,7 @@ describe(`DisableCommand`, () => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
       const dontRemoveBin = await makeBin(cwd, `dont-remove` as Filename);
 
-      for (const packageManager of SupportedPackageManagerSet)
+      for (const packageManager of SupportedPackageManagerSetWithoutNpm)
         for (const binName of engine.getBinariesFor(packageManager))
           for (const variant of getBinaryNames(binName))
             await makeBin(cwd, variant as Filename, {ignorePlatform: true});
@@ -49,7 +49,7 @@ describe(`DisableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const dontRemoveBin = await makeBin(cwd, `dont-remove` as Filename);
 
-      for (const packageManager of SupportedPackageManagerSet)
+      for (const packageManager of SupportedPackageManagerSetWithoutNpm)
         for (const binName of engine.getBinariesFor(packageManager))
           for (const variant of getBinaryNames(binName))
             await makeBin(cwd, variant as Filename, {ignorePlatform: true});
@@ -68,7 +68,7 @@ describe(`DisableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const binNames = new Set<string>();
 
-      for (const packageManager of SupportedPackageManagerSet)
+      for (const packageManager of SupportedPackageManagerSetWithoutNpm)
         for (const binName of engine.getBinariesFor(packageManager))
           for (const variant of getBinaryNames(binName))
             binNames.add(variant);
