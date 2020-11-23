@@ -1011,6 +1011,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/prompts@npm:^2.0.9":
+  version: 2.4.0
+  resolution: "@types/prompts@npm:2.4.0"
+  checksum: 9d5b490dbad2a89ed17b6bf5ef4430b045d61677ccd75e2d18b119cee97a2aa0329f573925032c22fe5d1b2a95b32f318156cb74b60ff8b36b488c36c4ee36b4
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.1.0":
   version: 7.1.0
   resolution: "@types/semver@npm:7.1.0"
@@ -2241,6 +2248,7 @@ __metadata:
     "@types/debug": ^4.1.5
     "@types/jest": ^25.1.4
     "@types/node": ^13.9.2
+    "@types/prompts": ^2.0.9
     "@types/semver": ^7.1.0
     "@types/tar": ^4.0.3
     "@types/which": ^1.3.2
@@ -2255,6 +2263,7 @@ __metadata:
     eslint-plugin-arca: ^0.9.5
     jest: ^25.1.0
     nock: ^13.0.4
+    prompts: ^2.4.0
     semver: ^7.1.3
     supports-color: ^7.1.0
     tar: ^6.0.1
@@ -5638,6 +5647,16 @@ fsevents@^2.1.2:
   languageName: node
   linkType: hard
 
+"prompts@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "prompts@npm:2.4.0"
+  dependencies:
+    kleur: ^3.0.3
+    sisteransi: ^1.0.5
+  checksum: fd375679ad53bb6a85ac1edf6d3f48b4a120a9aac87d3f0e50756c02013f1e9ee835f10ba18edc2f21048cf8423a986aff8f75ee42f03ce1ebf1d1c65f5ef3cf
+  languageName: node
+  linkType: hard
+
 "propagate@npm:^2.0.0":
   version: 2.0.1
   resolution: "propagate@npm:2.0.1"
@@ -6162,7 +6181,7 @@ resolve@^1.3.2:
   languageName: node
   linkType: hard
 
-"sisteransi@npm:^1.0.4":
+"sisteransi@npm:^1.0.4, sisteransi@npm:^1.0.5":
   version: 1.0.5
   resolution: "sisteransi@npm:1.0.5"
   checksum: 6554debe10fa4c6a7e8d58531313fdb61c39bb435ba420f8d7a01d8aaffecc654cca846b586e33f3c904350e24f229d5bbd8069abdb583c93252849a0f73e933

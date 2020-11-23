@@ -54,6 +54,12 @@ export interface Config {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [name in SupportedPackageManagers]?: {
       /**
+       * Defines the project homepage. Used in the `elect` command to provide
+       * helpful context information to a user.
+       */
+      homepage: string;
+
+      /**
        * Defines the version that needs to be used when running commands within
        * projects that don't list any preference.
        */

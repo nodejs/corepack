@@ -1,6 +1,7 @@
 {
     "definitions": {
         "npm": {
+            "homepage": "https://www.npmjs.com/",
             "default": "6.14.7",
             "transparent": {
               "commands": [
@@ -23,6 +24,7 @@
             }
         },
         "pnpm": {
+            "homepage": "https://pnpm.js.org/",
             "default": "5.4.11",
             "transparent": {
               "commands": [
@@ -45,6 +47,7 @@
             }
         },
         "yarn": {
+            "homepage": "https://yarnpkg.com/",
             "default": "1.22.10",
             "transparent": {
               "default": "2.2.0",

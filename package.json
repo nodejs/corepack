@@ -46,7 +46,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && webpack && ts-node ./mkshims.ts",
-    "corepack": "ts-node ./sources/main.ts",
+    "corepack": "ts-node --files ./sources/main.ts",
     "prepack": "node ./.yarn/releases/*.*js build",
     "postpack": "rm -rf dist shims",
     "test": "yarn jest"
@@ -78,5 +78,9 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
+  },
+  "dependencies": {
+    "@types/prompts": "^2.0.9",
+    "prompts": "^2.4.0"
   }
 }

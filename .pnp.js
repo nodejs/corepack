@@ -46,6 +46,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/debug", "npm:4.1.5"],
             ["@types/jest", "npm:25.1.4"],
             ["@types/node", "npm:13.9.2"],
+            ["@types/prompts", "npm:2.4.0"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@types/which", "npm:1.3.2"],
@@ -60,6 +61,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:25.1.0"],
             ["nock", "npm:13.0.4"],
+            ["prompts", "npm:2.4.0"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
@@ -1178,6 +1180,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-node-npm-13.9.2-d069dc6c73-d462ab643f.zip/node_modules/@types/node/",
           "packageDependencies": [
             ["@types/node", "npm:13.9.2"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@types/prompts", [
+        ["npm:2.4.0", {
+          "packageLocation": "./.yarn/cache/@types-prompts-npm-2.4.0-5b5caba459-9d5b490dba.zip/node_modules/@types/prompts/",
+          "packageDependencies": [
+            ["@types/prompts", "npm:2.4.0"]
           ],
           "linkType": "HARD",
         }]
@@ -2609,6 +2620,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/debug", "npm:4.1.5"],
             ["@types/jest", "npm:25.1.4"],
             ["@types/node", "npm:13.9.2"],
+            ["@types/prompts", "npm:2.4.0"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@types/which", "npm:1.3.2"],
@@ -2623,6 +2635,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:25.1.0"],
             ["nock", "npm:13.0.4"],
+            ["prompts", "npm:2.4.0"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
@@ -6330,6 +6343,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/prompts-npm-2.3.2-c8c33bdfcf-a910ba767e.zip/node_modules/prompts/",
           "packageDependencies": [
             ["prompts", "npm:2.3.2"],
+            ["kleur", "npm:3.0.3"],
+            ["sisteransi", "npm:1.0.5"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:2.4.0", {
+          "packageLocation": "./.yarn/cache/prompts-npm-2.4.0-44f1e10a9a-fd375679ad.zip/node_modules/prompts/",
+          "packageDependencies": [
+            ["prompts", "npm:2.4.0"],
             ["kleur", "npm:3.0.3"],
             ["sisteransi", "npm:1.0.5"]
           ],

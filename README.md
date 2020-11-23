@@ -59,6 +59,47 @@ Just use your package managers as you usually would. Run `yarn install` in Yarn 
 
 - **If the local project isn't configured for any package manager**, Corepack will assume that you know what you're doing, and will use whatever package manager version has been pinned as "known good release". Check the relevant section for more details.
 
+## Elected package manager
+
+Multiple project initializers offer ways to pick one package manager or another, but often in every-so-slightly different ways that don't interoperate well. To help with that, Corepack features a simple way to request the user which package manager to use when bootstrapping a project: `corepack elect --query`. Here's a short snippet:
+
+```ts
+const {execFileSync} = require(`child_process`);
+const {stdout} = execFileSync(`corepack`, [`elect`, `--query`]);
+
+switch (stdout) {
+  case `yarn`: {
+    console.log(`You selected Yarn!`);
+  } break;
+
+  case `pnpm`: {
+    console.log(`You selected pnpm!`);
+  } break;
+
+  case `npm`: {
+    console.log(`You selected npm!`);
+  } break;
+}
+```
+
+As you run this code, Corepack will check its internal records to see if the user already elected a package manager in the past. If they did, it'll print its name on the standard output. If they didn't, it will ask them to pick one, save their choice, then will print it on the standard output. In both cases, your application can now easily branch out based on the standardized enumeration values you'll receive.
+
+To support both environments with and without Corepack available, make a `try/catch` around `execFileSync`, and watch for an exception with code `ENOENT`. This will allow you to fallback on your own logic if you so choose:
+
+```ts
+function getElectedPackageManager() {
+  try {
+    return execFileSync(`corepack`, [`elect`, `--query`]).stdout;
+  } catch (error) {
+    if (error.code === `ENOENT`) {
+      return myOwnDetectionLogic();
+    } else {
+      throw error;
+    }
+  }
+}
+```
+
 ## Known Good Releases
 
 When running Yarn or pnpm within projects that don't list a supported package manager, Corepack will default to a set of Known Good Releases. In a way, you can compare this to Node, where each version ships with a specific version of npm.
@@ -76,6 +117,17 @@ The utility commands detailed in the next section.
 - Or you're publishing your project to a system where the network is unavailable, in which case you'll preemptively generate a package manager archive from your local computer (using `corepack prepare -o`) before storing it somewhere your container will be able to access (for example within your repository). After that it'll just be a matter of running `corepack hydrate <path/to/corepack.tgz>` to setup the cache.
 
 ## Utility Commands
+
+### `corepack elect`
+
+| Option | Description |
+| --- | --- |
+| `--exclude` | Exclude a package manager from the choice |
+| `--query` | Only ask to make a choice if none was made before |
+
+This command will ask the user to pick a preferred package manager, then will store their choice for future use. If the `--query` flag is set Corepack won't ask for a new election if a compatible one was already made before, and will print the selected package name on stdout before returning.
+
+The `--exclude` flag can be used to exclude a package manager from selection if you know your applications won't work with it. This should be used with caution, and only after formally discussing the problem with the relevant maintainers.
 
 ### `corepack enable [... name]`
 

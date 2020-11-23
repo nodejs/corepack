@@ -2,6 +2,7 @@ import {BaseContext, Cli, Command, UsageError} from 'clipanion';
 
 import {Engine}                                from './Engine';
 import {DisableCommand}                        from './commands/Disable';
+import {ElectCommand}                          from './commands/Elect';
 import {EnableCommand}                         from './commands/Enable';
 import {HydrateCommand}                        from './commands/Hydrate';
 import {PrepareCommand}                        from './commands/Prepare';
@@ -88,6 +89,7 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
 
     cli.register(Command.Entries.Help as any);
 
+    cli.register(ElectCommand);
     cli.register(EnableCommand);
     cli.register(DisableCommand);
     cli.register(HydrateCommand);

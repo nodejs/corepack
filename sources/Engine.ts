@@ -15,6 +15,10 @@ export class Engine {
   constructor(public config: Config = defaultConfig as Config) {
   }
 
+  getDefinitionFor(name: SupportedPackageManagers) {
+    return this.config.definitions[name]!;
+  }
+
   getBinariesFor(name: SupportedPackageManagers) {
     const binNames = new Set<string>();
 
@@ -29,6 +33,40 @@ export class Engine {
     }
 
     return binNames;
+  }
+
+  async getElectedPackageManager() {
+    let electedPackageManager: unknown;
+    try {
+      electedPackageManager = JSON.parse(await fs.promises.readFile(this.getLocalConfigFile(), `utf8`)).electedPackageManager;
+    } catch {
+      // Ignore errors; too bad
+    }
+
+    if (typeof electedPackageManager === `string` && SupportedPackageManagerSet.has(electedPackageManager as SupportedPackageManagers)) {
+      return electedPackageManager as SupportedPackageManagers;
+    } else {
+      return null;
+    }
+  }
+
+  async electPackageManager(packageManager: SupportedPackageManagers) {
+    const localConfigFile = this.getLocalConfigFile();
+
+    let localConfig;
+    try {
+      localConfig = JSON.parse(await fs.promises.readFile(localConfigFile, `utf8`));
+    } catch {
+      // Ignore errors; too bad
+    }
+
+    if (typeof localConfig !== `object` || localConfig === null)
+      localConfig = {};
+
+    localConfig.electedPackageManager = packageManager;
+
+    await fs.promises.mkdir(path.dirname(localConfigFile), {recursive: true});
+    await fs.promises.writeFile(localConfigFile, `${JSON.stringify(localConfig, null, 2)}\n`);
   }
 
   async getDefaultDescriptors() {
@@ -47,7 +85,7 @@ export class Engine {
 
     let lastKnownGood: unknown;
     try {
-      lastKnownGood = JSON.parse(await fs.promises.readFile(this.getLastKnownGoodFile(), `utf8`));
+      lastKnownGood = JSON.parse(await fs.promises.readFile(this.getLocalConfigFile(), `utf8`)).lastKnownGood;
     } catch {
       // Ignore errors; too bad
     }
@@ -66,22 +104,25 @@ export class Engine {
   }
 
   async activatePackageManager(locator: Locator) {
-    const lastKnownGoodFile = this.getLastKnownGoodFile();
+    const localConfigFile = this.getLocalConfigFile();
 
-    let lastKnownGood;
+    let localConfig;
     try {
-      lastKnownGood = JSON.parse(await fs.promises.readFile(lastKnownGoodFile, `utf8`));
+      localConfig = JSON.parse(await fs.promises.readFile(localConfigFile, `utf8`));
     } catch {
       // Ignore errors; too bad
     }
 
-    if (typeof lastKnownGood !== `object` || lastKnownGood === null)
-      lastKnownGood = {};
+    if (typeof localConfig !== `object` || localConfig === null)
+      localConfig = {};
 
-    lastKnownGood[locator.name] = locator.reference;
+    if (typeof localConfig.lastKnownGood !== `object` || localConfig.lastKnownGood === null)
+      localConfig.lastKnownGood = {};
 
-    await fs.promises.mkdir(path.dirname(lastKnownGoodFile), {recursive: true});
-    await fs.promises.writeFile(lastKnownGoodFile, `${JSON.stringify(lastKnownGood, null, 2)}\n`);
+    localConfig.lastKnownGood[locator.name] = locator.reference;
+
+    await fs.promises.mkdir(path.dirname(localConfigFile), {recursive: true});
+    await fs.promises.writeFile(localConfigFile, `${JSON.stringify(localConfig, null, 2)}\n`);
   }
 
   async ensurePackageManager(locator: Locator) {
@@ -139,7 +180,7 @@ export class Engine {
     return {name: descriptor.name, reference: maxSatisfying};
   }
 
-  private getLastKnownGoodFile() {
-    return path.join(folderUtils.getInstallFolder(), `lastKnownGood.json`);
+  private getLocalConfigFile() {
+    return path.join(folderUtils.getInstallFolder(), `localConfig.json`);
   }
 }
