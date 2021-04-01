@@ -1,6 +1,7 @@
 {
   "name": "corepack",
   "version": "0.6.0",
+  "license": "MIT",
   "bin": {
     "corepack": "./dist/corepack.js",
     "pnpm": "./dist/pnpm.js",
