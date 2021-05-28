@@ -7,6 +7,7 @@ import defaultConfig                                          from '../config.js
 
 import * as folderUtils                                       from './folderUtils';
 import * as pmmUtils                                          from './pmmUtils';
+import * as semverUtils                                       from './semverUtils';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 import {Config, Descriptor, Locator}                          from './types';
 
@@ -90,7 +91,7 @@ export class Engine {
       throw new UsageError(`This package manager (${locator.name}) isn't supported by this corepack build`);
 
     const ranges = Object.keys(definition.ranges).reverse();
-    const range = ranges.find(range => semver.satisfies(locator.reference, range));
+    const range = ranges.find(range => semver.satisfies(locator.reference, range, {includePrerelease: true}));
     if (typeof range === `undefined`)
       throw new Error(`Assertion failed: Specified resolution (${locator.reference}) isn't supported by any of ${ranges.join(`, `)}`);
 
@@ -115,8 +116,11 @@ export class Engine {
     if (cachedVersion !== null && useCache)
       return {name: descriptor.name, reference: cachedVersion};
 
+    // We retrieve compatible ranges without regard for prerelease ranges
+    const rangeNoPrereleases = semverUtils.removePrereleaseFromRange(descriptor.range);
+
     const candidateRangeDefinitions = Object.keys(definition.ranges).filter(range => {
-      return semver.intersects(range, descriptor.range);
+      return semver.intersects(range, rangeNoPrereleases);
     });
 
     const tagResolutions = await Promise.all(candidateRangeDefinitions.map(async range => {

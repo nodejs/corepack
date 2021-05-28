@@ -1,5 +1,4 @@
 import {UsageError}                                     from 'clipanion';
-import Enquirer                                         from 'enquirer';
 import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
@@ -59,7 +58,8 @@ export async function findProjectSpec(initialCwd: string, locator: Locator): Pro
         } else {
           return result.spec;
         }
-      }    }
+      }
+    }
   }
 }
 
@@ -109,6 +109,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 }
 
 export async function persistPmSpec(updateTarget: string, locator: Locator, message: string) {
+  const {default: Enquirer} = await import(`enquirer`);
   const newSpec = `${locator.name}@^${locator.reference}`;
 
   let res: boolean;

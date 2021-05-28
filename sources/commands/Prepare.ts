@@ -1,13 +1,16 @@
-import {Command, UsageError} from 'clipanion';
-import path                  from 'path';
-import tar                   from 'tar';
+import {Command, Option, UsageError} from 'clipanion';
+import path                          from 'path';
 
-import * as folderUtils      from '../folderUtils';
-import {Context}             from '../main';
-import * as specUtils        from '../specUtils';
-import {Descriptor}          from '../types';
+import * as folderUtils              from '../folderUtils';
+import {Context}                     from '../main';
+import * as specUtils                from '../specUtils';
+import {Descriptor}                  from '../types';
 
 export class PrepareCommand extends Command<Context> {
+  static paths = [
+    [`prepare`],
+  ];
+
   static usage = Command.Usage({
     description: `Generate a package manager archive`,
     details: `
@@ -24,22 +27,25 @@ export class PrepareCommand extends Command<Context> {
     ]],
   });
 
-  @Command.String({required: false})
-  spec?: string;
 
-  @Command.Boolean(`--cache-only`)
-  cacheOnly: boolean = false;
+  cacheOnly = Option.Boolean(`--cache-only`, false, {
+    description: `If true, cache the package manager without generating a tarball`,
+  });
 
-  @Command.Boolean(`--activate`)
-  activate: boolean = false;
+  activate = Option.Boolean(`--activate`, false, {
+    description: `If true, this release will become the default one for this package manager`,
+  });
 
-  @Command.Boolean(`--all`)
-  all: boolean = false;
+  all = Option.Boolean(`--all`, false, {
+    description: `If true, all available default package managers will be packed together`,
+  });
 
-  @Command.Boolean(`--json`)
-  json: boolean = false;
+  json = Option.Boolean(`--json`, false, {
+    description: `If true, the output will be the path of the generated tarball`,
+  });
 
-  @Command.Path(`prepare`)
+  spec = Option.String({required: false})
+
   async execute() {
     if (this.all && typeof this.spec !== `undefined`)
       throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
@@ -87,6 +93,7 @@ export class PrepareCommand extends Command<Context> {
         ? path.join(this.context.cwd, `corepack-${resolved.name}-${resolved.reference}.tgz`)
         : path.join(this.context.cwd, `corepack-${resolved.name}.tgz`);
 
+      const {default: tar} = await import(`tar`);
       await tar.c({gzip: true, cwd: baseInstallFolder, file: fileName}, [path.relative(baseInstallFolder, installSpec.location)]);
 
       if (this.json) {

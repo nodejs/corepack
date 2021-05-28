@@ -1,4 +1,4 @@
-import {Command, UsageError}                                   from 'clipanion';
+import {Command, Option, UsageError}                           from 'clipanion';
 import fs                                                      from 'fs';
 import path                                                    from 'path';
 import which                                                   from 'which';
@@ -7,6 +7,10 @@ import {Context}                                               from '../main';
 import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
 
 export class EnableCommand extends Command<Context> {
+  static paths = [
+    [`enable`],
+  ];
+
   static usage = Command.Usage({
     description: `Add the Corepack shims to the install directories`,
     details: `
@@ -26,13 +30,12 @@ export class EnableCommand extends Command<Context> {
     ]],
   });
 
-  @Command.String(`--install-directory`)
-  installDirectory?: string;
+  installDirectory = Option.String(`--install-directory`, {
+    description: `Where the shims are to be installed`,
+  });
 
-  @Command.Rest()
-  names: Array<string> = [];
+  names = Option.Rest();
 
-  @Command.Path(`enable`)
   async execute() {
     let installDirectory = this.installDirectory;
 

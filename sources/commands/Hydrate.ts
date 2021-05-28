@@ -1,12 +1,15 @@
-import {Command, UsageError}                                  from 'clipanion';
+import {Command, Option, UsageError}                          from 'clipanion';
 import path                                                   from 'path';
-import tar                                                    from 'tar';
 
 import * as folderUtils                                       from '../folderUtils';
 import {Context}                                              from '../main';
 import {SupportedPackageManagerSet, SupportedPackageManagers} from '../types';
 
 export class HydrateCommand extends Command<Context> {
+  static paths = [
+    [`hydrate`],
+  ];
+
   static usage = Command.Usage({
     description: `Import a package manager into the cache`,
     details: `
@@ -18,13 +21,12 @@ export class HydrateCommand extends Command<Context> {
     ]],
   });
 
-  @Command.String()
-  fileName!: string;
+  activate = Option.Boolean(`--activate`, false, {
+    description: `If true, this release will become the default one for this package manager`,
+  });
 
-  @Command.Boolean(`--activate`)
-  activate: boolean = false;
+  fileName = Option.String();
 
-  @Command.Path(`hydrate`)
   async execute() {
     const installFolder = folderUtils.getInstallFolder();
     const fileName = path.resolve(this.context.cwd, this.fileName);
@@ -33,6 +35,8 @@ export class HydrateCommand extends Command<Context> {
     const secondLevel = new Set();
 
     let hasShortEntries = false;
+
+    const {default: tar} = await import(`tar`);
 
     await tar.t({file: fileName, onentry: entry => {
       const segments = entry.header.path.split(/\//g);
