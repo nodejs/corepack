@@ -8,7 +8,16 @@ beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
-for (const [name, version] of [[`yarn`, `1.22.4`], [`yarn`, `2.0.0-rc.30`], [`yarn`, `3.0.0-rc.2`], [`pnpm`, `4.11.6`], [`npm`, `6.14.2`]]) {
+const testedPackageManagers: [string, string][] = [
+  [`yarn`, `1.22.4`],
+  [`yarn`, `2.0.0-rc.30`],
+  [`yarn`, `3.0.0-rc.2`],
+  [`pnpm`, `4.11.6`],
+  [`pnpm`, `6.6.2`],
+  [`npm`, `6.14.2`],
+];
+
+for (const [name, version] of testedPackageManagers) {
   it(`should use the right package manager version for a given project (${name}@${version})`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {

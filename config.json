@@ -31,7 +31,7 @@
               ]
             },
             "ranges": {
-                "<6.0.0-0": {
+                "<6.0.0": {
                     "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
                     "bin": {
                         "pnpm": "./bin/pnpm.js",
@@ -42,7 +42,7 @@
                         "package": "pnpm"
                     }
                 },
-                ">=6.0.0-0": {
+                ">=6.0.0": {
                     "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
                     "bin": {
                         "pnpm": "./bin/pnpm.cjs",
