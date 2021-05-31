@@ -2,7 +2,6 @@ import {execFile, StdioOptions, spawn}                    from 'child_process';
 import fs                                                 from 'fs';
 import path                                               from 'path';
 import semver                                             from 'semver';
-import tar                                                from 'tar';
 
 import * as debugUtils                                    from './debugUtils';
 import * as folderUtils                                   from './folderUtils';
@@ -12,6 +11,8 @@ import * as httpUtils                                     from './httpUtils';
 import {Context}                                          from './main';
 import {TagSpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
+declare const __non_webpack_require__: unknown;
+
 const REFS_TAGS_REGEXP = /^refs\/tags\/(.*)(?:\^\{\})?$/;
 
 export async function fetchAvailableVersions(spec: TagSpec) {
@@ -19,8 +20,7 @@ export async function fetchAvailableVersions(spec: TagSpec) {
     case `npm`: {
       const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
       return Object.keys(data.versions);
-    } break;
-
+    }
     case `git`: {
       const refs = await gitUtils.lsRemote(spec.repository);
 
@@ -40,11 +40,10 @@ export async function fetchAvailableVersions(spec: TagSpec) {
       }
 
       return results;
-    } break;
-
+    }
     default: {
       throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
-    } break;
+    }
   }
 }
 
@@ -79,6 +78,8 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
 }
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
+  const {default: tar} = await import(`tar`);
+
   const installFolder = path.join(installTarget, locator.name, locator.reference);
   if (fs.existsSync(installFolder)) {
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
@@ -161,7 +162,11 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
     if (context.stderr === process.stderr)
       stdio[2] = `inherit`;
 
-    const sub = spawn(process.execPath, [binPath!, ...args], {
+    const v8CompileCache = typeof __non_webpack_require__ !== `undefined`
+      ? eval(`require`).resolve(`./vcc.js`)
+      : eval(`require`).resolve(`corepack/dist/vcc.js`);
+
+    const sub = spawn(process.execPath, [`--require`, v8CompileCache, binPath!, ...args], {
       cwd: context.cwd,
       stdio,
     });

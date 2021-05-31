@@ -1,14 +1,14 @@
-import {BaseContext, Cli, Command, UsageError} from 'clipanion';
+import {BaseContext, Builtins, Cli, Command, Option, UsageError} from 'clipanion';
 
-import {Engine}                                from './Engine';
-import {DisableCommand}                        from './commands/Disable';
-import {EnableCommand}                         from './commands/Enable';
-import {HydrateCommand}                        from './commands/Hydrate';
-import {PrepareCommand}                        from './commands/Prepare';
-import * as miscUtils                          from './miscUtils';
-import * as pmmUtils                           from './pmmUtils';
-import * as specUtils                          from './specUtils';
-import {Locator, isSupportedPackageManager}    from './types';
+import {Engine}                                                  from './Engine';
+import {DisableCommand}                                          from './commands/Disable';
+import {EnableCommand}                                           from './commands/Enable';
+import {HydrateCommand}                                          from './commands/Hydrate';
+import {PrepareCommand}                                          from './commands/Prepare';
+import * as miscUtils                                            from './miscUtils';
+import * as pmmUtils                                             from './pmmUtils';
+import * as specUtils                                            from './specUtils';
+import {Locator, isSupportedPackageManager}                      from './types';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
@@ -27,7 +27,7 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
     const defaultVersion = await context.engine.getDefaultVersion(firstArg);
 
     class BinaryCommand extends Command<Context> {
-      public proxy: Array<string> = [];
+      proxy = Option.Proxy();
 
       async execute() {
         const definition = context.engine.config.definitions[packageManager]!;
@@ -74,9 +74,6 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
       }
     }
 
-    BinaryCommand.addPath();
-    BinaryCommand.addOption(`proxy`, Command.Proxy());
-
     cli.register(BinaryCommand);
 
     return await cli.run(argv.slice(2), {
@@ -86,7 +83,7 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
   } else {
     const cli = new Cli<Context>({binaryName: `corepack`});
 
-    cli.register(Command.Entries.Help as any);
+    cli.register(Builtins.HelpCommand as any);
 
     cli.register(EnableCommand);
     cli.register(DisableCommand);

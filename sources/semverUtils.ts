@@ -46,3 +46,14 @@ export function satisfiesWithPrereleases(version: string | null, range: string, 
     });
   });
 }
+
+export function removePrereleaseFromRange(range: string) {
+  let semverRange = new semver.Range(range);
+
+  for (const comparatorSet of semverRange.set)
+    for (const comparator of comparatorSet)
+      if (comparator.semver.prerelease)
+        comparator.semver.prerelease = [];
+
+  return semverRange;
+}

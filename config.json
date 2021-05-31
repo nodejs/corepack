@@ -67,7 +67,7 @@
                 },
                 ">=2.0.0-0": {
                     "name": "yarn",
-                    "url": "https://raw.githubusercontent.com/yarnpkg/berry/%40yarnpkg/cli/{}/packages/yarnpkg-cli/bin/yarn.js",
+                    "url": "https://repo.yarnpkg.com/{}/packages/yarnpkg-cli/bin/yarn.js",
                     "bin": ["yarn", "yarnpkg"],
                     "tags": {
                         "type": "git",
