@@ -36,6 +36,7 @@
     "@yarnpkg/eslint-config": "^0.1.0",
     "@yarnpkg/fslib": "^2.1.0",
     "@zkochan/cmd-shim": "^5.0.0",
+    "babel-plugin-dynamic-import-node": "^2.3.3",
     "clipanion": "^3.0.0-rc.12",
     "debug": "^4.1.1",
     "eslint": "^7.10.0",
@@ -49,6 +50,7 @@
     "ts-loader": "^8.0.2",
     "ts-node": "^8.10.2",
     "typescript": "^4.3.2",
+    "v8-compile-cache": "^2.3.0",
     "webpack": "^5.38.1",
     "webpack-cli": "^3.3.11",
     "which": "^2.0.2"
@@ -87,9 +89,5 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
-  },
-  "dependencies": {
-    "babel-plugin-dynamic-import-node": "^2.3.3",
-    "v8-compile-cache": "^2.3.0"
   }
 }

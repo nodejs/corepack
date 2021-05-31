@@ -1,8 +1,8 @@
 import cmdShim                                                           from '@zkochan/cmd-shim';
-import {Command, Option, UsageError}                           from 'clipanion';
-import fs                                                      from 'fs';
-import path                                                    from 'path';
-import which                                                   from 'which';
+import {Command, Option, UsageError}                                     from 'clipanion';
+import fs                                                                from 'fs';
+import path                                                              from 'path';
+import which                                                             from 'which';
 
 import {Context}                                                         from '../main';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';

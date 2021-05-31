@@ -117,7 +117,7 @@ export class Engine {
       return {name: descriptor.name, reference: cachedVersion};
 
     const candidateRangeDefinitions = Object.keys(definition.ranges).filter(range => {
-      return semverUtils.satisfiesWithPrereleases(descriptor.range, range)
+      return semverUtils.satisfiesWithPrereleases(descriptor.range, range);
     });
 
     const tagResolutions = await Promise.all(candidateRangeDefinitions.map(async range => {

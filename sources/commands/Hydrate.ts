@@ -1,9 +1,9 @@
-import {Command, Option, UsageError}                          from 'clipanion';
-import path                                                   from 'path';
+import {Command, Option, UsageError} from 'clipanion';
+import path                          from 'path';
 
-import * as folderUtils            from '../folderUtils';
-import {Context}                   from '../main';
-import {isSupportedPackageManager} from '../types';
+import * as folderUtils              from '../folderUtils';
+import {Context}                     from '../main';
+import {isSupportedPackageManager}   from '../types';
 
 export class HydrateCommand extends Command<Context> {
   static paths = [

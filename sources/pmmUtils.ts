@@ -1,4 +1,4 @@
-import {execFile, StdioOptions, spawn}                    from 'child_process';
+import {StdioOptions, spawn}                              from 'child_process';
 import fs                                                 from 'fs';
 import path                                               from 'path';
 import semver                                             from 'semver';
@@ -6,14 +6,11 @@ import semver                                             from 'semver';
 import * as debugUtils                                    from './debugUtils';
 import * as folderUtils                                   from './folderUtils';
 import * as fsUtils                                       from './fsUtils';
-import * as gitUtils                                      from './gitUtils';
 import * as httpUtils                                     from './httpUtils';
 import {Context}                                          from './main';
 import {TagSpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
 declare const __non_webpack_require__: unknown;
-
-const REFS_TAGS_REGEXP = /^refs\/tags\/(.*)(?:\^\{\})?$/;
 
 export async function fetchAvailableVersions(spec: TagSpec) {
   switch (spec.type) {
@@ -21,25 +18,10 @@ export async function fetchAvailableVersions(spec: TagSpec) {
       const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
       return Object.keys(data.versions);
     }
-    case `git`: {
-      const refs = await gitUtils.lsRemote(spec.repository);
-
-      const regexp = new RegExp(`^${spec.pattern.replace(`{}`, `(.*)`)}$`);
-
-      const results = [];
-      for (const ref of refs) {
-        const lv1 = ref.match(REFS_TAGS_REGEXP);
-        if (!lv1)
-          continue;
-
-        const lv2 = lv1[1].match(regexp);
-        if (!lv2)
-          continue;
-
-        results.push(lv2[1]);
-      }
-
-      return results;
+    case `url`: {
+      const data = await httpUtils.fetchAsJson(spec.url);
+      const field = data[spec.field];
+      return Array.isArray(field) ? field : Object.keys(field);
     }
     default: {
       throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);

@@ -27,15 +27,15 @@ export interface NpmTagSpec {
   package: string;
 }
 
-export interface GitTagSpec {
-  type: `git`;
-  repository: string;
-  pattern: string;
+export interface UrlTagSpec {
+  type: `url`;
+  url: string;
+  field: string;
 }
 
 export type TagSpec =
     | NpmTagSpec
-    | GitTagSpec;
+    | UrlTagSpec;
 
 /**
  * Defines how the package manager is meant to be downloaded and accessed.
