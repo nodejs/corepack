@@ -31,11 +31,22 @@
               ]
             },
             "ranges": {
-                "*": {
+                "<6.0.0": {
                     "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
                     "bin": {
                         "pnpm": "./bin/pnpm.js",
                         "pnpx": "./bin/pnpx.js"
+                    },
+                    "tags": {
+                        "type": "npm",
+                        "package": "pnpm"
+                    }
+                },
+                ">=6.0.0": {
+                    "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+                    "bin": {
+                        "pnpm": "./bin/pnpm.cjs",
+                        "pnpx": "./bin/pnpx.cjs"
                     },
                     "tags": {
                         "type": "npm",
