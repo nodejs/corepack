@@ -117,8 +117,8 @@ If you want to build corepack yourself things yourself, you can build the projec
 
 1. Clone this repository
 2. Run `yarn build` (no need for `yarn install`)
-3. The `dist/` directory now contains the pmm build and the shims
-4. Call `node ./dist/pmm --version` and behold
+3. The `dist/` directory now contains the corepack build and the shims
+4. Call `node ./dist/corepack --help` and behold
 
 You can also run the tests with `yarn jest` (still no install needed).
 
