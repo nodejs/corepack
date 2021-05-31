@@ -1,4 +1,4 @@
-import {Command, UsageError}                                             from 'clipanion';
+import {Command, Option, UsageError}                                     from 'clipanion';
 import fs                                                                from 'fs';
 import path                                                              from 'path';
 import which                                                             from 'which';
@@ -7,6 +7,10 @@ import {Context}                                                         from '.
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
 export class DisableCommand extends Command<Context> {
+  static paths = [
+    [`disable`],
+  ];
+
   static usage = Command.Usage({
     description: `Remove the Corepack shims from the install directory`,
     details: `
@@ -26,13 +30,12 @@ export class DisableCommand extends Command<Context> {
     ]],
   });
 
-  @Command.String(`--install-directory`)
-  installDirectory?: string;
+  installDirectory = Option.String(`--install-directory`, {
+    description: `Where the shims are located`,
+  });
 
-  @Command.Rest()
-  names: Array<string> = [];
+  names = Option.Rest();
 
-  @Command.Path(`disable`)
   async execute() {
     let installDirectory = this.installDirectory;
 

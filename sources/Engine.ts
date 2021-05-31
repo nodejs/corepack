@@ -5,9 +5,9 @@ import semver                                                 from 'semver';
 
 import defaultConfig                                          from '../config.json';
 
-import * as semverUtils                                       from './semverUtils'
 import * as folderUtils                                       from './folderUtils';
 import * as pmmUtils                                          from './pmmUtils';
+import * as semverUtils                                       from './semverUtils';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 import {Config, Descriptor, Locator}                          from './types';
 
@@ -117,7 +117,7 @@ export class Engine {
       return {name: descriptor.name, reference: cachedVersion};
 
     const candidateRangeDefinitions = Object.keys(definition.ranges).filter(range => {
-      return semverUtils.satisfiesWithPrereleases(descriptor.range, range)
+      return semverUtils.satisfiesWithPrereleases(descriptor.range, range);
     });
 
     const tagResolutions = await Promise.all(candidateRangeDefinitions.map(async range => {

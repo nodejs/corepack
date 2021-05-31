@@ -2,11 +2,12 @@ const TerserPlugin = require(`terser-webpack-plugin`);
 const webpack = require(`webpack`);
 
 module.exports = {
-  mode: `production`,
+  mode: `development`,
   devtool: false,
   target: `node`,
   entry: {
     [`corepack`]: `./sources/main.ts`,
+    [`vcc`]: `v8-compile-cache`,
   },
   output: {
     libraryTarget: `commonjs`,
@@ -15,13 +16,14 @@ module.exports = {
     extensions: [`.ts`, `.js`],
   },
   module: {
+    noParse: /v8-compile-cache/,
     rules: [
       {
         test: /\.ts$/,
         loader: `ts-loader`,
         options: {
           compilerOptions: {
-            module: `es6`,
+            module: `es2020`,
             noEmit: false,
           },
         },

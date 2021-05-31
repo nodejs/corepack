@@ -1,10 +1,12 @@
-import {UsageError}            from 'clipanion';
-import https, {RequestOptions} from 'https';
-import {IncomingMessage}       from 'http';
+import {UsageError}      from 'clipanion';
+import {RequestOptions}  from 'https';
+import {IncomingMessage} from 'http';
 
-export function fetchUrlStream(url: string, options: RequestOptions = {}) {
+export async function fetchUrlStream(url: string, options: RequestOptions = {}) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${url}`);
+
+  const {default: https} = await import(`https`);
 
   return new Promise<IncomingMessage>((resolve, reject) => {
     const request = https.get(url, options, response => {
@@ -16,7 +18,7 @@ export function fetchUrlStream(url: string, options: RequestOptions = {}) {
     });
 
     request.on(`error`, err => {
-      reject(err);
+      reject(new Error(`Error when performing the request`));
     });
   });
 }

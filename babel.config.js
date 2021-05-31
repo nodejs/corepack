@@ -7,5 +7,6 @@ module.exports = {
     [`@babel/plugin-proposal-class-properties`, {loose: true}],
     [`@babel/plugin-transform-modules-commonjs`],
     [`@babel/plugin-proposal-nullish-coalescing-operator`],
+    [`babel-plugin-dynamic-import-node`],
   ],
 };
