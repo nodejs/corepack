@@ -60,7 +60,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
 }
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
-  const {default: tar} = await import(`tar`);
+  const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
 
   const installFolder = path.join(installTarget, locator.name, locator.reference);
   if (fs.existsSync(installFolder)) {
@@ -151,6 +151,10 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
     const sub = spawn(process.execPath, [`--require`, v8CompileCache, binPath!, ...args], {
       cwd: context.cwd,
       stdio,
+      env: {
+        ...process.env,
+        COREPACK_ROOT: path.dirname(eval(`__dirname`)),
+      },
     });
 
     if (context.stdin !== process.stdin)

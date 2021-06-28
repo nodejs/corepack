@@ -1,14 +1,14 @@
-import {Filename, ppath, xfs, npath} from '@yarnpkg/fslib';
+import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 
-import config                        from '../config.json';
+import config                                      from '../config.json';
 
-import {runCli}                      from './_runCli';
+import {runCli}                                    from './_runCli';
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
-const testedPackageManagers: [string, string][] = [
+const testedPackageManagers: Array<[string, string]> = [
   [`yarn`, `1.22.4`],
   [`yarn`, `2.0.0-rc.30`],
   [`yarn`, `3.0.0-rc.2`],
@@ -31,6 +31,67 @@ for (const [name, version] of testedPackageManagers) {
     });
   });
 }
+
+it(`should ignore the packageManager field when found within a node_modules vendor`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules/foo` as PortablePath), {recursive: true});
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      packageManager: `yarn@1.22.4`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `node_modules/foo/package.json` as PortablePath), {
+      packageManager: `npm@6.14.2`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `node_modules/@foo/bar/package.json` as PortablePath), {
+      packageManager: `npm@6.14.2`,
+    });
+
+    await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `1.22.4\n`,
+    });
+
+    await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `1.22.4\n`,
+    });
+  });
+});
+
+it(`should use the closest matching packageManager field`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.mkdirPromise(ppath.join(cwd, `foo` as PortablePath), {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      packageManager: `yarn@1.22.4`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `foo/package.json` as PortablePath), {
+      packageManager: `npm@6.14.2`,
+    });
+
+    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `npm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `6.14.2\n`,
+    });
+  });
+});
+
+it(`should expose its root to spawned processes`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `npm@6.14.2`,
+    });
+
+    await expect(runCli(cwd, [`npm`, `npm`, `run`, `env`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}\n`),
+    });
+  });
+});
 
 it(`shouldn't allow using regular Yarn commands on npm-configured projects`, async () => {
   await xfs.mktempPromise(async cwd => {

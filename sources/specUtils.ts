@@ -5,6 +5,8 @@ import semver                                           from 'semver';
 
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
+const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
+
 export function parseSpec(raw: unknown, source?: string): Descriptor {
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
@@ -75,11 +77,17 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
-  let selection: any = null;
+  let selection: {
+    data: any;
+    manifestPath: string;
+  } | null = null;
 
-  while (nextCwd !== currCwd && selection === null) {
+  while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
     currCwd = nextCwd;
     nextCwd = path.dirname(currCwd);
+
+    if (nodeModulesRegExp.test(currCwd))
+      continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
     if (!fs.existsSync(manifestPath))

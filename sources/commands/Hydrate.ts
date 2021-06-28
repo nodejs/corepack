@@ -34,7 +34,7 @@ export class HydrateCommand extends Command<Context> {
     const archiveEntries = new Map<string, Set<string>>();
     let hasShortEntries = false;
 
-    const {default: tar} = await import(`tar`);
+    const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
 
     await tar.t({file: fileName, onentry: entry => {
       const segments = entry.header.path.split(/\//g);
