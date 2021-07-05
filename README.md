@@ -111,6 +111,10 @@ This command will download the given package managers (or the one configured for
 
 This command will retrieve the given package manager from the specified archive and will install it within the Corepack cache, ready to be used without further network interaction.
 
+## Environment Variables
+
+- `COREPACK_ENABLED` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
+
 ## Contributing
 
 If you want to build corepack yourself things yourself, you can build the project like this:

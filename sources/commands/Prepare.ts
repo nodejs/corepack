@@ -115,7 +115,7 @@ export class PrepareCommand extends Command<Context> {
       if (!this.json)
         this.context.stdout.write(`Packing the selected tools in ${path.basename(outputPath)}...\n`);
 
-      const {default: tar} = await import(`tar`);
+      const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
       await tar.c({gzip: true, cwd: baseInstallFolder, file: path.resolve(outputPath)}, installLocations.map(location => {
         return path.relative(baseInstallFolder, location);
       }));
