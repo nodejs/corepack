@@ -105,23 +105,42 @@ export class Engine {
     };
   }
 
-  async resolveDescriptor(descriptor: Descriptor, {useCache = true}: {useCache?: boolean} = {}) {
+  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
     const definition = this.config.definitions[descriptor.name];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
+    let finalDescriptor = descriptor;
+    if (descriptor.range.match(/^[a-z-]+$/)) {
+      if (!allowTags)
+        throw new UsageError(`Packages managers can't be referended via tags in this context`);
+
+      // We only resolve tags from the latest registry entry
+      const ranges = Object.keys(definition.ranges);
+      const tagRange = ranges[ranges.length - 1];
+
+      const tags = await pmmUtils.fetchAvailableTags(definition.ranges[tagRange].registry);
+      if (!Object.prototype.hasOwnProperty.call(tags, descriptor.range))
+        throw new UsageError(`Tag not found (${descriptor.range})`);
+
+      finalDescriptor = {
+        name: descriptor.name,
+        range: tags[descriptor.range],
+      };
+    }
+
     // If a compatible version is already installed, no need to query one
     // from the remote listings
-    const cachedVersion = await pmmUtils.findInstalledVersion(folderUtils.getInstallFolder(), descriptor);
+    const cachedVersion = await pmmUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
-      return {name: descriptor.name, reference: cachedVersion};
+      return {name: finalDescriptor.name, reference: cachedVersion};
 
     const candidateRangeDefinitions = Object.keys(definition.ranges).filter(range => {
-      return semverUtils.satisfiesWithPrereleases(descriptor.range, range);
+      return semverUtils.satisfiesWithPrereleases(finalDescriptor.range, range);
     });
 
     const tagResolutions = await Promise.all(candidateRangeDefinitions.map(async range => {
-      return [range, await pmmUtils.fetchAvailableVersions(definition.ranges[range].tags)] as const;
+      return [range, await pmmUtils.fetchAvailableVersions(definition.ranges[range].registry)] as const;
     }));
 
     // If a version is available under multiple strategies (for example if
@@ -133,11 +152,11 @@ export class Engine {
         resolutionMap.set(entry, range);
 
     const candidates = [...resolutionMap.keys()];
-    const maxSatisfying = semver.maxSatisfying(candidates, descriptor.range);
+    const maxSatisfying = semver.maxSatisfying(candidates, finalDescriptor.range);
     if (maxSatisfying === null)
       return null;
 
-    return {name: descriptor.name, reference: maxSatisfying};
+    return {name: finalDescriptor.name, reference: maxSatisfying};
   }
 
   private getLastKnownGoodFile() {

@@ -15,16 +15,17 @@ export type Context = BaseContext & CustomContext;
 
 export async function main(argv: Array<string>, context: CustomContext & Partial<Context>) {
   const firstArg = argv[0];
+  const [, candidatePackageManager, requestedVersion] = firstArg.match(/^([^@]*)(?:@(.*))?$/)!;
 
-  if (isSupportedPackageManager(firstArg)) {
-    const packageManager = firstArg;
+  if (isSupportedPackageManager(candidatePackageManager)) {
+    const packageManager = candidatePackageManager;
     const binaryName = argv[1];
 
     // Note: we're playing a bit with Clipanion here, since instead of letting it
     // decide how to route the commands, we'll instead tweak the init settings
     // based on the arguments.
     const cli = new Cli<Context>({binaryName});
-    const defaultVersion = await context.engine.getDefaultVersion(firstArg);
+    const defaultVersion = await context.engine.getDefaultVersion(packageManager);
 
     class BinaryCommand extends Command<Context> {
       proxy = Option.Proxy();
@@ -63,7 +64,10 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
           }
         }
 
-        const resolved = await context.engine.resolveDescriptor(descriptor);
+        if (requestedVersion)
+          descriptor.range = requestedVersion;
+
+        const resolved = await context.engine.resolveDescriptor(descriptor, {allowTags: true});
         if (resolved === null)
           throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
