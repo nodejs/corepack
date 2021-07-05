@@ -1,18 +1,34 @@
-import {StdioOptions, spawn}                              from 'child_process';
-import fs                                                 from 'fs';
-import path                                               from 'path';
-import semver                                             from 'semver';
+import {StdioOptions, spawn}                                   from 'child_process';
+import fs                                                      from 'fs';
+import path                                                    from 'path';
+import semver                                                  from 'semver';
 
-import * as debugUtils                                    from './debugUtils';
-import * as folderUtils                                   from './folderUtils';
-import * as fsUtils                                       from './fsUtils';
-import * as httpUtils                                     from './httpUtils';
-import {Context}                                          from './main';
-import {TagSpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import * as debugUtils                                         from './debugUtils';
+import * as folderUtils                                        from './folderUtils';
+import * as fsUtils                                            from './fsUtils';
+import * as httpUtils                                          from './httpUtils';
+import {Context}                                               from './main';
+import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
 declare const __non_webpack_require__: unknown;
 
-export async function fetchAvailableVersions(spec: TagSpec) {
+export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<string, string>> {
+  switch (spec.type) {
+    case `npm`: {
+      const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
+      return data[`dist-tags`];
+    }
+    case `url`: {
+      const data = await httpUtils.fetchAsJson(spec.url);
+      return data[spec.fields.tags];
+    }
+    default: {
+      throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
+    }
+  }
+}
+
+export async function fetchAvailableVersions(spec: RegistrySpec): Promise<Array<string>> {
   switch (spec.type) {
     case `npm`: {
       const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
@@ -20,7 +36,7 @@ export async function fetchAvailableVersions(spec: TagSpec) {
     }
     case `url`: {
       const data = await httpUtils.fetchAsJson(spec.url);
-      const field = data[spec.field];
+      const field = data[spec.fields.versions];
       return Array.isArray(field) ? field : Object.keys(field);
     }
     default: {

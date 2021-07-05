@@ -22,20 +22,23 @@ export function isSupportedPackageManager(value: string): value is SupportedPack
   return SupportedPackageManagerSet.has(value as SupportedPackageManagers);
 }
 
-export interface NpmTagSpec {
+export interface NpmRegistrySpec {
   type: `npm`;
   package: string;
 }
 
-export interface UrlTagSpec {
+export interface UrlRegistrySpec {
   type: `url`;
   url: string;
-  field: string;
+  fields: {
+    tags: string;
+    versions: string;
+  };
 }
 
-export type TagSpec =
-    | NpmTagSpec
-    | UrlTagSpec;
+export type RegistrySpec =
+    | NpmRegistrySpec
+    | UrlRegistrySpec;
 
 /**
  * Defines how the package manager is meant to be downloaded and accessed.
@@ -43,7 +46,7 @@ export type TagSpec =
 export interface PackageManagerSpec {
   url: string;
   bin: BinSpec | BinList;
-  tags: TagSpec;
+  registry: RegistrySpec;
 }
 
 /**

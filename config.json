@@ -15,7 +15,7 @@
                         "npm": "./bin/npm-cli.js",
                         "npx": "./bin/npx-cli.js"
                     },
-                    "tags": {
+                    "registry": {
                         "type": "npm",
                         "package": "npm"
                     }
@@ -37,7 +37,7 @@
                         "pnpm": "./bin/pnpm.js",
                         "pnpx": "./bin/pnpx.js"
                     },
-                    "tags": {
+                    "registry": {
                         "type": "npm",
                         "package": "pnpm"
                     }
@@ -48,7 +48,7 @@
                         "pnpm": "./bin/pnpm.cjs",
                         "pnpx": "./bin/pnpx.cjs"
                     },
-                    "tags": {
+                    "registry": {
                         "type": "npm",
                         "package": "pnpm"
                     }
@@ -70,7 +70,7 @@
                         "yarn": "./bin/yarn.js",
                         "yarnpkg": "./bin/yarn.js"
                     },
-                    "tags": {
+                    "registry": {
                         "type": "npm",
                         "package": "yarn"
                     }
@@ -79,10 +79,13 @@
                     "name": "yarn",
                     "url": "https://repo.yarnpkg.com/{}/packages/yarnpkg-cli/bin/yarn.js",
                     "bin": ["yarn", "yarnpkg"],
-                    "tags": {
+                    "registry": {
                         "type": "url",
                         "url": "https://repo.yarnpkg.com/tags",
-                        "field": "tags"
+                        "fields": {
+                          "tags": "latest",
+                          "versions": "tags"
+                        }
                     }
                 }
             }
