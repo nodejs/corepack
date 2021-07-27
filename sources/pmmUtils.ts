@@ -1,4 +1,4 @@
-import {StdioOptions, spawn}                                   from 'child_process';
+import {StdioOptions, spawn, ChildProcess}                     from 'child_process';
 import fs                                                      from 'fs';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
@@ -164,7 +164,7 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
       ? eval(`require`).resolve(`./vcc.js`)
       : eval(`require`).resolve(`corepack/dist/vcc.js`);
 
-    const sub = spawn(process.execPath, [`--require`, v8CompileCache, binPath!, ...args], {
+    const child = spawn(process.execPath, [`--require`, v8CompileCache, binPath!, ...args], {
       cwd: context.cwd,
       stdio,
       env: {
@@ -173,16 +173,53 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
       },
     });
 
-    if (context.stdin !== process.stdin)
-      context.stdin.pipe(sub.stdin!);
-    if (context.stdout !== process.stdout)
-      sub.stdout!.pipe(context.stdout);
-    if (context.stderr !== process.stderr)
-      sub.stderr!.pipe(context.stderr);
+    activeChildren.add(child);
 
-    sub.on(`exit`, exitCode => {
+    if (activeChildren.size === 1) {
+      process.on(`SIGINT`, sigintHandler);
+      process.on(`SIGTERM`, sigtermHandler);
+    }
+
+    if (context.stdin !== process.stdin)
+      context.stdin.pipe(child.stdin!);
+    if (context.stdout !== process.stdout)
+      child.stdout!.pipe(context.stdout);
+    if (context.stderr !== process.stderr)
+      child.stderr!.pipe(context.stderr);
+
+    child.on(`error`, error => {
+      activeChildren.delete(child);
+
+      if (activeChildren.size === 0) {
+        process.off(`SIGINT`, sigintHandler);
+        process.off(`SIGTERM`, sigtermHandler);
+      }
+
+      reject(error);
+    });
+
+    child.on(`exit`, exitCode => {
+      activeChildren.delete(child);
+
+      if (activeChildren.size === 0) {
+        process.off(`SIGINT`, sigintHandler);
+        process.off(`SIGTERM`, sigtermHandler);
+      }
+
       resolve(exitCode !== null ? exitCode : 1);
     });
   });
 }
 
+const activeChildren = new Set<ChildProcess>();
+
+function sigintHandler() {
+  // We don't want SIGINT to kill our process; we want it to kill the
+  // innermost process, whose end will cause our own to exit.
+}
+
+function sigtermHandler() {
+  for (const child of activeChildren) {
+    child.kill();
+  }
+}

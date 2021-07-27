@@ -87,7 +87,8 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
   } else {
     const cli = new Cli<Context>({binaryName: `corepack`});
 
-    cli.register(Builtins.HelpCommand as any);
+    cli.register(Builtins.HelpCommand);
+    cli.register(Builtins.VersionCommand);
 
     cli.register(EnableCommand);
     cli.register(DisableCommand);

@@ -2190,14 +2190,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clipanion@npm:^3.0.0-rc.12":
-  version: 3.0.0-rc.12
-  resolution: "clipanion@npm:3.0.0-rc.12"
+"clipanion@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "clipanion@npm:3.0.1"
   dependencies:
     typanion: ^3.3.1
   peerDependencies:
     typanion: "*"
-  checksum: a3824cbd11df862b52b72bf69fe63b6fecc5f63c3cc48fc54af2ef6145eac78e021246bd5b0f5c10c4af0ddfc0503b169283142cd2f643f528109cc24548773f
+  checksum: 3a4b0c1e7d29a0f3c41860323494114a3533298134761e564b9057fe26ceef929a06da73cc3dfc0000e02c89ad7222984109a60213a212c10ea71ac6cacabc89
   languageName: node
   linkType: hard
 
@@ -2375,7 +2375,7 @@ __metadata:
     "@yarnpkg/fslib": ^2.1.0
     "@zkochan/cmd-shim": ^5.0.0
     babel-plugin-dynamic-import-node: ^2.3.3
-    clipanion: ^3.0.0-rc.12
+    clipanion: ^3.0.1
     debug: ^4.1.1
     eslint: ^7.10.0
     eslint-plugin-arca: ^0.9.5

@@ -53,7 +53,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@yarnpkg/fslib", "npm:2.1.0"],
             ["@zkochan/cmd-shim", "npm:5.0.0"],
             ["babel-plugin-dynamic-import-node", "npm:2.3.3"],
-            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.0-rc.12"],
+            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.1"],
             ["debug", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.1.1"],
             ["eslint", "npm:7.10.0"],
             ["eslint-plugin-arca", "npm:0.9.5"],
@@ -2849,17 +2849,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["clipanion", [
-        ["npm:3.0.0-rc.12", {
-          "packageLocation": "./.yarn/cache/clipanion-npm-3.0.0-rc.12-95ffbe8b7e-a3824cbd11.zip/node_modules/clipanion/",
+        ["npm:3.0.1", {
+          "packageLocation": "./.yarn/cache/clipanion-npm-3.0.1-901533eeed-3a4b0c1e7d.zip/node_modules/clipanion/",
           "packageDependencies": [
-            ["clipanion", "npm:3.0.0-rc.12"]
+            ["clipanion", "npm:3.0.1"]
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.0-rc.12", {
-          "packageLocation": "./.yarn/__virtual__/clipanion-virtual-5fe719a4f0/0/cache/clipanion-npm-3.0.0-rc.12-95ffbe8b7e-a3824cbd11.zip/node_modules/clipanion/",
+        ["virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.1", {
+          "packageLocation": "./.yarn/__virtual__/clipanion-virtual-119dc92083/0/cache/clipanion-npm-3.0.1-901533eeed-3a4b0c1e7d.zip/node_modules/clipanion/",
           "packageDependencies": [
-            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.0-rc.12"],
+            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.1"],
             ["@types/typanion", null],
             ["typanion", "npm:3.3.1"]
           ],
@@ -3069,7 +3069,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@yarnpkg/fslib", "npm:2.1.0"],
             ["@zkochan/cmd-shim", "npm:5.0.0"],
             ["babel-plugin-dynamic-import-node", "npm:2.3.3"],
-            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.0-rc.12"],
+            ["clipanion", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:3.0.1"],
             ["debug", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:4.1.1"],
             ["eslint", "npm:7.10.0"],
             ["eslint-plugin-arca", "npm:0.9.5"],
