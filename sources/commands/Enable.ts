@@ -46,6 +46,10 @@ export class EnableCommand extends Command<Context> {
     if (typeof installDirectory === `undefined`)
       installDirectory = path.dirname(await which(`corepack`));
 
+    // Otherwise the relative symlink we'll compute will be incorrect, if the
+    // install directory is within a symlink
+    installDirectory = fs.realpathSync(installDirectory);
+
     // We use `eval` so that Webpack doesn't statically transform it.
     const manifestPath = eval(`require`).resolve(`corepack/package.json`);
 
