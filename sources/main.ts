@@ -85,7 +85,8 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
       ...context,
     });
   } else {
-    const cli = new Cli<Context>({binaryName: `corepack`});
+    const binaryVersion = eval(`require`)(`corepack/package.json`).version;
+    const cli = new Cli<Context>({binaryName: `corepack`, binaryVersion});
 
     cli.register(Builtins.HelpCommand);
     cli.register(Builtins.VersionCommand);
