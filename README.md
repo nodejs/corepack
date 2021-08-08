@@ -77,6 +77,12 @@ The utility commands detailed in the next section.
 
 ## Utility Commands
 
+### `corepack <binary name>[@<version>] [... args]`
+
+This meta-command runs the specified package manager in the local folder. You can use it to force an install to run with a given version, which can be useful when looking for regressions.
+
+Note that those commands still check whether the local project is configured for the given package manager (ie you won't be able to run `corepack yarn install` on a project where the `packageManager` field references `pnpm`).
+
 ### `corepack enable [... name]`
 
 | Option | Description |
@@ -117,7 +123,7 @@ This command will retrieve the given package manager from the specified archive 
 
 ## Contributing
 
-If you want to build corepack yourself things yourself, you can build the project like this:
+If you want to build corepack yourself, you can build the project like this:
 
 1. Clone this repository
 2. Run `yarn build` (no need for `yarn install`)
