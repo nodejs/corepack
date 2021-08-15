@@ -29,7 +29,7 @@ async function main() {
       const entryPath = path.join(distDir, `${binaryName}.js`);
       const entryScript = [
         `#!/usr/bin/env node\n`,
-        `require('./corepack').runMain(['${packageManager}', '${binaryName}', ...process.argv.slice(2)]);\n`,
+        `require('./corepack').runMain(['${binaryName}', ...process.argv.slice(2)]);\n`,
       ].join(``);
 
       fs.writeFileSync(entryPath, entryScript);

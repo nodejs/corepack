@@ -16,6 +16,22 @@ export class Engine {
   constructor(public config: Config = defaultConfig as Config) {
   }
 
+  getPackageManagerFor(binaryName: string): SupportedPackageManagers | null {
+    for (const packageManager of SupportedPackageManagerSet) {
+      for (const rangeDefinition of Object.values(this.config.definitions[packageManager]!.ranges)) {
+        const bins = Array.isArray(rangeDefinition.bin)
+          ? rangeDefinition.bin
+          : Object.keys(rangeDefinition.bin);
+
+        if (bins.includes(binaryName)) {
+          return packageManager;
+        }
+      }
+    }
+
+    return null;
+  }
+
   getBinariesFor(name: SupportedPackageManagers) {
     const binNames = new Set<string>();
 

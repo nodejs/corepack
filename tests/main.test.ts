@@ -24,7 +24,7 @@ for (const [name, version] of testedPackageManagers) {
         packageManager: `${name}@${version}`,
       });
 
-      await expect(runCli(cwd, [name, name, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stdout: `${version}\n`,
       });
@@ -49,12 +49,12 @@ it(`should ignore the packageManager field when found within a node_modules vend
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: `1.22.4\n`,
     });
 
-    await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: `1.22.4\n`,
     });
@@ -73,7 +73,7 @@ it(`should use the closest matching packageManager field`, async () => {
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: `6.14.2\n`,
     });
@@ -86,7 +86,7 @@ it(`should expose its root to spawned processes`, async () => {
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`npm`, `npm`, `run`, `env`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm`, `run`, `env`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}\n`),
     });
@@ -99,7 +99,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
     });
   });
@@ -111,7 +111,7 @@ it(`should allow using transparent commands on npm-configured projects`, async (
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `dlx`, `cat@0.2.0`, __filename])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `dlx`, `cat@0.2.0`, __filename])).resolves.toMatchObject({
       exitCode: 0,
     });
   });
@@ -119,7 +119,7 @@ it(`should allow using transparent commands on npm-configured projects`, async (
 
 it(`should transparently use the preconfigured version when there is no local project`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
     });
   });
@@ -135,17 +135,17 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default}\n`,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`pnpm`, `pnpm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.pnpm.default}\n`,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`npm`, `npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.npm.default}\n`,
       exitCode: 0,
     });
@@ -162,7 +162,7 @@ it(`should allow updating the pinned version using the "prepare" command`, async
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
       exitCode: 0,
     });
@@ -179,7 +179,7 @@ it(`should allow to call "prepare" without arguments within a configured project
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
       exitCode: 0,
     });
@@ -199,17 +199,17 @@ it(`should allow to call "prepare" with --all to prepare all package managers`, 
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.yarn.default}\n`,
         exitCode: 0,
       });
 
-      await expect(runCli(cwd, [`pnpm`, `pnpm`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default}\n`,
         exitCode: 0,
       });
 
-      await expect(runCli(cwd, [`npm`, `npm`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.npm.default}\n`,
         exitCode: 0,
       });
@@ -228,7 +228,7 @@ it(`should support disabling the network accesses from the environment`, async (
         packageManager: `yarn@2.2.2`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: expect.stringContaining(`Network access disabled by the environment`),
         exitCode: 1,
       });
@@ -260,7 +260,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
         packageManager: `yarn@2.2.2`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
         exitCode: 0,
       });
@@ -292,7 +292,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
         packageManager: `yarn@2.2.2`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
         exitCode: 0,
       });
@@ -301,7 +301,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
         packageManager: `pnpm@5.8.0`,
       });
 
-      await expect(runCli(cwd, [`pnpm`, `pnpm`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `5.8.0\n`,
         exitCode: 0,
       });
@@ -317,12 +317,12 @@ it(`should support running package managers with bin array`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarnpkg`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarnpkg`, `--version`])).resolves.toMatchObject({
       stdout: `2.2.2\n`,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`yarn`, `yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `2.2.2\n`,
       exitCode: 0,
     });

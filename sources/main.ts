@@ -8,86 +8,98 @@ import {PrepareCommand}                                          from './command
 import * as miscUtils                                            from './miscUtils';
 import * as pmmUtils                                             from './pmmUtils';
 import * as specUtils                                            from './specUtils';
-import {Locator, isSupportedPackageManager}                      from './types';
+import {Locator, SupportedPackageManagers, Descriptor}           from './types';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
 
-export async function main(argv: Array<string>, context: CustomContext & Partial<Context>) {
-  const firstArg = argv[0];
-  const [, candidatePackageManager, requestedVersion] = firstArg.match(/^([^@]*)(?:@(.*))?$/)!;
+type PackageManagerRequest = {
+  packageManager: SupportedPackageManagers;
+  binaryName: string;
+  binaryVersion: string | null;
+};
 
-  if (isSupportedPackageManager(candidatePackageManager)) {
-    const packageManager = candidatePackageManager;
-    const binaryName = argv[1];
+function getPackageManagerRequestFromCli(parameter: string | undefined, context: CustomContext & Partial<Context>): PackageManagerRequest {
+  if (!parameter)
+    return null;
 
-    // Note: we're playing a bit with Clipanion here, since instead of letting it
-    // decide how to route the commands, we'll instead tweak the init settings
-    // based on the arguments.
-    const cli = new Cli<Context>({binaryName});
-    const defaultVersion = await context.engine.getDefaultVersion(packageManager);
+  const match = parameter.match(/^([^@]*)(?:@(.*))?$/);
+  if (!match)
+    return null;
 
-    class BinaryCommand extends Command<Context> {
-      proxy = Option.Proxy();
+  const [, binaryName, binaryVersion] = match;
+  const packageManager = context.engine.getPackageManagerFor(binaryName);
+  if (!packageManager)
+    return null;
 
-      async execute() {
-        const definition = context.engine.config.definitions[packageManager]!;
+  return {
+    packageManager,
+    binaryName,
+    binaryVersion: binaryVersion || null,
+  };
+}
 
-        // If all leading segments match one of the patterns defined in the `transparent`
-        // key, we tolerate calling this binary even if the local project isn't explicitly
-        // configured for it, and we use the special default version if requested.
-        let isTransparentCommand = false;
-        for (const transparentPath of definition.transparent.commands) {
-          if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === this.proxy[index])) {
-            isTransparentCommand = true;
-            break;
-          }
-        }
+async function executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, args: Array<string>, context: Context) {
+  const defaultVersion = await context.engine.getDefaultVersion(packageManager);
+  const definition = context.engine.config.definitions[packageManager]!;
 
-        const fallbackReference = isTransparentCommand
-          ? definition.transparent.default ?? defaultVersion
-          : defaultVersion;
-
-        const fallbackLocator: Locator = {
-          name: packageManager,
-          reference: fallbackReference,
-        };
-
-        let descriptor;
-        try {
-          descriptor = await specUtils.findProjectSpec(this.context.cwd, fallbackLocator, {transparent: isTransparentCommand});
-        } catch (err) {
-          if (err instanceof miscUtils.Cancellation) {
-            return 1;
-          } else {
-            throw err;
-          }
-        }
-
-        if (requestedVersion)
-          descriptor.range = requestedVersion;
-
-        const resolved = await context.engine.resolveDescriptor(descriptor, {allowTags: true});
-        if (resolved === null)
-          throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
-
-        const installSpec = await context.engine.ensurePackageManager(resolved);
-        const exitCode = await pmmUtils.runVersion(installSpec, resolved, binaryName, this.proxy, this.context);
-
-        return exitCode;
-      }
+  // If all leading segments match one of the patterns defined in the `transparent`
+  // key, we tolerate calling this binary even if the local project isn't explicitly
+  // configured for it, and we use the special default version if requested.
+  let isTransparentCommand = false;
+  for (const transparentPath of definition.transparent.commands) {
+    if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === args[index])) {
+      isTransparentCommand = true;
+      break;
     }
+  }
 
-    cli.register(BinaryCommand);
+  const fallbackReference = isTransparentCommand
+    ? definition.transparent.default ?? defaultVersion
+    : defaultVersion;
 
-    return await cli.run(argv.slice(2), {
-      ...Cli.defaultContext,
-      ...context,
-    });
-  } else {
-    const cli = new Cli<Context>({
+  const fallbackLocator: Locator = {
+    name: packageManager,
+    reference: fallbackReference,
+  };
+
+  let descriptor: Descriptor;
+  try {
+    descriptor = await specUtils.findProjectSpec(context.cwd, fallbackLocator, {transparent: isTransparentCommand});
+  } catch (err) {
+    if (err instanceof miscUtils.Cancellation) {
+      return 1;
+    } else {
+      throw err;
+    }
+  }
+
+  if (binaryVersion)
+    descriptor.range = binaryVersion;
+
+  const resolved = await context.engine.resolveDescriptor(descriptor, {allowTags: true});
+  if (resolved === null)
+    throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
+
+  const installSpec = await context.engine.ensurePackageManager(resolved);
+  const exitCode = await pmmUtils.runVersion(installSpec, resolved, binaryName, args, context);
+
+  return exitCode;
+}
+
+export async function main(argv: Array<string>, context: CustomContext & Partial<Context>) {
+  const corepackVersion = require(`../package.json`).version;
+
+  const [firstArg, ...restArgs] = argv;
+  const request = getPackageManagerRequestFromCli(firstArg, context);
+
+  let cli: Cli<Context>;
+  if (!request) {
+    // If the first argument doesn't match any supported package manager, we fallback to the standard Corepack CLI
+    cli = new Cli({
+      binaryLabel: `Corepack`,
       binaryName: `corepack`,
-      binaryVersion: require(`../package.json`).version,
+      binaryVersion: corepackVersion,
     });
 
     cli.register(Builtins.HelpCommand);
@@ -99,6 +111,25 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
     cli.register(PrepareCommand);
 
     return await cli.run(argv, {
+      ...Cli.defaultContext,
+      ...context,
+    });
+  } else {
+    // Otherwise, we create a single-command CLI to run the specified package manager (we still use Clipanion in order to pretty-print usage errors).
+    const cli = new Cli({
+      binaryLabel: `'${request.binaryName}', via Corepack`,
+      binaryName: request.binaryName,
+      binaryVersion: `corepack/${corepackVersion}`,
+    });
+
+    cli.register(class BinaryCommand extends Command<Context> {
+      proxy = Option.Proxy();
+      async execute() {
+        return executePackageManagerRequest(request, this.proxy, this.context);
+      }
+    });
+
+    return await cli.run(restArgs, {
       ...Cli.defaultContext,
       ...context,
     });
