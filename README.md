@@ -1,6 +1,6 @@
 # <img src="./icon.svg" height="25" /> corepack
 
-Corepack is a zero-runtime-dependency Node script that acts as a bridge between Node projects and the package managers they are intended to be used with during development. In practical terms, **Corepack will let you use Yarn and pnpm without having to install them** - just like what currently happens with npm, which is shipped by Node by default.
+Corepack is a zero-runtime-dependency Node.js script that acts as a bridge between Node.js projects and the package managers they are intended to be used with during development. In practical terms, **Corepack will let you use Yarn and pnpm without having to install them** - just like what currently happens with npm, which is shipped by Node.js by default.
 
 **Important:** At the moment, Corepack only covers Yarn and pnpm. Given that we have little control on the npm project, we prefer to focus on the Yarn and pnpm use cases. As a result, Corepack doesn't have any effect at all on the way you use npm.
 
@@ -8,7 +8,7 @@ Corepack is a zero-runtime-dependency Node script that acts as a bridge between 
 
 ### Default Installs
 
-Corepack isn't intended to be installed manually. While it's certainly possible, we're working with the Node TSC to provide Corepack by default starting from Node 15, thus ensuring that all package managers can be used with little to no friction.
+Corepack isn't intended to be installed manually. While it's certainly possible, we're working with the Node.js TSC to provide Corepack by default starting from Node.js 15, thus ensuring that all package managers can be used with little to no friction.
 
 ### Manual Installs
 
@@ -30,16 +30,16 @@ Then install Corepack:
 npm install -g corepack
 ```
 
-We do acknowledge the irony and overhead of using npm to install Corepack, which is at least part of why the preferred option is to use the Corepack version that will be distributed along with Node itself.
+We do acknowledge the irony and overhead of using npm to install Corepack, which is at least part of why the preferred option is to use the Corepack version that will be distributed along with Node.js itself.
 
 </details>
 
 ### Prebuilt Binaries
 
 <details>
-<summary>Click here to see how to download prebuilt Corepack Node distributions</summary>
+<summary>Click here to see how to download prebuilt Corepack Node.js distributions</summary>
 
-We have a few prebuilt Node binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable.
+We have a few prebuilt Node.js binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable.
 
 1. Go to [this page](https://github.com/arcanis/pmm/actions?query=workflow%3ABuild)
 2. Open the latest build (the one at the top)
@@ -61,7 +61,7 @@ Just use your package managers as you usually would. Run `yarn install` in Yarn 
 
 ## Known Good Releases
 
-When running Yarn or pnpm within projects that don't list a supported package manager, Corepack will default to a set of Known Good Releases. In a way, you can compare this to Node, where each version ships with a specific version of npm.
+When running Yarn or pnpm within projects that don't list a supported package manager, Corepack will default to a set of Known Good Releases. In a way, you can compare this to Node.js, where each version ships with a specific version of npm.
 
 The Known Good Releases can be updated system-wide using the `--activate` flag from the `corepack prepare` and `corepack hydrate` commands.
 
@@ -89,7 +89,7 @@ Note that those commands still check whether the local project is configured for
 | --- | --- |
 | `--install-directory` | Add the shims to the specified location |
 
-This command will detect where Node is installed and will create shims next to it for each of the specified package managers (or all of them if the command is called without parameters). Note that the npm shims will not be installed unless explicitly requested, as npm is currently distributed with Node through other means.
+This command will detect where Node.js is installed and will create shims next to it for each of the specified package managers (or all of them if the command is called without parameters). Note that the npm shims will not be installed unless explicitly requested, as npm is currently distributed with Node.js through other means.
 
 ### `corepack disable [... name]`
 
@@ -97,7 +97,7 @@ This command will detect where Node is installed and will create shims next to i
 | --- | --- |
 | `--install-directory` | Remove the shims to the specified location |
 
-This command will detect where Node is installed and will remove the shims from there.
+This command will detect where Node.js is installed and will remove the shims from there.
 
 ### `corepack prepare [... name@version]`
 
