@@ -36,7 +36,7 @@ Discussion thread: https://github.com/nodejs/node/issues/15244
 
     - However, users with strong offline requirements would be able to run the `corepack install <name@version>` command when preparing their images. It would ensure that the requested package manager is made available for later use.
 
-    - Network access could be disabled entirely by setting `COREPACK_ENABLE_NETWORK=0` in the environmen - Corepack would then only use the package managers that got installed by prior `corepack install` calls.
+    - Network access could be disabled entirely by setting `COREPACK_ENABLE_NETWORK=0` in the environment - Corepack would then only use the package managers that got installed by prior `corepack install` calls.
 
 6. Package manager maintainers would submit a PR to the Node repository each time they wish for a new version to be made available through Corepack (can be easily automated using a GitHub Action on each of our repositories). Merging the PR would instantly make the new version available to Node users (once they upgrade).
 
