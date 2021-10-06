@@ -6,7 +6,7 @@ import {EnableCommand}                                           from './command
 import {HydrateCommand}                                          from './commands/Hydrate';
 import {PrepareCommand}                                          from './commands/Prepare';
 import * as miscUtils                                            from './miscUtils';
-import * as pmmUtils                                             from './pmmUtils';
+import * as corepackUtils                                        from './corepackUtils';
 import * as specUtils                                            from './specUtils';
 import {Locator, SupportedPackageManagers, Descriptor}           from './types';
 
@@ -82,7 +82,7 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
     throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
   const installSpec = await context.engine.ensurePackageManager(resolved);
-  const exitCode = await pmmUtils.runVersion(installSpec, resolved, binaryName, args, context);
+  const exitCode = await corepackUtils.runVersion(installSpec, resolved, binaryName, args, context);
 
   return exitCode;
 }

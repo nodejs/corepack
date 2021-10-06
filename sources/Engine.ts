@@ -6,7 +6,7 @@ import semver                                                 from 'semver';
 import defaultConfig                                          from '../config.json';
 
 import * as folderUtils                                       from './folderUtils';
-import * as pmmUtils                                          from './pmmUtils';
+import * as corepackUtils                                     from './corepackUtils';
 import * as semverUtils                                       from './semverUtils';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 import {Config, Descriptor, Locator}                          from './types';
@@ -111,7 +111,7 @@ export class Engine {
     if (typeof range === `undefined`)
       throw new Error(`Assertion failed: Specified resolution (${locator.reference}) isn't supported by any of ${ranges.join(`, `)}`);
 
-    const installedLocation = await pmmUtils.installVersion(folderUtils.getInstallFolder(), locator, {
+    const installedLocation = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec: definition.ranges[range],
     });
 
@@ -135,7 +135,7 @@ export class Engine {
       const ranges = Object.keys(definition.ranges);
       const tagRange = ranges[ranges.length - 1];
 
-      const tags = await pmmUtils.fetchAvailableTags(definition.ranges[tagRange].registry);
+      const tags = await corepackUtils.fetchAvailableTags(definition.ranges[tagRange].registry);
       if (!Object.prototype.hasOwnProperty.call(tags, descriptor.range))
         throw new UsageError(`Tag not found (${descriptor.range})`);
 
@@ -147,7 +147,7 @@ export class Engine {
 
     // If a compatible version is already installed, no need to query one
     // from the remote listings
-    const cachedVersion = await pmmUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
+    const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
       return {name: finalDescriptor.name, reference: cachedVersion};
 
@@ -156,7 +156,7 @@ export class Engine {
     });
 
     const tagResolutions = await Promise.all(candidateRangeDefinitions.map(async range => {
-      return [range, await pmmUtils.fetchAvailableVersions(definition.ranges[range].registry)] as const;
+      return [range, await corepackUtils.fetchAvailableVersions(definition.ranges[range].registry)] as const;
     }));
 
     // If a version is available under multiple strategies (for example if

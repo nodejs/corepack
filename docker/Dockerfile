@@ -11,6 +11,6 @@ RUN rm -rf /opt/node/lib /opt/node/bin/npm /opt/node/bin/npx
 ENV PATH="/opt/node/bin:$PATH"
 RUN which node && node --version
 
-RUN wget https://github.com/arcanis/pmm/archive/master.tar.gz -O - | tar -xz --strip-components=1 -C /opt/corepack && cd /opt/corepack && node ./.yarn/releases/yarn-*.js build
+RUN wget https://github.com/nodejs/corepack/archive/master.tar.gz -O - | tar -xz --strip-components=1 -C /opt/corepack && cd /opt/corepack && node ./.yarn/releases/yarn-*.js build
 
 ENV PATH="/opt/corepack/shims:$PATH"
