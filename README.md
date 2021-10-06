@@ -8,7 +8,7 @@ Corepack is a zero-runtime-dependency Node.js script that acts as a bridge betwe
 
 ### Default Installs
 
-Corepack isn't intended to be installed manually. While it's certainly possible, we're working with the Node.js TSC to provide Corepack by default starting from Node.js 15, thus ensuring that all package managers can be used with little to no friction.
+Corepack is distributed by default with Node.js 16.9, but is opt-in for the time being. Run `corepack enable` to install the required shims.
 
 ### Manual Installs
 
@@ -30,22 +30,7 @@ Then install Corepack:
 npm install -g corepack
 ```
 
-We do acknowledge the irony and overhead of using npm to install Corepack, which is at least part of why the preferred option is to use the Corepack version that will be distributed along with Node.js itself.
-
-</details>
-
-### Prebuilt Binaries
-
-<details>
-<summary>Click here to see how to download prebuilt Corepack Node.js distributions</summary>
-
-We have a few prebuilt Node.js binaries (based on the [following branch](https://github.com/arcanis/node/tree/mael/pmm)) that you can just download, unpack somewhere, and add to your `PATH` environment variable.
-
-1. Go to [this page](https://github.com/arcanis/pmm/actions?query=workflow%3ABuild)
-2. Open the latest build (the one at the top)
-3. Download the right artifact (Linux or Darwin)
-4. Unzip the artifact, then untar it
-5. Add the `node-v15.0.0-nightlyYYYY-MM-DDXXXX-linux-x64/bin` directory to your `$PATH`
+We do acknowledge the irony and overhead of using npm to install Corepack, which is at least part of why the preferred option is to use the Corepack version that is distributed along with Node.js itself.
 
 </details>
 
@@ -119,7 +104,7 @@ This command will retrieve the given package manager from the specified archive 
 
 ## Environment Variables
 
-- `COREPACK_ENABLED` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
+- `COREPACK_ROOT` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
 
 ## Contributing
 
