@@ -56,7 +56,7 @@
             }
         },
         "yarn": {
-            "default": "1.22.11",
+            "default": "1.22.15",
             "transparent": {
               "default": "3.0.0",
               "commands": [
