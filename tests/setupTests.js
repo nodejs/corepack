@@ -7,6 +7,19 @@ const path = require(`path`);
 const v8 = require(`v8`);
 
 const getNockFile = () => path.join(__dirname, `nock/${crypto.createHash(`md5`).update(expect.getState().currentTestName).digest(`hex`)}.dat`);
+const ACCEPTED_HEADERS = new Set([`Content-Type`, `Content-Length`]);
+
+function filterHeaders(headers) {
+  if (!Array.isArray(headers))
+    return headers;
+
+  const filtered = [];
+  for (let t = 0; t < headers.length; t += 2)
+    if (ACCEPTED_HEADERS.has(headers[t].toLowerCase()))
+      filtered.push(headers[t], headers[t + 1]);
+
+  return filtered;
+}
 
 switch (process.env.NOCK_ENV || ``) {
   case `record`: {
@@ -23,6 +36,10 @@ switch (process.env.NOCK_ENV || ``) {
 
     afterEach(() => {
       const nockCallObjects = nock.recorder.play();
+      for (const req of nockCallObjects)
+        if (typeof req !== `string`)
+          req.rawHeaders = filterHeaders(req.rawHeaders);
+
       const serialized = v8.serialize(nockCallObjects);
       fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
       fs.writeFileSync(getNockFile(), serialized);
