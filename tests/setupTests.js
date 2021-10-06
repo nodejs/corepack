@@ -40,7 +40,6 @@ switch (process.env.NOCK_ENV || ``) {
         if (typeof req !== `string`)
           req.rawHeaders = filterHeaders(req.rawHeaders);
 
-      fs.writeFileSync(`/tmp/xxx-${process.env.XXX}`, JSON.stringify(nockCallObjects, null, 2));
       const serialized = v8.serialize(nockCallObjects);
       fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
       fs.writeFileSync(getNockFile(), serialized);
