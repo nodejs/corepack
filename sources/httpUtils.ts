@@ -8,8 +8,12 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const {default: https} = await import(`https`);
 
+  const {default: ProxyAgent} = await import(`proxy-agent`);
+
+  const proxyAgent = new ProxyAgent();
+
   return new Promise<IncomingMessage>((resolve, reject) => {
-    const request = https.get(url, options, response => {
+    const request = https.get(url, {...options, agent: proxyAgent}, response => {
       const statusCode = response.statusCode ?? 500;
       if (!(statusCode >= 200 && statusCode < 300))
         return reject(new Error(`Server answered with HTTP ${statusCode}`));

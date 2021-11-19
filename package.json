@@ -44,6 +44,7 @@
     "eslint-plugin-arca": "^0.9.5",
     "jest": "^26.0.0",
     "nock": "^13.0.4",
+    "proxy-agent": "^4.0.1",
     "rimraf": "^3.0.2",
     "semver": "^7.1.3",
     "supports-color": "^7.1.0",
