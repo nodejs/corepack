@@ -36,18 +36,36 @@ We do acknowledge the irony and overhead of using npm to install Corepack, which
 
 ## Usage
 
-Just use your package managers as you usually would. Run `yarn install` in Yarn projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack will catch these calls, and depending on the situation:
+Just use your package managers as you usually would. 
 
-- **If the local project is configured for the package manager you're using**, Corepack will silently download and cache the latest compatible version.
+Run: <br />
 
-- **If the local project is configured for a different package manager**, Corepack will request you to run the command again using the right package manager - thus avoiding corruptions of your install artifacts.
 
-- **If the local project isn't configured for any package manager**, Corepack will assume that you know what you're doing, and will use whatever package manager version has been pinned as "known good release". Check the relevant section for more details.
+```shell
+yarn install  ;#in Yarn projects,
+pnpm install  ;#in pnpm projects,
+npm install  ;#in npm projects. 
+
+```
+
+Corepack will catch these calls, and then  do the following.
+
+1. Look for the `"packageManager" :"<package manager name>"` in your package.json .
+
+2. Look at the **local** project to see if it is configured for the package manager `<package manager name>`
+   
+    **a.** If the local project is configured for a different package manager, Corepack will request you to run the command again using the right package manager - thus avoiding corruptions of your install artifacts.
+  
+    **b.** If the local project isn't configured for any package manager, Corepack will assume that you know what you're doing, and will use whatever package manager version has been pinned as "known good release".
+  
+4. Silently download and cache the latest compatible version of `<package manager name>` of a Known Good Releases
 
 ## Known Good Releases
 
-When running Yarn or pnpm within projects that don't list a supported package manager, Corepack will default to a set of Known Good Releases. In a way, you can compare this to Node.js, where each version ships with a specific version of npm.
-
+When running Yarn or pnpm within projects that don't list a supported package manager, 
+<br />Corepack will default to a set of Known Good Releases. 
+ <br />
+ <br /> In a way, you can compare this to Node.js, where each version ships with a specific version of npm.  <br />
 The Known Good Releases can be updated system-wide using the `--activate` flag from the `corepack prepare` and `corepack hydrate` commands.
 
 ## Offline Workflow
