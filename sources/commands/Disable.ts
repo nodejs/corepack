@@ -16,7 +16,7 @@ export class DisableCommand extends Command<Context> {
     details: `
       When run, this command will remove the shims for the specified package managers from the install directory, or all shims if no parameters are passed.
 
-      By default it will locate the install directory by running the equivalent of \`which corepack\`, but this can be tweaked by explicitly passing the install directory via the \`--bin-folder\` flag.
+      By default it will locate the install directory by running the equivalent of \`which corepack\`, but this can be tweaked by explicitly passing the install directory via the \`--install-directory\` flag.
     `,
     examples: [[
       `Disable all shims, removing them if they're next to the \`coreshim\` binary`,
