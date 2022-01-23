@@ -43,7 +43,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/preset-typescript", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.13.0"],
             ["@types/debug", "npm:4.1.5"],
             ["@types/jest", "npm:26.0.23"],
-            ["@types/node", "npm:13.9.2"],
+            ["@types/node", "npm:17.0.10"],
+            ["@types/rimraf", "npm:3.0.2"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@types/which", "npm:1.3.2"],
@@ -59,6 +60,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:26.6.3"],
             ["nock", "npm:13.0.4"],
+            ["rimraf", "npm:3.0.2"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],
@@ -1461,6 +1463,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@types/glob", [
+        ["npm:7.2.0", {
+          "packageLocation": "./.yarn/cache/@types-glob-npm-7.2.0-772334bf9a-6ae717fedf.zip/node_modules/@types/glob/",
+          "packageDependencies": [
+            ["@types/glob", "npm:7.2.0"],
+            ["@types/minimatch", "npm:3.0.5"],
+            ["@types/node", "npm:13.9.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@types/graceful-fs", [
         ["npm:4.1.5", {
           "packageLocation": "./.yarn/cache/@types-graceful-fs-npm-4.1.5-91d62e1050-d076bb61f4.zip/node_modules/@types/graceful-fs/",
@@ -1527,6 +1540,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["@types/minimatch", [
+        ["npm:3.0.5", {
+          "packageLocation": "./.yarn/cache/@types-minimatch-npm-3.0.5-802bb0797f-c41d136f67.zip/node_modules/@types/minimatch/",
+          "packageDependencies": [
+            ["@types/minimatch", "npm:3.0.5"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["@types/minipass", [
         ["npm:2.2.0", {
           "packageLocation": "./.yarn/cache/@types-minipass-npm-2.2.0-78f6142b4d-a6e7d103ce.zip/node_modules/@types/minipass/",
@@ -1545,10 +1567,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],
           "linkType": "HARD",
         }],
-        ["npm:13.9.2", {
-          "packageLocation": "./.yarn/cache/@types-node-npm-13.9.2-d069dc6c73-58e82c03d3.zip/node_modules/@types/node/",
+        ["npm:17.0.10", {
+          "packageLocation": "./.yarn/cache/@types-node-npm-17.0.10-c0e46c1462-979e83d642.zip/node_modules/@types/node/",
           "packageDependencies": [
-            ["@types/node", "npm:13.9.2"]
+            ["@types/node", "npm:17.0.10"]
           ],
           "linkType": "HARD",
         }]
@@ -1567,6 +1589,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-prettier-npm-2.2.3-6036e6d94a-78f1d731f9.zip/node_modules/@types/prettier/",
           "packageDependencies": [
             ["@types/prettier", "npm:2.2.3"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["@types/rimraf", [
+        ["npm:3.0.2", {
+          "packageLocation": "./.yarn/cache/@types-rimraf-npm-3.0.2-dd6eb5de99-b47fa302f4.zip/node_modules/@types/rimraf/",
+          "packageDependencies": [
+            ["@types/rimraf", "npm:3.0.2"],
+            ["@types/glob", "npm:7.2.0"],
+            ["@types/node", "npm:13.9.0"]
           ],
           "linkType": "HARD",
         }]
@@ -3059,7 +3092,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@babel/preset-typescript", "virtual:0bda696f47fa4339976f909c007f0dc954386da51b8923bf264010d9929618071aa538c29b76d4b6c53f7388a7d83508f2a5027eb81cfc74b39b9d4a0b1a8c5a#npm:7.13.0"],
             ["@types/debug", "npm:4.1.5"],
             ["@types/jest", "npm:26.0.23"],
-            ["@types/node", "npm:13.9.2"],
+            ["@types/node", "npm:17.0.10"],
+            ["@types/rimraf", "npm:3.0.2"],
             ["@types/semver", "npm:7.1.0"],
             ["@types/tar", "npm:4.0.3"],
             ["@types/which", "npm:1.3.2"],
@@ -3075,6 +3109,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-arca", "npm:0.9.5"],
             ["jest", "npm:26.6.3"],
             ["nock", "npm:13.0.4"],
+            ["rimraf", "npm:3.0.2"],
             ["semver", "npm:7.1.3"],
             ["supports-color", "npm:7.1.0"],
             ["tar", "npm:6.0.1"],

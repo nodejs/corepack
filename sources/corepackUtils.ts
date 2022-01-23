@@ -87,39 +87,50 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const url = spec.url.replace(`{}`, locator.reference);
   debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url}`);
 
-  return await fsUtils.mutex(installFolder, async () => {
-    // Creating a temporary folder inside the install folder means that we
-    // are sure it'll be in the same drive as the destination, so we can
-    // just move it there atomically once we are done
+  // Creating a temporary folder inside the install folder means that we
+  // are sure it'll be in the same drive as the destination, so we can
+  // just move it there atomically once we are done
 
-    const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
-    const stream = await httpUtils.fetchUrlStream(url);
+  const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
+  const stream = await httpUtils.fetchUrlStream(url);
 
-    const parsedUrl = new URL(url);
-    const ext = path.posix.extname(parsedUrl.pathname);
+  const parsedUrl = new URL(url);
+  const ext = path.posix.extname(parsedUrl.pathname);
 
-    let outputFile: string | null = null;
+  let outputFile: string | null = null;
 
-    let sendTo: any;
-    if (ext === `.tgz`) {
-      sendTo = tar.x({strip: 1, cwd: tmpFolder});
-    } else if (ext === `.js`) {
-      outputFile = path.join(tmpFolder, path.posix.basename(parsedUrl.pathname));
-      sendTo = fs.createWriteStream(outputFile);
-    }
+  let sendTo: any;
+  if (ext === `.tgz`) {
+    sendTo = tar.x({strip: 1, cwd: tmpFolder});
+  } else if (ext === `.js`) {
+    outputFile = path.join(tmpFolder, path.posix.basename(parsedUrl.pathname));
+    sendTo = fs.createWriteStream(outputFile);
+  }
 
-    stream.pipe(sendTo);
+  stream.pipe(sendTo);
 
-    await new Promise(resolve => {
-      sendTo.on(`finish`, resolve);
-    });
-
-    await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
-    await fs.promises.rename(tmpFolder, installFolder);
-
-    debugUtils.log(`Install finished`);
-    return installFolder;
+  await new Promise(resolve => {
+    sendTo.on(`finish`, resolve);
   });
+
+  await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
+  try {
+    await fs.promises.rename(tmpFolder, installFolder);
+  } catch (err) {
+    if (
+      err.code === `ENOTEMPTY` ||
+      // On Windows the error code is EPERM so we check if it is a directory
+      (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
+    ) {
+      debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
+      await fsUtils.rimraf(tmpFolder);
+    } else {
+      throw err;
+    }
+  }
+
+  debugUtils.log(`Install finished`);
+  return installFolder;
 }
 
 export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, locator: Locator, binName: string, args: Array<string>, context: Context) {

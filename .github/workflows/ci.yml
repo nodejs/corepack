@@ -32,6 +32,9 @@ jobs:
         env:
           TARGET_BRANCH: ${{github.event.pull_request.base.ref}}
 
+      - name: 'Check for type errors'
+        run: yarn typecheck
+
   build:
     strategy:
       fail-fast: false

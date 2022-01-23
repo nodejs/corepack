@@ -55,7 +55,7 @@ async function main() {
   const remapPath = (p: string) => path.resolve(__dirname, path.relative(virtualNodewinDir, p));
 
   const easyStatFs = Object.assign(Object.create(fs), {
-    readFile: (p: string, encoding: string, cb: (err: any, str: string) => void) => fs.readFile(remapPath(p), encoding, cb),
+    readFile: (p: string, encoding: BufferEncoding, cb: (err: any, str: string) => void) => fs.readFile(remapPath(p), encoding, cb),
     stat: (p: string, cb: () => void) => fs.stat(remapPath(p), cb),
   });
 
