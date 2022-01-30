@@ -58,7 +58,7 @@
     "which": "^2.0.2"
   },
   "scripts": {
-    "build": "rm -rf dist && webpack && ts-node ./mkshims.ts",
+    "build": "rm -rf dist shims && webpack && ts-node ./mkshims.ts",
     "corepack": "ts-node ./sources/main.ts",
     "prepack": "node ./.yarn/releases/*.*js build",
     "postpack": "rm -rf dist shims",
