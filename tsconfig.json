@@ -10,6 +10,7 @@
     "lib": ["dom", "es2017", "esnext.asynciterable"],
     "module": "commonjs",
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "target": "es2017"
   }
 }

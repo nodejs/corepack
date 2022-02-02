@@ -328,3 +328,30 @@ it(`should support running package managers with bin array`, async () => {
     });
   });
 });
+
+it(`should handle parallel installs`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(Promise.all([
+      runCli(cwd, [`yarn`, `--version`]),
+      runCli(cwd, [`yarn`, `--version`]),
+      runCli(cwd, [`yarn`, `--version`]),
+    ])).resolves.toMatchObject([
+      {
+        stdout: `2.2.2\n`,
+        exitCode: 0,
+      },
+      {
+        stdout: `2.2.2\n`,
+        exitCode: 0,
+      },
+      {
+        stdout: `2.2.2\n`,
+        exitCode: 0,
+      },
+    ]);
+  });
+});

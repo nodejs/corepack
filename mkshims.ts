@@ -5,9 +5,14 @@ import path                         from 'path';
 import {Engine}                     from './sources/Engine';
 import {SupportedPackageManagerSet} from './sources/types';
 
-const EXCLUDE_SHIMS = new Set([
-  `vcc.js`,
-]);
+function shouldGenerateShim(name: string) {
+  if (name === 'vcc.js') {
+    return false;
+  } else if (name.startsWith('vendors')) {
+    return false;
+  }
+  return true;
+}
 
 const engine = new Engine();
 
@@ -38,7 +43,7 @@ async function main() {
   }
 
   for (const binaryName of fs.readdirSync(distDir)) {
-    if (EXCLUDE_SHIMS.has(binaryName))
+    if (shouldGenerateShim(binaryName) === false)
       continue;
 
     await cmdShim(path.join(distDir, binaryName), path.join(shimsDir, path.basename(binaryName, `.js`)), {createCmdFile: true});
@@ -55,12 +60,16 @@ async function main() {
   const remapPath = (p: string) => path.resolve(__dirname, path.relative(virtualNodewinDir, p));
 
   const easyStatFs = Object.assign(Object.create(fs), {
-    readFile: (p: string, encoding: string, cb: (err: any, str: string) => void) => fs.readFile(remapPath(p), encoding, cb),
+    readFile: (p: string, encoding: BufferEncoding, cb: (err: any, str: string) => void) => fs.readFile(remapPath(p), encoding, cb),
     stat: (p: string, cb: () => void) => fs.stat(remapPath(p), cb),
   });
 
-  for (const binaryName of fs.readdirSync(distDir))
+  for (const binaryName of fs.readdirSync(distDir)) {
+    if (shouldGenerateShim(binaryName) === false)
+      continue;
+
     await cmdShim(path.join(virtualNodewinDir, `dist/${binaryName}`), path.join(physicalNodewinDir, path.basename(binaryName, `.js`)), {createCmdFile: true, fs: easyStatFs});
+  }
 
   console.log(`All shims have been generated.`);
 }
