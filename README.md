@@ -8,7 +8,7 @@ Corepack is a zero-runtime-dependency Node.js script that acts as a bridge betwe
 
 ### Default Installs
 
-Corepack is distributed by default with Node.js 16.9, but is opt-in for the time being. Run `corepack enable` to install the required shims.
+Corepack is distributed by default with Node.js 14.19.0 and 16.9.0, but is opt-in for the time being. Run `corepack enable` to install the required shims.
 
 ### Manual Installs
 
