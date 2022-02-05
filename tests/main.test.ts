@@ -88,7 +88,7 @@ it(`should expose its root to spawned processes`, async () => {
 
     await expect(runCli(cwd, [`npm`, `run`, `env`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}\n`),
+      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}`),
     });
   });
 });
