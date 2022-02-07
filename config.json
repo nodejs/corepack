@@ -1,94 +1,110 @@
 {
-    "definitions": {
-        "npm": {
-            "default": "7.20.1",
-            "transparent": {
-              "commands": [
-                ["npm", "init"],
-                ["npx"]
-              ]
-            },
-            "ranges": {
-                "*": {
-                    "url": "https://registry.npmjs.org/npm/-/npm-{}.tgz",
-                    "bin": {
-                        "npm": "./bin/npm-cli.js",
-                        "npx": "./bin/npx-cli.js"
-                    },
-                    "registry": {
-                        "type": "npm",
-                        "package": "npm"
-                    }
-                }
-            }
-        },
-        "pnpm": {
-            "default": "6.11.0",
-            "transparent": {
-              "commands": [
-                ["pnpm", "init"],
-                ["pnpx"]
-              ]
-            },
-            "ranges": {
-                "<6.0.0": {
-                    "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
-                    "bin": {
-                        "pnpm": "./bin/pnpm.js",
-                        "pnpx": "./bin/pnpx.js"
-                    },
-                    "registry": {
-                        "type": "npm",
-                        "package": "pnpm"
-                    }
-                },
-                ">=6.0.0": {
-                    "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
-                    "bin": {
-                        "pnpm": "./bin/pnpm.cjs",
-                        "pnpx": "./bin/pnpx.cjs"
-                    },
-                    "registry": {
-                        "type": "npm",
-                        "package": "pnpm"
-                    }
-                }
-            }
-        },
-        "yarn": {
-            "default": "1.22.15",
-            "transparent": {
-              "default": "3.0.0",
-              "commands": [
-                ["yarn", "dlx"]
-              ]
-            },
-            "ranges": {
-                "<2.0.0": {
-                    "url": "https://registry.yarnpkg.com/yarn/-/yarn-{}.tgz",
-                    "bin": {
-                        "yarn": "./bin/yarn.js",
-                        "yarnpkg": "./bin/yarn.js"
-                    },
-                    "registry": {
-                        "type": "npm",
-                        "package": "yarn"
-                    }
-                },
-                ">=2.0.0": {
-                    "name": "yarn",
-                    "url": "https://repo.yarnpkg.com/{}/packages/yarnpkg-cli/bin/yarn.js",
-                    "bin": ["yarn", "yarnpkg"],
-                    "registry": {
-                        "type": "url",
-                        "url": "https://repo.yarnpkg.com/tags",
-                        "fields": {
-                          "tags": "latest",
-                          "versions": "tags"
-                        }
-                    }
-                }
-            }
+  "definitions": {
+    "npm": {
+      "default": "8.4.0",
+      "transparent": {
+        "commands": [
+          [
+            "npm",
+            "init"
+          ],
+          [
+            "npx"
+          ]
+        ]
+      },
+      "ranges": {
+        "*": {
+          "url": "https://registry.npmjs.org/npm/-/npm-{}.tgz",
+          "bin": {
+            "npm": "./bin/npm-cli.js",
+            "npx": "./bin/npx-cli.js"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "npm"
+          }
         }
+      }
+    },
+    "pnpm": {
+      "default": "6.29.1",
+      "transparent": {
+        "commands": [
+          [
+            "pnpm",
+            "init"
+          ],
+          [
+            "pnpx"
+          ]
+        ]
+      },
+      "ranges": {
+        "<6.0.0": {
+          "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+          "bin": {
+            "pnpm": "./bin/pnpm.js",
+            "pnpx": "./bin/pnpx.js"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "pnpm"
+          }
+        },
+        ">=6.0.0": {
+          "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+          "bin": {
+            "pnpm": "./bin/pnpm.cjs",
+            "pnpx": "./bin/pnpx.cjs"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "pnpm"
+          }
+        }
+      }
+    },
+    "yarn": {
+      "default": "1.22.17",
+      "transparent": {
+        "default": "3.1.1",
+        "commands": [
+          [
+            "yarn",
+            "dlx"
+          ]
+        ]
+      },
+      "ranges": {
+        "<2.0.0": {
+          "url": "https://registry.yarnpkg.com/yarn/-/yarn-{}.tgz",
+          "bin": {
+            "yarn": "./bin/yarn.js",
+            "yarnpkg": "./bin/yarn.js"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "yarn"
+          }
+        },
+        ">=2.0.0": {
+          "name": "yarn",
+          "url": "https://repo.yarnpkg.com/{}/packages/yarnpkg-cli/bin/yarn.js",
+          "bin": [
+            "yarn",
+            "yarnpkg"
+          ],
+          "registry": {
+            "type": "url",
+            "url": "https://repo.yarnpkg.com/tags",
+            "fields": {
+              "tags": "latest",
+              "versions": "tags"
+            }
+          }
+        }
+      }
     }
+  }
 }

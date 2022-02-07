@@ -1,0 +1,54 @@
+name: Version Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+    - name: 'Update the package manager versions'
+      run: |
+        LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest')
+        LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest')
+        LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest')
+        LATEST_BERRY=$(curl https://repo.yarnpkg.com/tags | jq '.latest.stable')
+
+        jq < config.json > config.json.new '. * '"{
+          definitions: {
+            npm: {
+              default: $LATEST_NPM,
+            },
+            pnpm: {
+              default: $LATEST_PNPM,
+            },
+            yarn: {
+              default: $LATEST_YARN,
+              transparent: {
+                default: $LATEST_BERRY,
+              },
+            },
+          },
+        }"
+
+        rm config.json
+        mv config.json.new config.json
+
+        if [[ ! -z "$(git status --porcelain)" ]]; then
+          git config user.email 'github-bot@iojs.org'
+          git config user.name 'Node.js GitHub Bot'
+
+          git add config.json
+          git commit -m 'chore: update package manager versions'
+          git push
+        fi
