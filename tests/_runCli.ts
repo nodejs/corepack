@@ -1,36 +1,35 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
-import {PassThrough}         from 'stream';
-
-import {Engine}              from '../sources/Engine';
-import {main}                from '../sources/main';
+import {spawn}               from 'child_process';
 
 export async function runCli(cwd: PortablePath, argv: Array<string>) {
-  const stdin = new PassThrough();
-  const stdout = new PassThrough();
-  const stderr = new PassThrough();
-
   const out: Array<Buffer> = [];
   const err: Array<Buffer> = [];
 
-  stdout.on(`data`, chunk => {
-    out.push(chunk);
-  });
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [require.resolve(`corepack/dist/corepack.js`), ...argv], {
+      cwd: npath.fromPortablePath(cwd),
+      env: process.env,
+      stdio: `pipe`,
+    });
 
-  stderr.on(`data`, chunk => {
-    err.push(chunk);
-  });
+    child.stdout.on(`data`, chunk => {
+      out.push(chunk);
+    });
 
-  const exitCode = await main(argv, {
-    cwd: npath.fromPortablePath(cwd),
-    engine: new Engine(),
-    stdin,
-    stdout,
-    stderr,
-  });
+    child.stderr.on(`data`, chunk => {
+      err.push(chunk);
+    });
 
-  return {
-    exitCode,
-    stdout: Buffer.concat(out).toString(),
-    stderr: Buffer.concat(err).toString(),
-  };
+    child.on(`error`, error => {
+      reject(error);
+    });
+
+    child.on(`exit`, exitCode => {
+      resolve({
+        exitCode,
+        stdout: Buffer.concat(out).toString(),
+        stderr: Buffer.concat(err).toString(),
+      });
+    });
+  });
 }

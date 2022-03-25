@@ -6,7 +6,7 @@ module.exports = {
   devtool: false,
   target: `node`,
   entry: {
-    [`corepack`]: `./sources/main.ts`,
+    [`corepack`]: `./sources/_entryPoint.ts`,
     [`vcc`]: `v8-compile-cache`,
   },
   output: {

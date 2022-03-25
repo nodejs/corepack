@@ -59,7 +59,7 @@
   },
   "scripts": {
     "build": "rm -rf dist shims && webpack && ts-node ./mkshims.ts",
-    "corepack": "ts-node ./sources/main.ts",
+    "corepack": "ts-node ./sources/_entryPoint.ts",
     "prepack": "node ./.yarn/releases/*.*js build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",

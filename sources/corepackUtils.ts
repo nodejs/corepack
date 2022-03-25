@@ -1,4 +1,3 @@
-import {StdioOptions, spawn, ChildProcess}                     from 'child_process';
 import fs                                                      from 'fs';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
@@ -7,10 +6,8 @@ import * as debugUtils                                         from './debugUtil
 import * as folderUtils                                        from './folderUtils';
 import * as fsUtils                                            from './fsUtils';
 import * as httpUtils                                          from './httpUtils';
-import {Context}                                               from './main';
+import * as nodeUtils                                          from './nodeUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-
-declare const __non_webpack_require__: unknown;
 
 export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<string, string>> {
   switch (spec.type) {
@@ -133,7 +130,10 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   return installFolder;
 }
 
-export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, locator: Locator, binName: string, args: Array<string>, context: Context) {
+/**
+ * Loads the binary, taking control of the current process.
+ */
+export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
   let binPath: string | null = null;
   if (Array.isArray(installSpec.spec.bin)) {
     if (installSpec.spec.bin.some(bin => bin === binName)) {
@@ -155,82 +155,23 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
-  return new Promise<number>((resolve, reject) => {
-    process.on(`SIGINT`, () => {
-      // We don't want to exit the process before the child, so we just
-      // ignore SIGINT and wait for the regular exit to happen (the child
-      // will receive SIGINT too since it's part of the same process grp)
-    });
+  nodeUtils.registerV8CompileCache();
 
-    const stdio: StdioOptions = [`pipe`, `pipe`, `pipe`];
+  // We load the binary into the current process,
+  // while making it think it was spawned.
 
-    if (context.stdin === process.stdin)
-      stdio[0] = `inherit`;
-    if (context.stdout === process.stdout)
-      stdio[1] = `inherit`;
-    if (context.stderr === process.stderr)
-      stdio[2] = `inherit`;
+  // Non-exhaustive list of requirements:
+  // - Yarn uses process.argv[1] to determine its own path: https://github.com/yarnpkg/berry/blob/0da258120fc266b06f42aed67e4227e81a2a900f/packages/yarnpkg-cli/sources/main.ts#L80
+  // - pnpm uses `require.main == null` to determine its own version: https://github.com/pnpm/pnpm/blob/e2866dee92991e979b2b0e960ddf5a74f6845d90/packages/cli-meta/src/index.ts#L14
 
-    const v8CompileCache = typeof __non_webpack_require__ !== `undefined`
-      ? eval(`require`).resolve(`./vcc.js`)
-      : eval(`require`).resolve(`corepack/dist/vcc.js`);
+  process.env.COREPACK_ROOT = path.dirname(eval(`__dirname`));
 
-    const child = spawn(process.execPath, [`--require`, v8CompileCache, binPath!, ...args], {
-      cwd: context.cwd,
-      stdio,
-      env: {
-        ...process.env,
-        COREPACK_ROOT: path.dirname(eval(`__dirname`)),
-      },
-    });
+  process.argv = [
+    process.execPath,
+    binPath,
+    ...args,
+  ];
+  process.execArgv = [];
 
-    activeChildren.add(child);
-
-    if (activeChildren.size === 1) {
-      process.on(`SIGINT`, sigintHandler);
-      process.on(`SIGTERM`, sigtermHandler);
-    }
-
-    if (context.stdin !== process.stdin)
-      context.stdin.pipe(child.stdin!);
-    if (context.stdout !== process.stdout)
-      child.stdout!.pipe(context.stdout);
-    if (context.stderr !== process.stderr)
-      child.stderr!.pipe(context.stderr);
-
-    child.on(`error`, error => {
-      activeChildren.delete(child);
-
-      if (activeChildren.size === 0) {
-        process.off(`SIGINT`, sigintHandler);
-        process.off(`SIGTERM`, sigtermHandler);
-      }
-
-      reject(error);
-    });
-
-    child.on(`exit`, exitCode => {
-      activeChildren.delete(child);
-
-      if (activeChildren.size === 0) {
-        process.off(`SIGINT`, sigintHandler);
-        process.off(`SIGTERM`, sigtermHandler);
-      }
-
-      resolve(exitCode !== null ? exitCode : 1);
-    });
-  });
-}
-
-const activeChildren = new Set<ChildProcess>();
-
-function sigintHandler() {
-  // We don't want SIGINT to kill our process; we want it to kill the
-  // innermost process, whose end will cause our own to exit.
-}
-
-function sigtermHandler() {
-  for (const child of activeChildren) {
-    child.kill();
-  }
+  return nodeUtils.loadMainModule(binPath);
 }
