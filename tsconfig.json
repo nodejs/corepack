@@ -11,6 +11,10 @@
     "module": "commonjs",
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "strict": true,
     "target": "es2017"
+  },
+  "ts-node": {
+    "transpileOnly": true
   }
 }

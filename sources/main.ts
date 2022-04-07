@@ -5,8 +5,8 @@ import {DisableCommand}                                          from './command
 import {EnableCommand}                                           from './commands/Enable';
 import {HydrateCommand}                                          from './commands/Hydrate';
 import {PrepareCommand}                                          from './commands/Prepare';
-import * as miscUtils                                            from './miscUtils';
 import * as corepackUtils                                        from './corepackUtils';
+import * as miscUtils                                            from './miscUtils';
 import * as specUtils                                            from './specUtils';
 import {Locator, SupportedPackageManagers, Descriptor}           from './types';
 
@@ -19,7 +19,7 @@ type PackageManagerRequest = {
   binaryVersion: string | null;
 };
 
-function getPackageManagerRequestFromCli(parameter: string | undefined, context: CustomContext & Partial<Context>): PackageManagerRequest {
+function getPackageManagerRequestFromCli(parameter: string | undefined, context: CustomContext & Partial<Context>): PackageManagerRequest | null {
   if (!parameter)
     return null;
 
@@ -82,13 +82,19 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
     throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
   const installSpec = await context.engine.ensurePackageManager(resolved);
-  const exitCode = await corepackUtils.runVersion(installSpec, resolved, binaryName, args, context);
 
-  return exitCode;
+  return await corepackUtils.runVersion(installSpec, binaryName, args);
 }
 
-export async function main(argv: Array<string>, context: CustomContext & Partial<Context>) {
+async function main(argv: Array<string>) {
   const corepackVersion = require(`../package.json`).version;
+
+  // Because we load the binaries in the same process, we don't support custom contexts.
+  const context = {
+    ...Cli.defaultContext,
+    cwd: process.cwd(),
+    engine: new Engine(),
+  };
 
   const [firstArg, ...restArgs] = argv;
   const request = getPackageManagerRequestFromCli(firstArg, context);
@@ -110,10 +116,7 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
     cli.register(HydrateCommand);
     cli.register(PrepareCommand);
 
-    return await cli.run(argv, {
-      ...Cli.defaultContext,
-      ...context,
-    });
+    return await cli.run(argv, context);
   } else {
     // Otherwise, we create a single-command CLI to run the specified package manager (we still use Clipanion in order to pretty-print usage errors).
     const cli = new Cli({
@@ -129,25 +132,16 @@ export async function main(argv: Array<string>, context: CustomContext & Partial
       }
     });
 
-    return await cli.run(restArgs, {
-      ...Cli.defaultContext,
-      ...context,
-    });
+    return await cli.run(restArgs, context);
   }
 }
 
+// Important: this is the only function that the corepack binary exports.
 export function runMain(argv: Array<string>) {
-  main(argv, {
-    cwd: process.cwd(),
-    engine: new Engine(),
-  }).then(exitCode => {
+  main(argv).then(exitCode => {
     process.exitCode = exitCode;
   }, err => {
     console.error(err.stack);
     process.exitCode = 1;
   });
 }
-
-// Using `eval` to be sure that Webpack doesn't transform it
-if (process.mainModule === eval(`module`))
-  runMain(process.argv.slice(2));

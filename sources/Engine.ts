@@ -5,11 +5,11 @@ import semver                                                 from 'semver';
 
 import defaultConfig                                          from '../config.json';
 
-import * as folderUtils                                       from './folderUtils';
 import * as corepackUtils                                     from './corepackUtils';
+import * as folderUtils                                       from './folderUtils';
 import * as semverUtils                                       from './semverUtils';
-import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 import {Config, Descriptor, Locator}                          from './types';
+import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 
 
 export class Engine {
