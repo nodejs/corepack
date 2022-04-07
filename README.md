@@ -110,6 +110,8 @@ This command will retrieve the given package manager from the specified archive 
 
 - `COREPACK_ROOT` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
 
+- `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through [`node-proxy-agent`](https://github.com/TooTallNate/node-proxy-agent).
+
 ## Contributing
 
 If you want to build corepack yourself, you can build the project like this:
