@@ -56,33 +56,31 @@ export class PrepareCommand extends Command<Context> {
     if (this.all && this.specs.length > 0)
       throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
 
-    const specs = this.all
+    const specs: Array<string | Descriptor> = this.all
       ? await this.context.engine.getDefaultDescriptors()
       : this.specs;
 
     const installLocations: Array<string> = [];
 
-    for (const request of specs) {
-      let spec: Descriptor;
+    if (specs.length === 0) {
+      const lookup = await specUtils.loadSpec(this.context.cwd);
+      switch (lookup.type) {
+        case `NoProject`:
+          throw new UsageError(`Couldn't find a project in the local directory - please explicit the package manager to pack, or run this command from a valid project`);
 
-      if (typeof request === `undefined`) {
-        const lookup = await specUtils.loadSpec(this.context.cwd);
-        switch (lookup.type) {
-          case `NoProject`:
-            throw new UsageError(`Couldn't find a project in the local directory - please explicit the package manager to pack, or run this command from a valid project`);
+        case `NoSpec`:
+          throw new UsageError(`The local project doesn't feature a 'packageManager' field - please explicit the package manager to pack, or update the manifest to reference it`);
 
-          case `NoSpec`:
-            throw new UsageError(`The local project doesn't feature a 'packageManager' field - please explicit the package manager to pack, or update the manifest to reference it`);
-
-          default: {
-            spec = lookup.spec;
-          }
+        default: {
+          specs.push(lookup.spec);
         }
-      } else {
-        spec = typeof request === `string`
-          ? specUtils.parseSpec(request, `CLI arguments`)
-          : request;
       }
+    }
+
+    for (const request of specs) {
+      const spec = typeof request === `string`
+        ? specUtils.parseSpec(request, `CLI arguments`)
+        : request;
 
       const resolved = await this.context.engine.resolveDescriptor(spec);
       if (resolved === null)
