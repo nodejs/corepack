@@ -41,3 +41,7 @@ export function loadMainModule(id: string): void {
     throw error;
   }
 }
+
+export interface NodeError extends Error {
+  code: string;
+}

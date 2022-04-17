@@ -49,7 +49,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   try {
     folderContent = await fs.promises.readdir(installFolder);
   } catch (error) {
-    if (error.code === `ENOENT`) {
+    if ((error as nodeUtils.NodeError).code === `ENOENT`) {
       folderContent = [];
     } else {
       throw error;
@@ -115,9 +115,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     await fs.promises.rename(tmpFolder, installFolder);
   } catch (err) {
     if (
-      err.code === `ENOTEMPTY` ||
+      (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
       // On Windows the error code is EPERM so we check if it is a directory
-      (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
+      ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
       await fsUtils.rimraf(tmpFolder);
