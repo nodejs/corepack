@@ -56,7 +56,7 @@
   "scripts": {
     "build": "rm -rf dist shims && webpack && ts-node ./mkshims.ts",
     "corepack": "ts-node ./sources/_entryPoint.ts",
-    "prepack": "node ./.yarn/releases/*.*js build",
+    "prepack": "yarn build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",
     "test": "yarn jest"
