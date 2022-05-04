@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 14
+          - "v14.19.2"
         platform:
           - ubuntu-latest
           - macos-latest
