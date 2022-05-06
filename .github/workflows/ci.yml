@@ -19,7 +19,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: "v14.19.2"
+          node-version: 14
 
       - name: "Check that the cache files are consistent with their remote sources"
         run: |
