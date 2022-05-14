@@ -40,23 +40,23 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - "v14.19.2"
+          - 14
         platform:
           - ubuntu-latest
           - macos-latest
           - windows-latest
 
-    name: "${{matrix.platform}} w/ Node.js 14.x"
+    name: "${{matrix.platform}} w/ Node.js ${{matrix.node}}.x"
     runs-on: ${{matrix.platform}}
     needs: chore
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: "Use Node.js ${{matrix.node}}"
+      - name: "Use Node.js ${{matrix.node}}.x"
         uses: actions/setup-node@v3
         with:
-          node-version: ${{matrix.node}}
+          node-version: ${{matrix.node}}.x
 
       - run: corepack yarn install --immutable
       - run: corepack yarn build # We need the stubs to run the tests
