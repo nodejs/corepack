@@ -179,10 +179,17 @@ it(`should allow to call "prepare" without arguments within a configured project
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      stdout: `1.0.0\n`,
-      exitCode: 0,
-    });
+    // Disable the network to make sure we don't succeed by accident
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+    try {
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `1.0.0\n`,
+        exitCode: 0,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_NETWORK;
+    }
   });
 });
 
