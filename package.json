@@ -17,7 +17,7 @@
     "yarn": "./dist/yarn.js",
     "yarnpkg": "./dist/yarnpkg.js"
   },
-  "packageManager": "yarn@3.2.0",
+  "packageManager": "yarn@3.2.1",
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-transform-modules-commonjs": "^7.14.0",
@@ -30,17 +30,17 @@
     "@types/which": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "@yarnpkg/eslint-config": "^0.5.0",
+    "@yarnpkg/eslint-config": "^1.0.0-rc.5",
     "@yarnpkg/fslib": "^2.1.0",
     "@zkochan/cmd-shim": "^5.0.0",
     "babel-plugin-dynamic-import-node": "^2.3.3",
     "clipanion": "^3.0.1",
     "debug": "^4.1.1",
     "eslint": "^8.0.0",
-    "eslint-plugin-arca": "^0.9.5",
+    "eslint-plugin-arca": "^0.15.0",
     "jest": "^28.0.0",
     "nock": "^13.0.4",
-    "proxy-agent": "^4.0.1",
+    "proxy-agent": "^5.0.0",
     "semver": "^7.1.3",
     "supports-color": "^9.0.0",
     "tar": "^6.0.1",
@@ -88,5 +88,8 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
+  },
+  "resolutions": {
+    "vm2": "patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch"
   }
 }
