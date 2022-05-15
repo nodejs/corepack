@@ -1,6 +1,7 @@
-import {mkdirSync}       from 'fs';
-import {homedir, tmpdir} from 'os';
-import {join}            from 'path';
+import {mkdirSync}        from 'fs';
+import {homedir, tmpdir}  from 'os';
+import {join}             from 'path';
+import type { NodeError } from './nodeUtils';
 
 export function getInstallFolder() {
   return process.env.COREPACK_HOME ?? join(homedir(), `.node/corepack`);
@@ -18,7 +19,7 @@ export function getTemporaryFolder(target: string = tmpdir()) {
       mkdirSync(path);
       return path;
     } catch (error) {
-      if (error.code === `EEXIST`) {
+      if ((error as NodeError).code === `EEXIST`) {
         continue;
       } else {
         throw error;

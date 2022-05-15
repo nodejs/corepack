@@ -3,7 +3,7 @@ import {Filename, ppath, xfs, PortablePath} from '@yarnpkg/fslib';
 export async function makeBin(cwd: PortablePath, name: Filename, {ignorePlatform = false}: {ignorePlatform?: boolean} = {}) {
   let path = ppath.join(cwd, name);
   if (process.platform === `win32` && !ignorePlatform)
-    path = `${path}.cmd` as PortablePath;
+    path = `${path}.CMD` as PortablePath;
 
   await xfs.writeFilePromise(path, ``);
   await xfs.chmodPromise(path, 0o755);
@@ -17,7 +17,7 @@ export function getBinaryNames(name: string) {
 
   return [
     `${name}`,
-    `${name}.cmd`,
+    `${name}.CMD`,
     `${name}.ps1`,
   ];
 }

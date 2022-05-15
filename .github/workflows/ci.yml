@@ -8,23 +8,23 @@ on:
 
 jobs:
   chore:
-    name: 'Testing chores'
+    name: "Testing chores"
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - run: |
           git fetch --no-tags --unshallow origin HEAD main
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 14
 
-      - name: 'Check that the cache files are consistent with their remote sources'
+      - name: "Check that the cache files are consistent with their remote sources"
         run: |
           if [[ $(git diff --name-only "$(git merge-base origin/"$TARGET_BRANCH" HEAD)" HEAD -- .yarn/cache | wc -l) -gt 0 ]]; then
-            yarn --immutable --immutable-cache --check-cache
+            corepack yarn --immutable --immutable-cache --check-cache
           fi
         shell: bash
         if: |
@@ -32,33 +32,33 @@ jobs:
         env:
           TARGET_BRANCH: ${{github.event.pull_request.base.ref}}
 
-      - name: 'Check for type errors'
-        run: yarn typecheck
+      - name: "Check for type errors"
+        run: corepack yarn typecheck
 
   build:
     strategy:
       fail-fast: false
       matrix:
         node:
-        - 14
+          - 14
         platform:
-        - ubuntu-latest
-        - macos-latest
-        - windows-latest
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
 
-    name: '${{matrix.platform}} w/ Node.js ${{matrix.node}}.x'
+    name: "${{matrix.platform}} w/ Node.js ${{matrix.node}}.x"
     runs-on: ${{matrix.platform}}
     needs: chore
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-    - name: 'Use Node.js ${{matrix.node}}.x'
-      uses: actions/setup-node@master
-      with:
-        node-version: ${{matrix.node}}.x
+      - name: "Use Node.js ${{matrix.node}}.x"
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{matrix.node}}.x
 
-    - run: yarn install --immutable
-    - run: yarn build # We need the stubs to run the tests
-    - run: yarn eslint
-    - run: yarn jest
+      - run: corepack yarn install --immutable
+      - run: corepack yarn build # We need the stubs to run the tests
+      - run: corepack yarn eslint
+      - run: corepack yarn jest

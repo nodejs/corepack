@@ -3,6 +3,7 @@ import fs                                                                from 'f
 import path                                                              from 'path';
 import which                                                             from 'which';
 
+import type { NodeError }                                                from '../nodeUtils';
 import {Context}                                                         from '../main';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
@@ -68,7 +69,7 @@ export class DisableCommand extends Command<Context> {
     try {
       await fs.promises.unlink(file);
     } catch (err) {
-      if (err.code !== `ENOENT`) {
+      if ((err as NodeError).code !== `ENOENT`) {
         throw err;
       }
     }
@@ -80,7 +81,7 @@ export class DisableCommand extends Command<Context> {
       try {
         await fs.promises.unlink(file);
       } catch (err) {
-        if (err.code !== `ENOENT`) {
+        if ((err as NodeError).code !== `ENOENT`) {
           throw err;
         }
       }
