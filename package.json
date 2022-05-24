@@ -17,7 +17,7 @@
     "yarn": "./dist/yarn.js",
     "yarnpkg": "./dist/yarnpkg.js"
   },
-  "packageManager": "yarn@3.2.1",
+  "packageManager": "yarn@4.0.0-rc.6",
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-transform-modules-commonjs": "^7.14.0",
