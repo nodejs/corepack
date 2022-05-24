@@ -7,23 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  chore:
-    name: "Testing chores"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 14
-
-      - name: "Check for type errors"
-        run: corepack yarn typecheck
-
-  build:
+  test:
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +30,14 @@ jobs:
         with:
           node-version: ${{matrix.node}}.x
 
-      - run: corepack yarn install --immutable
+      - run: corepack yarn install
       - run: corepack yarn build # We need the stubs to run the tests
-      - run: corepack yarn lint
-      - run: corepack yarn test
+
+      - name: "Check for type errors"
+        run: corepack yarn typecheck
+
+      - name: "Check for linting errors"
+        run: corepack yarn lint
+
+      - name: "Check for failing tests"
+        run: corepack yarn test
