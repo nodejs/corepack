@@ -21,6 +21,7 @@ jobs:
           node-version: 14
 
       - run: corepack yarn install
+      - run: corepack yarn build # We need the stubs to run the tests
 
       - name: "Check for type errors"
         run: corepack yarn typecheck
@@ -53,4 +54,5 @@ jobs:
 
       - run: corepack yarn install
       - run: corepack yarn build # We need the stubs to run the tests
+
       - run: corepack yarn test
