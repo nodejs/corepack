@@ -108,6 +108,10 @@ function tryParseURL(str, base) {
     return null;
   }
 }
+let entrypointPath = null;
+function setEntrypointPath(file) {
+  entrypointPath = file;
+}
 function getFileFormat(filepath) {
   var _a, _b;
   const ext = path.extname(filepath);
@@ -131,8 +135,7 @@ function getFileFormat(filepath) {
       return (_a = pkg.data.type) != null ? _a : `commonjs`;
     }
     default: {
-      const isMain = process.argv[1] === filepath;
-      if (!isMain)
+      if (entrypointPath !== filepath)
         return null;
       const pkg = readPackageScope(filepath);
       if (!pkg)
@@ -225,6 +228,8 @@ async function resolve$1(originalSpecifier, context, defaultResolver) {
     resultURL.search = url.search;
     resultURL.hash = url.hash;
   }
+  if (!parentURL)
+    setEntrypointPath(fileURLToPath(resultURL));
   return {
     url: resultURL.href
   };
