@@ -3,6 +3,8 @@
 !/.yarn/patches
 !/.yarn/releases
 !/.yarn/sdks
+/.pnp.*
+
 /dist
 /package.tgz
 
