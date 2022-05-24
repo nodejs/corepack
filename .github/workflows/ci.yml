@@ -20,8 +20,13 @@ jobs:
         with:
           node-version: 14
 
+      - run: corepack yarn install
+
       - name: "Check for type errors"
         run: corepack yarn typecheck
+
+      - name: "Check for linting errors"
+        run: corepack yarn lint
 
   build:
     strategy:
@@ -46,7 +51,6 @@ jobs:
         with:
           node-version: ${{matrix.node}}.x
 
-      - run: corepack yarn install --immutable
+      - run: corepack yarn install
       - run: corepack yarn build # We need the stubs to run the tests
-      - run: corepack yarn lint
       - run: corepack yarn test
