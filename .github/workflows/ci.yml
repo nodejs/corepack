@@ -20,13 +20,6 @@ jobs:
         with:
           node-version: 14
 
-      - name: "Check that the cache files are consistent with their remote sources"
-        run: |
-          git diff --exit-code --quiet HEAD^ -- .yarn/cache || \
-            corepack yarn --immutable --immutable-cache --check-cache
-        if: |
-          github.event.pull_request != ''
-
       - name: "Check for type errors"
         run: corepack yarn typecheck
 
