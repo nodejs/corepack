@@ -82,13 +82,13 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   const url = spec.url.replace(`{}`, locator.reference);
-  debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url}`);
 
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done
 
   const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
+  debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url} to ${tmpFolder}`);
   const stream = await httpUtils.fetchUrlStream(url);
 
   const parsedUrl = new URL(url);
