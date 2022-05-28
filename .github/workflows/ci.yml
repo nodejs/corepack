@@ -19,8 +19,19 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 14
+          
+      - name: Get the Yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
 
-      - run: corepack yarn install
+      - uses: actions/cache@v3
+        with:
+          path: ${{steps.yarn-cache-dir-path.outputs.dir}}
+          key: ${{runner.os}}-yarn-${{hashFiles('**/yarn.lock')}}
+          restore-keys: |
+            ${{runner.os}}-yarn-
+
+      - run: corepack yarn install --immutable
       - run: corepack yarn build # We need the stubs to run the tests
 
       - name: "Check for type errors"
@@ -52,7 +63,18 @@ jobs:
         with:
           node-version: ${{matrix.node}}.x
 
-      - run: corepack yarn install
+      - name: Get the Yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{steps.yarn-cache-dir-path.outputs.dir}}
+          key: ${{runner.os}}-yarn-${{hashFiles('**/yarn.lock')}}
+          restore-keys: |
+            ${{runner.os}}-yarn-
+
+      - run: corepack yarn install --immutable
       - run: corepack yarn build # We need the stubs to run the tests
 
       - run: corepack yarn test
