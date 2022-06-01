@@ -3,7 +3,8 @@ name: Version Sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    # Run once a week at 00:05 AM UTC on Sunday.
+    - cron: 5 0 * * 0
 
 jobs:
   build:
@@ -15,7 +16,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: lts/*
 
       - name: "Update the package manager versions"
         run: |
@@ -24,7 +25,7 @@ jobs:
           LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest')
           LATEST_BERRY=$(curl https://repo.yarnpkg.com/tags | jq '.latest.stable')
 
-          jq < config.json > config.json.new '. * '"{
+          git --no-pager show HEAD:config.json | jq '. * '"{
             definitions: {
               npm: {
                 default: $LATEST_NPM,
@@ -39,16 +40,15 @@ jobs:
                 },
               },
             },
-          }"
+          }" > config.json
 
-          rm config.json
-          mv config.json.new config.json
-
-          if [[ ! -z "$(git status --porcelain)" ]]; then
-            git config user.email 'github-bot@iojs.org'
-            git config user.name 'Node.js GitHub Bot'
-
-            git add config.json
-            git commit -m 'chore: update package manager versions'
-            git push
-          fi
+      - uses: gr2m/create-or-update-pull-request-action@v1
+        # Creates a PR or update the Action's existing PR, or
+        # no-op if the base branch is already up-to-date.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body: This is an automated update of package manager versions
+          branch: actions/tools-update-config.json
+          commit-message: "chore: update package manager versions"
+          title: "chore: update package manager versions"
