@@ -19,16 +19,26 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 14
+          
+      - name: Get the Yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
 
-      - name: "Check that the cache files are consistent with their remote sources"
-        run: |
-          git diff --exit-code --quiet HEAD^ -- .yarn/cache || \
-            corepack yarn --immutable --immutable-cache --check-cache
-        if: |
-          github.event.pull_request != ''
+      - uses: actions/cache@v3
+        with:
+          path: ${{steps.yarn-cache-dir-path.outputs.dir}}
+          key: ${{runner.os}}-yarn-${{hashFiles('**/yarn.lock')}}
+          restore-keys: |
+            ${{runner.os}}-yarn-
+
+      - run: corepack yarn install --immutable
+      - run: corepack yarn build # We need the stubs to run the tests
 
       - name: "Check for type errors"
         run: corepack yarn typecheck
+
+      - name: "Check for linting errors"
+        run: corepack yarn lint
 
   build:
     strategy:
@@ -53,7 +63,18 @@ jobs:
         with:
           node-version: ${{matrix.node}}.x
 
+      - name: Get the Yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(corepack yarn config get cacheFolder)"
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{steps.yarn-cache-dir-path.outputs.dir}}
+          key: ${{runner.os}}-yarn-${{hashFiles('**/yarn.lock')}}
+          restore-keys: |
+            ${{runner.os}}-yarn-
+
       - run: corepack yarn install --immutable
       - run: corepack yarn build # We need the stubs to run the tests
-      - run: corepack yarn lint
+
       - run: corepack yarn test
