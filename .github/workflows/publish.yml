@@ -6,14 +6,25 @@ on:
     paths: [package.json]
 
 jobs:
-  build:
+  release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created:  ${{ steps.release.outputs.release_created }}
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          release-type: node
+          package-name: corepack
 
+  npm-publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: lts/*
 
@@ -28,8 +39,7 @@ jobs:
           restore-keys: |
             ${{runner.os}}-yarn-
 
-      - name: Publish the package
-        run:
+      - run:
           corepack yarn install --immutable
           corepack yarn npm publish --tolerate-republish
         env:
