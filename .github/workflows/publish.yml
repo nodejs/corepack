@@ -41,6 +41,6 @@ jobs:
 
       - run:
           corepack yarn install --immutable
-          corepack yarn npm publish --tolerate-republish
+          corepack yarn npm publish
         env:
           YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
