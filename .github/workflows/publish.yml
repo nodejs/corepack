@@ -29,7 +29,7 @@ jobs:
 
       - name: Publish the package
         run:
-          corepack yarn
+          corepack yarn install --immutable
           corepack yarn npm publish --tolerate-republish
         env:
           YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
