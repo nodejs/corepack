@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [main]
+    paths: [package.json]
 
 jobs:
   build:
