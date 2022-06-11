@@ -3,7 +3,6 @@ name: Publish releases
 on:
   push:
     branches: [main]
-    paths: [package.json]
 
 jobs:
   release-please:
