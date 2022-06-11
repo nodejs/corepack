@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "8.10.0",
+      "default": "8.12.1",
       "transparent": {
         "commands": [
           [
@@ -28,7 +28,7 @@
       }
     },
     "pnpm": {
-      "default": "7.1.5",
+      "default": "7.2.1",
       "transparent": {
         "commands": [
           [
@@ -70,7 +70,7 @@
       }
     },
     "yarn": {
-      "default": "1.22.18",
+      "default": "1.22.19",
       "transparent": {
         "default": "3.2.1",
         "commands": [
