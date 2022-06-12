@@ -39,7 +39,7 @@ jobs:
           restore-keys: |
             ${{runner.os}}-yarn-
 
-      - run:
+      - run: |
           corepack yarn install --immutable
           corepack yarn npm publish
         env:
