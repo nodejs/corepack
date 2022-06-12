@@ -15,6 +15,7 @@ jobs:
         with:
           release-type: node
           package-name: corepack
+          bump-minor-pre-major: true # TODO: remove this when releasing v1.0.0.
 
   npm-publish:
     needs: release-please

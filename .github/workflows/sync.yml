@@ -50,5 +50,5 @@ jobs:
         with:
           body: This is an automated update of package manager versions
           branch: actions/tools-update-config.json
-          commit-message: "chore: update package manager versions"
-          title: "chore: update package manager versions"
+          commit-message: "feat: update package manager versions"
+          title: "feat: update package manager versions"
