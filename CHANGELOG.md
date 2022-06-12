@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/nodejs/corepack/compare/v0.11.0...v0.11.1) (2022-06-12)
+
+
+### Bug Fixes
+
+* **ci:** YAML formatting in publish workflow ([#124](https://github.com/nodejs/corepack/issues/124)) ([01c7d63](https://github.com/nodejs/corepack/commit/01c7d638b04a1340b3939a7985e24b586e344995))
+
 ## 0.11.0 (2022-06-12)
 
 
