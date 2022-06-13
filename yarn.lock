@@ -2255,12 +2255,6 @@ __metadata:
     webpack: "npm:^5.38.1"
     webpack-cli: "npm:^4.0.0"
     which: "npm:^2.0.2"
-  bin:
-    corepack: ./dist/corepack.js
-    pnpm: ./dist/pnpm.js
-    pnpx: ./dist/pnpx.js
-    yarn: ./dist/yarn.js
-    yarnpkg: ./dist/yarnpkg.js
   languageName: unknown
   linkType: soft
 
