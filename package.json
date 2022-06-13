@@ -10,13 +10,6 @@
     "url": "https://github.com/nodejs/corepack.git"
   },
   "license": "MIT",
-  "bin": {
-    "corepack": "./dist/corepack.js",
-    "pnpm": "./dist/pnpm.js",
-    "pnpx": "./dist/pnpx.js",
-    "yarn": "./dist/yarn.js",
-    "yarnpkg": "./dist/yarnpkg.js"
-  },
   "packageManager": "yarn@4.0.0-rc.6",
   "devDependencies": {
     "@babel/core": "^7.14.3",
@@ -68,6 +61,13 @@
     "LICENSE.md"
   ],
   "publishConfig": {
+    "bin": {
+      "corepack": "./dist/corepack.js",
+      "pnpm": "./dist/pnpm.js",
+      "pnpx": "./dist/pnpx.js",
+      "yarn": "./dist/yarn.js",
+      "yarnpkg": "./dist/yarnpkg.js"
+    },
     "executableFiles": [
       "./dist/npm.js",
       "./dist/npx.js",
