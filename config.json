@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "8.12.2",
+      "default": "8.13.1",
       "transparent": {
         "commands": [
           [
