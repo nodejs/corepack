@@ -7,6 +7,7 @@ import defaultConfig                                          from '../config.js
 
 import * as corepackUtils                                     from './corepackUtils';
 import * as folderUtils                                       from './folderUtils';
+import {fetchAsJson}                                          from './httpUtils';
 import * as semverUtils                                       from './semverUtils';
 import {Config, Descriptor, Locator}                          from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
@@ -69,17 +70,16 @@ export class Engine {
       // Ignore errors; too bad
     }
 
-    if (typeof lastKnownGood !== `object` || lastKnownGood === null)
-      return definition.default;
+    if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
+        Object.prototype.hasOwnProperty.call(lastKnownGood, packageManager)) {
+      const override = (lastKnownGood as any)[packageManager];
+      if (typeof override === `string`) {
+        return override;
+      }
+    }
 
-    if (!Object.prototype.hasOwnProperty.call(lastKnownGood, packageManager))
-      return definition.default;
-
-    const override = (lastKnownGood as any)[packageManager];
-    if (typeof override !== `string`)
-      return definition.default;
-
-    return override;
+    const latest = await fetchAsJson(`https://registry.npmjs.org/${packageManager}`);
+    return latest[`dist-tags`].latest;
   }
 
   async activatePackageManager(locator: Locator) {
