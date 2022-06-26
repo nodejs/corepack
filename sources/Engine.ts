@@ -78,6 +78,9 @@ export class Engine {
       }
     }
 
+    if (process.env.COREPACK_NO_LOOKUP)
+      return definition.default;
+
     const latest = await fetchAsJson(`https://registry.npmjs.org/${packageManager}`);
     return latest[`dist-tags`].latest;
   }

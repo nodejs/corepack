@@ -6,6 +6,7 @@ import {runCli}                                    from './_runCli';
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_NO_LOOKUP = `1`;
 });
 
 const testedPackageManagers: Array<[string, string]> = [
