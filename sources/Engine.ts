@@ -81,8 +81,15 @@ export class Engine {
     if (process.env.COREPACK_NO_LOOKUP)
       return definition.default;
 
-    const latest = await fetchAsJson(`https://registry.npmjs.org/${packageManager}`);
-    return latest[`dist-tags`].latest;
+    const {[`dist-tags`]: {latest}, versions: {[latest]: {dist: {shasum}}}} = await fetchAsJson(`https://registry.npmjs.org/${packageManager}`);
+    const reference = `${latest}+sha1.${shasum}`;
+
+    await this.activatePackageManager({
+      name: packageManager,
+      reference,
+    });
+
+    return reference;
   }
 
   async activatePackageManager(locator: Locator) {
