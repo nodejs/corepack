@@ -1,3 +1,4 @@
+import {createHash}                                            from 'crypto';
 import fs                                                      from 'fs';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
@@ -74,21 +75,22 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
   const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
+  const {version, build} = semver.parse(locator.reference)!;
 
-  const installFolder = path.join(installTarget, locator.name, locator.reference);
+  const installFolder = path.join(installTarget, locator.name, version);
   if (fs.existsSync(installFolder)) {
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
     return installFolder;
   }
 
-  const url = spec.url.replace(`{}`, locator.reference);
+  const url = spec.url.replace(`{}`, version);
 
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done
 
   const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
-  debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url} to ${tmpFolder}`);
+  debugUtils.log(`Installing ${locator.name}@${version} from ${url} to ${tmpFolder}`);
   const stream = await httpUtils.fetchUrlStream(url);
 
   const parsedUrl = new URL(url);
@@ -105,10 +107,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   stream.pipe(sendTo);
+  const hash = build[0] ? stream.pipe(createHash(build[0])) : null;
 
   await new Promise(resolve => {
     sendTo.on(`finish`, resolve);
   });
+
+  const actualHash = hash?.digest(`hex`);
+  if (actualHash !== build[1]) throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
