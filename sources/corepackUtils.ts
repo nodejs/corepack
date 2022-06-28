@@ -9,6 +9,23 @@ import * as httpUtils                                          from './httpUtils
 import * as nodeUtils                                          from './nodeUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
+export async function fetchLatestStableVersion(spec: RegistrySpec) {
+  switch (spec.type) {
+    case `npm`: {
+      const {[`dist-tags`]: {latest}, versions: {[latest]: {dist: {shasum}}}} =
+        await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`);
+      return `${latest}+sha1.${shasum}`;
+    }
+    case `url`: {
+      const data = await httpUtils.fetchAsJson(spec.url);
+      return data[spec.fields.tags].stable;
+    }
+    default: {
+      throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
+    }
+  }
+}
+
 export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<string, string>> {
   switch (spec.type) {
     case `npm`: {

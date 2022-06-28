@@ -7,7 +7,6 @@ import defaultConfig                                          from '../config.js
 
 import * as corepackUtils                                     from './corepackUtils';
 import * as folderUtils                                       from './folderUtils';
-import {fetchAsJson}                                          from './httpUtils';
 import * as semverUtils                                       from './semverUtils';
 import {Config, Descriptor, Locator}                          from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
@@ -81,8 +80,7 @@ export class Engine {
     if (process.env.COREPACK_NO_LOOKUP)
       return definition.default;
 
-    const {[`dist-tags`]: {latest}, versions: {[latest]: {dist: {shasum}}}} = await fetchAsJson(`https://registry.npmjs.org/${packageManager}`);
-    const reference = `${latest}+sha1.${shasum}`;
+    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
 
     await this.activatePackageManager({
       name: packageManager,

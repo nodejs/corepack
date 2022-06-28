@@ -2,6 +2,10 @@
   "definitions": {
     "npm": {
       "default": "8.13.1",
+      "fetchLatestFrom": {
+        "type": "npm",
+        "package": "npm"
+      },
       "transparent": {
         "commands": [
           [
@@ -29,6 +33,10 @@
     },
     "pnpm": {
       "default": "7.3.0",
+      "fetchLatestFrom": {
+        "type": "npm",
+        "package": "pnpm"
+      },
       "transparent": {
         "commands": [
           [
@@ -71,6 +79,10 @@
     },
     "yarn": {
       "default": "1.22.19",
+      "fetchLatestFrom": {
+        "type": "npm",
+        "package": "yarn"
+      },
       "transparent": {
         "default": "3.2.1",
         "commands": [
