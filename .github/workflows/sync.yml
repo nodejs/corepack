@@ -20,9 +20,9 @@ jobs:
 
       - name: "Update the package manager versions"
         run: |
-          LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest')
-          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest')
-          LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest')
+          LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
           LATEST_BERRY=$(curl https://repo.yarnpkg.com/tags | jq '.latest.stable')
 
           git --no-pager show HEAD:config.json | jq '. * '"{
