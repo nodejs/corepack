@@ -25,6 +25,9 @@ export class PrepareCommand extends Command<Context> {
       `Prepare a specific Yarn version`,
       `$0 prepare yarn@2.2.2`,
     ], [
+      `Prepare the latest available pnpm version`,
+      `$0 prepare pnpm@latest --activate`,
+    ], [
       `Generate an archive for a specific Yarn version`,
       `$0 prepare yarn@2.2.2 -o`,
     ], [
@@ -50,7 +53,7 @@ export class PrepareCommand extends Command<Context> {
     tolerateBoolean: true,
   });
 
-  specs = Option.Rest()
+  specs = Option.Rest();
 
   async execute() {
     if (this.all && this.specs.length > 0)
@@ -79,10 +82,10 @@ export class PrepareCommand extends Command<Context> {
 
     for (const request of specs) {
       const spec = typeof request === `string`
-        ? specUtils.parseSpec(request, `CLI arguments`)
+        ? specUtils.parseSpec(request, `CLI arguments`, {enforceExactVersion: false})
         : request;
 
-      const resolved = await this.context.engine.resolveDescriptor(spec);
+      const resolved = await this.context.engine.resolveDescriptor(spec, {allowTags: true});
       if (resolved === null)
         throw new UsageError(`Failed to successfully resolve '${spec.range}' to a valid ${spec.name} release`);
 
