@@ -107,14 +107,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   stream.pipe(sendTo);
-  const hash = build[0] ? stream.pipe(createHash(build[0])) : null;
+
+  const hash = build[0]
+    ? stream.pipe(createHash(build[0]))
+    : null;
 
   await new Promise(resolve => {
     sendTo.on(`finish`, resolve);
   });
 
   const actualHash = hash?.digest(`hex`);
-  if (actualHash !== build[1]) throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+  if (actualHash !== build[1])
+    throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
