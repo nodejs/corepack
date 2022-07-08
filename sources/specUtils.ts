@@ -7,13 +7,13 @@ import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
-export function parseSpec(raw: unknown, source?: string): Descriptor {
+export function parseSpec(raw: unknown, source: string, {enforceExactVersion = true} = {}): Descriptor {
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
   const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || !semver.valid(match[2]))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version`);
+  if (match === null || (enforceExactVersion && !semver.valid(match[2])))
+    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
   if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
