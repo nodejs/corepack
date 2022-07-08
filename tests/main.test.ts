@@ -8,13 +8,38 @@ beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
+it(`should refuse to download a package manager if the hash doesn't match`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.deadbeef`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stdout: /Mismatch hashes/,
+    });
+  });
+});
+
 const testedPackageManagers: Array<[string, string]> = [
   [`yarn`, `1.22.4`],
+  [`yarn`, `1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`],
+  [`yarn`, `1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`],
   [`yarn`, `2.0.0-rc.30`],
+  [`yarn`, `2.0.0-rc.30+sha1.4f0423b01bcb57f8e390b4e0f1990831f92dd1da`],
+  [`yarn`, `2.0.0-rc.30+sha224.0e7a64468c358596db21c401ffeb11b6534fce7367afd3ae640eadf1`],
   [`yarn`, `3.0.0-rc.2`],
+  [`yarn`, `3.0.0-rc.2+sha1.694bdad81703169e203febd57f9dc97d3be867bd`],
+  [`yarn`, `3.0.0-rc.2+sha224.f83f6d1cbfac10ba6b516a62ccd2a72ccd857aa6c514d1cd7185ec60`],
   [`pnpm`, `4.11.6`],
+  [`pnpm`, `4.11.6+sha1.7cffc04295f4db4740225c6c37cc345eb923c06a`],
+  [`pnpm`, `4.11.6+sha224.7783c4b01916b7a69e6ff05d328df6f83cb7f127e9c96be88739386d`],
   [`pnpm`, `6.6.2`],
+  [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
+  [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
   [`npm`, `6.14.2`],
+  [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
+  [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
 ];
 
 for (const [name, version] of testedPackageManagers) {
@@ -26,7 +51,7 @@ for (const [name, version] of testedPackageManagers) {
 
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
-        stdout: `${version}\n`,
+        stdout: `${version.split(`+`, 1)[0]}\n`,
       });
     });
   });
@@ -136,17 +161,17 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.yarn.default}\n`,
+      stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
       exitCode: 0,
     });
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.pnpm.default}\n`,
+      stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
       exitCode: 0,
     });
 
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.npm.default}\n`,
+      stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
       exitCode: 0,
     });
   });
