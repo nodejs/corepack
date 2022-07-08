@@ -232,17 +232,17 @@ it(`should allow to call "prepare" with --all to prepare all package managers`, 
 
     try {
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.yarn.default}\n`,
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
         exitCode: 0,
       });
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.pnpm.default}\n`,
+        stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
         exitCode: 0,
       });
 
       await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.npm.default}\n`,
+        stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
         exitCode: 0,
       });
     } finally {
