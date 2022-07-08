@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "8.13.1",
+      "default": "8.13.2+sha1.d79c851c1d9cc6c11efe708379fd5339580f8fec",
       "transparent": {
         "commands": [
           [
@@ -28,7 +28,7 @@
       }
     },
     "pnpm": {
-      "default": "7.3.0",
+      "default": "7.5.0+sha1.d9fda828c036a7284bb8aa04c545691029dc75ae",
       "transparent": {
         "commands": [
           [
@@ -70,9 +70,9 @@
       }
     },
     "yarn": {
-      "default": "1.22.19",
+      "default": "1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
       "transparent": {
-        "default": "3.2.1",
+        "default": "3.2.1+sha1.712f0d3e236f0705a55d2b7c9be47a717d68dbef",
         "commands": [
           [
             "yarn",
