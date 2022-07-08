@@ -20,10 +20,12 @@ jobs:
 
       - name: "Update the package manager versions"
         run: |
-          LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest')
-          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest')
-          LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest')
-          LATEST_BERRY=$(curl https://repo.yarnpkg.com/tags | jq '.latest.stable')
+          LATEST_BERRY_VERSION=$(curl https://repo.yarnpkg.com/tags | jq -r '.latest.stable')
+
+          LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_BERRY=$(jq -n '$version + "+sha1." + $checksum' --arg version "$LATEST_BERRY_VERSION" --arg checksum "$(curl https://repo.yarnpkg.com/"$LATEST_BERRY_VERSION"/packages/yarnpkg-cli/bin/yarn.js | sha1sum - | cut -d' ' -f1)")
 
           git --no-pager show HEAD:config.json | jq '. * '"{
             definitions: {
