@@ -72,7 +72,7 @@
     "yarn": {
       "default": "1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
       "transparent": {
-        "default": "3.2.2+sha224.(stdin)=",
+        "default": "3.2.2+sha224.634d0331703700cabfa9d9389835bd8f7426b0207ed6b74d8d34c81e",
         "commands": [
           [
             "yarn",
