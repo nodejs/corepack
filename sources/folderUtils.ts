@@ -1,10 +1,20 @@
-import {mkdirSync}        from 'fs';
-import {homedir, tmpdir}  from 'os';
-import {join}             from 'path';
-import type { NodeError } from './nodeUtils';
+import {mkdirSync}       from 'fs';
+import {homedir, tmpdir} from 'os';
+import {join}            from 'path';
+import process           from 'process';
+
+import type {NodeError}  from './nodeUtils';
 
 export function getInstallFolder() {
-  return process.env.COREPACK_HOME ?? join(homedir(), `.node/corepack`);
+  return (
+    process.env.COREPACK_HOME ??
+    join(
+      process.env.XDG_CACHE_HOME ??
+        process.env.APPDATA ??
+        join(homedir(), `.cache`),
+      `node/corepack`,
+    )
+  );
 }
 
 export function getTemporaryFolder(target: string = tmpdir()) {

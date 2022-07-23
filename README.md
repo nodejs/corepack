@@ -56,7 +56,7 @@ The utility commands detailed in the next section.
 
 - Either you can use the network while building your container image, in which case you'll simply run `corepack prepare` to make sure that your image includes the Last Known Good release for the specified package manager.
 
-  - If you want to have *all* Last Known Good releases for all package managers, just use the `--all` flag which will do just that.
+  - If you want to have _all_ Last Known Good releases for all package managers, just use the `--all` flag which will do just that.
 
 - Or you're publishing your project to a system where the network is unavailable, in which case you'll preemptively generate a package manager archive from your local computer (using `corepack prepare -o`) before storing it somewhere your container will be able to access (for example within your repository). After that it'll just be a matter of running `corepack hydrate <path/to/corepack.tgz>` to setup the cache.
 
@@ -70,34 +70,34 @@ Note that those commands still check whether the local project is configured for
 
 ### `corepack enable [... name]`
 
-| Option | Description |
-| --- | --- |
+| Option                | Description                             |
+| --------------------- | --------------------------------------- |
 | `--install-directory` | Add the shims to the specified location |
 
 This command will detect where Node.js is installed and will create shims next to it for each of the specified package managers (or all of them if the command is called without parameters). Note that the npm shims will not be installed unless explicitly requested, as npm is currently distributed with Node.js through other means.
 
 ### `corepack disable [... name]`
 
-| Option | Description |
-| --- | --- |
+| Option                | Description                                |
+| --------------------- | ------------------------------------------ |
 | `--install-directory` | Remove the shims to the specified location |
 
 This command will detect where Node.js is installed and will remove the shims from there.
 
 ### `corepack prepare [... name@version]`
 
-| Option | Description |
-| --- | --- |
-| `--all` | Prepare the "Last Known Good" version of all supported package managers |
-| `-o,--output` | Also generate an archive containing the package managers |
-| `--activate` | Also update the "Last Known Good" release |
+| Option        | Description                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| `--all`       | Prepare the "Last Known Good" version of all supported package managers |
+| `-o,--output` | Also generate an archive containing the package managers                |
+| `--activate`  | Also update the "Last Known Good" release                               |
 
 This command will download the given package managers (or the one configured for the local project if no argument is passed in parameter) and store it within the Corepack cache. If the `-o,--output` flag is set (optionally with a path as parameter), an archive will also be generated that can be used by the `corepack hydrate` command.
 
 ### `corepack hydrate <path/to/corepack.tgz>`
 
-| Option | Description |
-| --- | --- |
+| Option       | Description                               |
+| ------------ | ----------------------------------------- |
 | `--activate` | Also update the "Last Known Good" release |
 
 This command will retrieve the given package manager from the specified archive and will install it within the Corepack cache, ready to be used without further network interaction.
@@ -106,7 +106,9 @@ This command will retrieve the given package manager from the specified archive 
 
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing the network (in which case you'll be responsible for hydrating the package manager versions that will be required for the projects you'll run, using `corepack hydrate`).
 
-- `COREPACK_HOME` can be set in order to define where Corepack should install the package managers. By default it is set to `$HOME/.node/corepack`.
+- `COREPACK_HOME` can be set in order to define where Corepack should install the
+  package managers. By default it is set to `%APPDATA%\node\corepack` on Windows,
+  and to `$HOME/.cache/node/corepack` everywhere else.
 
 - `COREPACK_ROOT` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
 
