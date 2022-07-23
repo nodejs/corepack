@@ -3,8 +3,8 @@ name: Version Sync
 on:
   workflow_dispatch:
   schedule:
-    # Run once a week at 00:05 UTC on Sunday.
-    - cron: 5 0 * * 0
+    # Run once a week at 00:05 UTC on Friday.
+    - cron: 5 0 * * 5
 
 jobs:
   build:
