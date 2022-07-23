@@ -113,7 +113,9 @@ This command will retrieve the given package manager from the specified archive 
 
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing the network (in which case you'll be responsible for hydrating the package manager versions that will be required for the projects you'll run, using `corepack hydrate`).
 
-- `COREPACK_NO_LOOKUP` can be set in order to instruct Corepack not to lookup on the remote registry for the latest version of the selected package manager.
+- `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
+  not to lookup on the remote registry for the latest version of the selected
+  package manager.
 
 - `COREPACK_HOME` can be set in order to define where Corepack should install the package managers. By default it is set to `$HOME/.node/corepack`.
 

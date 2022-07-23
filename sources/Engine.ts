@@ -1,6 +1,7 @@
 import {UsageError}                                           from 'clipanion';
 import fs                                                     from 'fs';
 import path                                                   from 'path';
+import process                                                from 'process';
 import semver                                                 from 'semver';
 
 import defaultConfig                                          from '../config.json';
@@ -77,7 +78,7 @@ export class Engine {
       }
     }
 
-    if (process.env.COREPACK_NO_LOOKUP)
+    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
       return definition.default;
 
     const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
