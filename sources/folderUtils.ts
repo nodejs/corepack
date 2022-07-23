@@ -10,8 +10,8 @@ export function getInstallFolder() {
     process.env.COREPACK_HOME ??
     join(
       process.env.XDG_CACHE_HOME ??
-        process.env.APPDATA ??
-        join(homedir(), `.cache`),
+        process.env.LOCALAPPDATA ??
+        join(homedir(), process.platform === `win32` ? `AppData/Local` : `.cache`),
       `node/corepack`,
     )
   );
