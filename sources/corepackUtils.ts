@@ -1,4 +1,7 @@
+import {createHash}                                            from 'crypto';
+import {once}                                                  from 'events';
 import fs                                                      from 'fs';
+import type {Dir}                                              from 'fs';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
 
@@ -62,50 +65,56 @@ export async function fetchAvailableVersions(spec: RegistrySpec): Promise<Array<
 export async function findInstalledVersion(installTarget: string, descriptor: Descriptor) {
   const installFolder = path.join(installTarget, descriptor.name);
 
-  let folderContent: Array<string>;
+  let cacheDirectory: Dir;
   try {
-    folderContent = await fs.promises.readdir(installFolder);
+    cacheDirectory = await fs.promises.opendir(installFolder);
   } catch (error) {
     if ((error as nodeUtils.NodeError).code === `ENOENT`) {
-      folderContent = [];
+      return null;
     } else {
       throw error;
     }
   }
 
-  const candidateVersions: Array<string> = [];
-  for (const entry of folderContent) {
+  const range = new semver.Range(descriptor.range);
+  let bestMatch: string | null = null;
+  let maxSV: semver.SemVer | undefined = undefined;
+
+  for await (const {name} of cacheDirectory) {
     // Some dot-folders tend to pop inside directories, especially on OSX
-    if (entry.startsWith(`.`))
+    if (name.startsWith(`.`))
       continue;
 
-    candidateVersions.push(entry);
+    // If the dirname correspond to an in-range version and is not lower than
+    // the previous best match (or if there is not yet a previous best match),
+    // it's our new best match.
+    if (range.test(name) && maxSV?.compare(name) !== 1) {
+      bestMatch = name;
+      maxSV = new semver.SemVer(bestMatch);
+    }
   }
-
-  const bestMatch = semver.maxSatisfying(candidateVersions, descriptor.range);
-  if (bestMatch === null)
-    return null;
 
   return bestMatch;
 }
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
   const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
+  const {version, build} = semver.parse(locator.reference)!;
 
-  const installFolder = path.join(installTarget, locator.name, locator.reference);
+  const installFolder = path.join(installTarget, locator.name, version);
   if (fs.existsSync(installFolder)) {
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
     return installFolder;
   }
 
-  const url = spec.url.replace(`{}`, locator.reference);
+  const url = spec.url.replace(`{}`, version);
 
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done
 
   const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
-  debugUtils.log(`Installing ${locator.name}@${locator.reference} from ${url} to ${tmpFolder}`);
+  debugUtils.log(`Installing ${locator.name}@${version} from ${url} to ${tmpFolder}`);
   const stream = await httpUtils.fetchUrlStream(url);
 
   const parsedUrl = new URL(url);
@@ -123,9 +132,15 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   stream.pipe(sendTo);
 
-  await new Promise(resolve => {
-    sendTo.on(`finish`, resolve);
-  });
+  const hash = build[0]
+    ? stream.pipe(createHash(build[0]))
+    : null;
+
+  await once(sendTo, `finish`);
+
+  const actualHash = hash?.digest(`hex`);
+  if (actualHash !== build[1])
+    throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {

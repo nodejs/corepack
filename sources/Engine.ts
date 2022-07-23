@@ -135,7 +135,7 @@ export class Engine {
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
     let finalDescriptor = descriptor;
-    if (descriptor.range.match(/^[a-z-]+$/)) {
+    if (/^[a-z-]+$/.test(descriptor.range)) {
       if (!allowTags)
         throw new UsageError(`Packages managers can't be referended via tags in this context`);
 
@@ -158,6 +158,11 @@ export class Engine {
     const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
       return {name: finalDescriptor.name, reference: cachedVersion};
+
+    // If the user asked for a specific version, no need to request the list of
+    // available versions from the registry.
+    if (semver.valid(finalDescriptor.range))
+      return {name: finalDescriptor.name, reference: finalDescriptor.range};
 
     const candidateRangeDefinitions = Object.keys(definition.ranges).filter(range => {
       return semverUtils.satisfiesWithPrereleases(finalDescriptor.range, range);
