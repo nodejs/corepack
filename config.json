@@ -28,7 +28,7 @@
       }
     },
     "pnpm": {
-      "default": "7.5.2+sha1.89331cc7dc542e0d7a33fe4f423989f0c54e9604",
+      "default": "7.6.0+sha1.e50ef80d171fad1a8ee359507d3c3338704e5ab6",
       "transparent": {
         "commands": [
           [
