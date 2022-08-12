@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "8.16.0+sha1.d385060093f3af10fabe6d8205d41bbf2a34ff9d",
+      "default": "8.17.0+sha1.05c77fb2794daa3d9b2cd0460859f1f9dc596676",
       "transparent": {
         "commands": [
           [
@@ -28,7 +28,7 @@
       }
     },
     "pnpm": {
-      "default": "7.8.0+sha1.420c53c7089c0ed6ad659e3b4fce73228f5638ab",
+      "default": "7.9.0+sha1.4226ed225337fd55f9ff7736b67048dffe1d7b16",
       "transparent": {
         "commands": [
           [
