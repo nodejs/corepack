@@ -63,6 +63,11 @@ export interface Config {
       default: string;
 
       /**
+       * Defines how to fetch the latest version from a remote registry.
+       */
+      fetchLatestFrom: RegistrySpec;
+
+      /**
        * Defines a set of commands that are fine to run even if the user isn't
        * in a project configured for the specified package manager. For instance,
        * we would use that to be able to run "pnpx" even inside Yarn projects.

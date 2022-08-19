@@ -1,6 +1,7 @@
 import {UsageError}                                           from 'clipanion';
 import fs                                                     from 'fs';
 import path                                                   from 'path';
+import process                                                from 'process';
 import semver                                                 from 'semver';
 
 import defaultConfig                                          from '../config.json';
@@ -69,17 +70,25 @@ export class Engine {
       // Ignore errors; too bad
     }
 
-    if (typeof lastKnownGood !== `object` || lastKnownGood === null)
+    if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
+        Object.prototype.hasOwnProperty.call(lastKnownGood, packageManager)) {
+      const override = (lastKnownGood as any)[packageManager];
+      if (typeof override === `string`) {
+        return override;
+      }
+    }
+
+    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
       return definition.default;
 
-    if (!Object.prototype.hasOwnProperty.call(lastKnownGood, packageManager))
-      return definition.default;
+    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
 
-    const override = (lastKnownGood as any)[packageManager];
-    if (typeof override !== `string`)
-      return definition.default;
+    await this.activatePackageManager({
+      name: packageManager,
+      reference,
+    });
 
-    return override;
+    return reference;
   }
 
   async activatePackageManager(locator: Locator) {

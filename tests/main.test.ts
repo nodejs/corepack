@@ -6,6 +6,7 @@ import {runCli}                                    from './_runCli';
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 it(`should refuse to download a package manager if the hash doesn't match`, async () => {
