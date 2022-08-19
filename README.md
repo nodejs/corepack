@@ -117,7 +117,9 @@ This command will retrieve the given package manager from the specified archive 
   not to lookup on the remote registry for the latest version of the selected
   package manager.
 
-- `COREPACK_HOME` can be set in order to define where Corepack should install the package managers. By default it is set to `$HOME/.node/corepack`.
+- `COREPACK_HOME` can be set in order to define where Corepack should install
+  the package managers. By default it is set to `%LOCALAPPDATA%\node\corepack`
+  on Windows, and to `$HOME/.cache/node/corepack` everywhere else.
 
 - `COREPACK_ROOT` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
 
