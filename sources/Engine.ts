@@ -136,7 +136,7 @@ export class Engine {
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
     let finalDescriptor = descriptor;
-    if (/^[a-z-]+$/.test(descriptor.range)) {
+    if (!semver.valid(descriptor.range) && !semver.validRange(descriptor.range)) {
       if (!allowTags)
         throw new UsageError(`Packages managers can't be referended via tags in this context`);
 
