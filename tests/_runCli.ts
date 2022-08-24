@@ -6,7 +6,7 @@ export async function runCli(cwd: PortablePath, argv: Array<string>) {
   const err: Array<Buffer> = [];
 
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [require.resolve(`corepack/dist/corepack.js`), ...argv], {
+    const child = spawn(process.execPath, [`-r`, require.resolve(`./recordRequests.js`), require.resolve(`corepack/dist/corepack.js`), ...argv], {
       cwd: npath.fromPortablePath(cwd),
       env: process.env,
       stdio: `pipe`,

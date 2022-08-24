@@ -137,7 +137,7 @@ it(`should allow using transparent commands on npm-configured projects`, async (
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `dlx`, `cat@0.2.0`, __filename])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
       exitCode: 0,
     });
   });
