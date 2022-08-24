@@ -1,6 +1,8 @@
-/* global expect, beforeEach, afterAll */
+/* global jest, expect, beforeEach, afterAll */
 
 const crypto = require(`crypto`);
+
+jest.retryTimes(2, {logErrorsBeforeRetry: true});
 
 switch (process.env.NOCK_ENV || ``) {
   case `record`:
