@@ -11,6 +11,7 @@ const engine = new Engine();
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 describe(`EnableCommand`, () => {

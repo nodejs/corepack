@@ -1,4 +1,4 @@
-/* global expect, beforeEach, afterEach */
+/* global expect, beforeEach, afterAll */
 
 const crypto = require(`crypto`);
 
@@ -7,10 +7,16 @@ switch (process.env.NOCK_ENV || ``) {
   case `replay`:
     {
       beforeEach(() => {
+        process.env.RUN_CLI_ID = 0;
         process.env.NOCK_FILE_NAME = crypto
           .createHash(`md5`)
           .update(expect.getState().currentTestName)
-          .digest(`hex`);
+          .digest(`base64url`);
+      });
+
+      afterAll(() => {
+        delete process.env.RUN_CLI_ID;
+        delete process.env.NOCK_FILE_NAME;
       });
     }
     break;

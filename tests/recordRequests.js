@@ -1,12 +1,27 @@
 "use strict";
+const crypto = require(`crypto`);
 const fs = require(`fs`);
 const path = require(`path`);
 const v8 = require(`v8`);
+const Module = require(`module`);
 
 const nock = require(`nock`);
 
+const { _resolveFilename } = Module;
+
+Module._resolveFilename = function (specifier) {
+  if (specifier === `corepack/package.json`)
+    return path.join(__dirname, `..`, `package.json`);
+
+  return Reflect.apply(_resolveFilename, this, arguments);
+};
+
 const getNockFile = () =>
-  path.join(__dirname, `nock`, `${process.env.NOCK_FILE_NAME}.dat`);
+  path.join(
+    __dirname,
+    `nock`,
+    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`
+  );
 const ACCEPTED_HEADERS = new Set([`Content-Type`, `Content-Length`]);
 function filterHeaders(headers) {
   if (!Array.isArray(headers)) return headers;
