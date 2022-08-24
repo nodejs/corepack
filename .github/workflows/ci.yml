@@ -79,4 +79,4 @@ jobs:
 
       - run: corepack yarn test
         env:
-          - NOCK_ENV: replay
+          NOCK_ENV: replay
