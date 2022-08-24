@@ -23,8 +23,8 @@ describe(`EnableCommand`, () => {
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
-          stderr: ``,
           stdout: ``,
+          stderr: ``,
           exitCode: 0,
         });
       } finally {
@@ -49,8 +49,8 @@ describe(`EnableCommand`, () => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
-        stderr: ``,
         stdout: ``,
+        stderr: ``,
         exitCode: 0,
       });
 
@@ -75,8 +75,8 @@ describe(`EnableCommand`, () => {
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
-          stderr: ``,
           stdout: ``,
+          stderr: ``,
           exitCode: 0,
         });
       } finally {

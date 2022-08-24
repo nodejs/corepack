@@ -7,7 +7,7 @@ const Module = require(`module`);
 
 const nock = require(`nock`);
 
-const { _resolveFilename } = Module;
+const {_resolveFilename} = Module;
 
 Module._resolveFilename = function (specifier) {
   if (specifier === `corepack/package.json`)
