@@ -1,4 +1,5 @@
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
+import exp                                         from 'constants';
 
 import config                                      from '../config.json';
 
@@ -219,11 +220,12 @@ it(`should allow to call "prepare" with a tag`, async () => {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      stdout: `7.24.2\n`,
+    const npmVersion = await runCli(cwd, [`npm`, `--version`]);
+    expect(npmVersion).toMatchObject({
       stderr: ``,
       exitCode: 0,
     });
+    expect(npmVersion.stdout).toMatch(/^7\./);
   });
 });
 

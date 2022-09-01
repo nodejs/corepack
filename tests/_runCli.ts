@@ -1,7 +1,7 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
 import {spawn}               from 'child_process';
 
-export async function runCli(cwd: PortablePath, argv: Array<string>) {
+export async function runCli(cwd: PortablePath, argv: Array<string>): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
   const out: Array<Buffer> = [];
   const err: Array<Buffer> = [];
 
