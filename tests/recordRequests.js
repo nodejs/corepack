@@ -1,26 +1,15 @@
 "use strict";
-const crypto = require(`crypto`);
-const fs = require(`fs`);
-const path = require(`path`);
-const v8 = require(`v8`);
-const Module = require(`module`);
+const fs = require(`node:fs`);
+const path = require(`node:path`);
+const v8 = require(`node:v8`);
 
 const nock = require(`nock`);
-
-const {_resolveFilename} = Module;
-
-Module._resolveFilename = function (specifier) {
-  if (specifier === `corepack/package.json`)
-    return path.join(__dirname, `..`, `package.json`);
-
-  return Reflect.apply(_resolveFilename, this, arguments);
-};
 
 const getNockFile = () =>
   path.join(
     __dirname,
     `nock`,
-    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`
+    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`,
   );
 const ACCEPTED_HEADERS = new Set([`Content-Type`, `Content-Length`]);
 function filterHeaders(headers) {
@@ -37,9 +26,9 @@ function filterHeaders(headers) {
 switch (process.env.NOCK_ENV || ``) {
   case `record`:
     nock.recorder.rec({
-      // eslint-disable-next-line @typescript-eslint/camelcase
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       dont_print: true,
-      // eslint-disable-next-line @typescript-eslint/camelcase
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       output_objects: true,
     });
 

@@ -4,7 +4,6 @@
 !/.yarn/releases
 !/.yarn/sdks
 /.pnp.*
-node_modules/
 
 /dist
 /package.tgz
