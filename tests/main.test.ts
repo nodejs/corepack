@@ -1,5 +1,4 @@
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
-import exp                                         from 'constants';
 
 import config                                      from '../config.json';
 
