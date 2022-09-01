@@ -208,6 +208,25 @@ it(`should allow updating the pinned version using the "prepare" command`, async
   });
 });
 
+it(`should allow to call "prepare" with a tag`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`prepare`, `--activate`, `npm@latest-7`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+    });
+
+    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+      stdout: `7.24.2\n`,
+      stderr: ``,
+      exitCode: 0,
+    });
+  });
+});
+
 it(`should allow to call "prepare" without arguments within a configured project`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
