@@ -78,3 +78,5 @@ jobs:
       - run: corepack yarn build # We need the stubs to run the tests
 
       - run: corepack yarn test
+        env:
+          NOCK_ENV: replay
