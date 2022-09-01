@@ -17,6 +17,7 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
+      stderr: ``,
       stdout: /Mismatch hashes/,
     });
   });
@@ -52,6 +53,7 @@ for (const [name, version] of testedPackageManagers) {
 
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
+        stderr: ``,
         stdout: `${version.split(`+`, 1)[0]}\n`,
       });
     });
@@ -77,11 +79,13 @@ it(`should ignore the packageManager field when found within a node_modules vend
 
     await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
       stdout: `1.22.4\n`,
     });
 
     await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
       stdout: `1.22.4\n`,
     });
   });
@@ -101,6 +105,7 @@ it(`should use the closest matching packageManager field`, async () => {
 
     await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
       stdout: `6.14.2\n`,
     });
   });
@@ -127,6 +132,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
+      stderr: ``,
     });
   });
 });
@@ -137,8 +143,9 @@ it(`should allow using transparent commands on npm-configured projects`, async (
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `dlx`, `cat@0.2.0`, __filename])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
   });
 });
@@ -147,6 +154,7 @@ it(`should transparently use the preconfigured version when there is no local pr
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
   });
 });
@@ -163,16 +171,19 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
       exitCode: 0,
     });
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
       exitCode: 0,
     });
 
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
       exitCode: 0,
     });
   });
@@ -182,6 +193,7 @@ it(`should allow updating the pinned version using the "prepare" command`, async
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`prepare`, `--activate`, `yarn@1.0.0`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -190,6 +202,7 @@ it(`should allow updating the pinned version using the "prepare" command`, async
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
+      stderr: ``,
       exitCode: 0,
     });
   });
@@ -203,6 +216,7 @@ it(`should allow to call "prepare" without arguments within a configured project
 
     await expect(runCli(cwd, [`prepare`, `--activate`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
 
     // Disable the network to make sure we don't succeed by accident
@@ -211,6 +225,7 @@ it(`should allow to call "prepare" without arguments within a configured project
     try {
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `1.0.0\n`,
+        stderr: ``,
         exitCode: 0,
       });
     } finally {
@@ -255,6 +270,7 @@ it(`should allow to call "prepare" with --all to prepare all package managers`, 
 
     await expect(runCli(cwd, [`prepare`, `--all`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
 
     process.env.COREPACK_ENABLE_NETWORK = `0`;
@@ -262,16 +278,19 @@ it(`should allow to call "prepare" with --all to prepare all package managers`, 
     try {
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
         exitCode: 0,
       });
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
         exitCode: 0,
       });
 
       await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
         exitCode: 0,
       });
     } finally {
@@ -291,6 +310,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: expect.stringContaining(`Network access disabled by the environment`),
+        stderr: ``,
         exitCode: 1,
       });
     });
@@ -303,6 +323,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `-o`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
 
     // Use a new cache
@@ -314,6 +335,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
     try {
       await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
         stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
+        stderr: ``,
         exitCode: 0,
       });
 
@@ -323,6 +345,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
+        stderr: ``,
         exitCode: 0,
       });
     } finally {
@@ -335,6 +358,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `pnpm@5.8.0`, `-o`])).resolves.toMatchObject({
       exitCode: 0,
+      stderr: ``,
     });
 
     // Use a new cache
@@ -346,6 +370,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
     try {
       await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
         stdout: `Hydrating yarn@2.2.2...\nHydrating pnpm@5.8.0...\nAll done!\n`,
+        stderr: ``,
         exitCode: 0,
       });
 
@@ -355,6 +380,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
+        stderr: ``,
         exitCode: 0,
       });
 
@@ -364,6 +390,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `5.8.0\n`,
+        stderr: ``,
         exitCode: 0,
       });
     } finally {
@@ -380,11 +407,13 @@ it(`should support running package managers with bin array`, async () => {
 
     await expect(runCli(cwd, [`yarnpkg`, `--version`])).resolves.toMatchObject({
       stdout: `2.2.2\n`,
+      stderr: ``,
       exitCode: 0,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `2.2.2\n`,
+      stderr: ``,
       exitCode: 0,
     });
   });
@@ -403,14 +432,17 @@ it(`should handle parallel installs`, async () => {
     ])).resolves.toMatchObject([
       {
         stdout: `2.2.2\n`,
+        stderr: ``,
         exitCode: 0,
       },
       {
         stdout: `2.2.2\n`,
+        stderr: ``,
         exitCode: 0,
       },
       {
         stdout: `2.2.2\n`,
+        stderr: ``,
         exitCode: 0,
       },
     ]);

@@ -11,6 +11,7 @@ const engine = new Engine();
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 describe(`EnableCommand`, () => {
@@ -22,6 +23,8 @@ describe(`EnableCommand`, () => {
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+          stdout: ``,
+          stderr: ``,
           exitCode: 0,
         });
       } finally {
@@ -46,6 +49,8 @@ describe(`EnableCommand`, () => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
         exitCode: 0,
       });
 
@@ -70,6 +75,8 @@ describe(`EnableCommand`, () => {
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
         await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
+          stdout: ``,
+          stderr: ``,
           exitCode: 0,
         });
       } finally {
