@@ -26,7 +26,7 @@ export async function runCli(cwd: PortablePath, argv: Array<string>) {
       reject(error);
     });
 
-    child.on(`exit`, exitCode => {
+    child.on(`close`, exitCode => {
       resolve({
         exitCode,
         stdout: Buffer.concat(out).toString(),

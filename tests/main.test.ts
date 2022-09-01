@@ -234,6 +234,34 @@ it(`should allow to call "prepare" without arguments within a configured project
   });
 });
 
+it(`should refuse to run a different package manager within a configured project`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.0.0`,
+    });
+
+    process.env.FORCE_COLOR = `0`;
+
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
+      exitCode: 1,
+    });
+
+    // Disable strict checking to workaround the UsageError.
+    process.env.COREPACK_ENABLE_STRICT = `0`;
+
+    try {
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        exitCode: 0,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_STRICT;
+      delete process.env.FORCE_COLOR;
+    }
+  });
+});
+
 it(`should allow to call "prepare" with --all to prepare all package managers`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
