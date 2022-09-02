@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "8.18.0+sha1.bd6ca7f637720441f812370363e2ae67426fb42f",
+      "default": "8.19.1+sha1.78bfc5fc1b7bc36881a2d9d1f2c93ad0246f31e5",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "npm"
