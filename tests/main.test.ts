@@ -219,12 +219,11 @@ it(`should allow to call "prepare" with a tag`, async () => {
       // empty package.json file
     });
 
-    const npmVersion = await runCli(cwd, [`npm`, `--version`]);
-    expect(npmVersion).toMatchObject({
+    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+      stdout: expect.stringMatching(/^7\./),
       stderr: ``,
       exitCode: 0,
     });
-    expect(npmVersion.stdout).toMatch(/^7\./);
   });
 });
 
