@@ -21,7 +21,7 @@ export class EnableCommand extends Command<Context> {
       By default it will locate the install directory by running the equivalent of \`which corepack\`, but this can be tweaked by explicitly passing the install directory via the \`--install-directory\` flag.
     `,
     examples: [[
-      `Enable all shims, putting them next to the \`corepath\` binary`,
+      `Enable all shims, putting them next to the \`corepack\` binary`,
       `$0 enable`,
     ], [
       `Enable all shims, putting them in the specified directory`,
