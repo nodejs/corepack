@@ -9,7 +9,7 @@ on:
         required: true
 
 jobs:
-  build:
+  build-and-update-nock-files:
     runs-on: ubuntu-latest
 
     steps:
