@@ -30,7 +30,6 @@ jobs:
             ${{runner.os}}-yarn-
 
       - run: corepack yarn install --immutable
-      - run: corepack yarn build # We need the stubs to run the tests
 
       - name: "Check for type errors"
         run: corepack yarn typecheck
@@ -38,7 +37,7 @@ jobs:
       - name: "Check for linting errors"
         run: corepack yarn lint
 
-  build:
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +52,6 @@ jobs:
 
     name: "${{matrix.platform}} w/ Node.js ${{matrix.node}}.x"
     runs-on: ${{matrix.platform}}
-    needs: chore
 
     steps:
       - uses: actions/checkout@v3

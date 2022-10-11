@@ -7,7 +7,7 @@ on:
     - cron: 5 0 * * 5
 
 jobs:
-  build:
+  fetch-latest-versions:
     runs-on: ubuntu-latest
 
     steps:
