@@ -10,14 +10,13 @@ import * as folderUtils                                        from './folderUti
 import * as fsUtils                                            from './fsUtils';
 import * as httpUtils                                          from './httpUtils';
 import * as nodeUtils                                          from './nodeUtils';
+import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
 export async function fetchLatestStableVersion(spec: RegistrySpec) {
   switch (spec.type) {
     case `npm`: {
-      const {[`dist-tags`]: {latest}, versions: {[latest]: {dist: {shasum}}}} =
-        await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`);
-      return `${latest}+sha1.${shasum}`;
+      return await npmRegistryUtils.fetchLatestStableVersion(spec.package);
     }
     case `url`: {
       const data = await httpUtils.fetchAsJson(spec.url);
@@ -32,8 +31,7 @@ export async function fetchLatestStableVersion(spec: RegistrySpec) {
 export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<string, string>> {
   switch (spec.type) {
     case `npm`: {
-      const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
-      return data[`dist-tags`];
+      return await npmRegistryUtils.fetchAvailableTags(spec.package);
     }
     case `url`: {
       const data = await httpUtils.fetchAsJson(spec.url);
@@ -48,8 +46,7 @@ export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<str
 export async function fetchAvailableVersions(spec: RegistrySpec): Promise<Array<string>> {
   switch (spec.type) {
     case `npm`: {
-      const data = await httpUtils.fetchAsJson(`https://registry.npmjs.org/${spec.package}`, {headers: {[`Accept`]: `application/vnd.npm.install-v1+json`}});
-      return Object.keys(data.versions);
+      return await npmRegistryUtils.fetchAvailableVersions(spec.package);
     }
     case `url`: {
       const data = await httpUtils.fetchAsJson(spec.url);

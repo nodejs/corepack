@@ -152,6 +152,12 @@ This command will retrieve the given package manager from the specified archive 
 
 - `COREPACK_ROOT` has no functional impact on Corepack itself; it's automatically being set in your environment by Corepack when it shells out to the underlying package managers, so that they can feature-detect its presence (useful for commands like `yarn init`).
 
+- `COREPACK_NPM_REGISTRY` sets the registry base url used when retrieving package managers from npm. Default value is `https://registry.npmjs.org`
+
+- `COREPACK_NPM_TOKEN` sets a Bearer token authorization header when connecting to a npm type registry.
+
+- `COREPACK_NPM_USERNAME` and `COREPACK_NPM_PASSWORD` to set a Basic authorization header when connecting to a npm type registry. Note that both environment variables are required and as plain text. If you want to send an empty password, explicitly set `COREPACK_NPM_PASSWORD` to an empty string.
+
 - `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through [`node-proxy-agent`](https://github.com/TooTallNate/node-proxy-agent).
 
 ## Contributing
