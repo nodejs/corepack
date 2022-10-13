@@ -36,6 +36,8 @@ We do acknowledge the irony and overhead of using npm to install Corepack, which
 
 ## Usage
 
+### When Building Packages
+
 Just use your package managers as you usually would. Run `yarn install` in Yarn projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack will catch these calls, and depending on the situation:
 
 - **If the local project is configured for the package manager you're using**, Corepack will silently download and cache the latest compatible version.
@@ -43,6 +45,18 @@ Just use your package managers as you usually would. Run `yarn install` in Yarn 
 - **If the local project is configured for a different package manager**, Corepack will request you to run the command again using the right package manager - thus avoiding corruptions of your install artifacts.
 
 - **If the local project isn't configured for any package manager**, Corepack will assume that you know what you're doing, and will use whatever package manager version has been pinned as "known good release". Check the relevant section for more details.
+
+### When Authoring Packages
+
+Set your package's manager with the `packageManager` field in `package.json`:
+
+```json
+{
+  "packageManager": "yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa"
+}
+```
+
+Here, `yarn` is the name of the package manager, specified at version `3.2.3`, along with the SHA-224 hash of this version for validation. `packageManager@x.y.z` is required. The hash is optional but strongly recommended as a security practice. Permitted values for the package manager are `yarn`, `npm`, and `pnpm`.
 
 ## Known Good Releases
 
