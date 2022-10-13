@@ -56,7 +56,7 @@ Set your package's manager with the `packageManager` field in `package.json`:
 }
 ```
 
-Here, `yarn` executable is specified at version `3.2.3`, along with the `sha224` hash of this version for validation. `executable@x.y.z` is required. The sha is optional but strongly recommended as a security practice. Permitted values for the executable are `yarn`, `npm`, and `pnpm`.
+Here, `yarn` is the name of the package manager, specified at version `3.2.3`, along with the SHA-224 hash of this version for validation. `packageManager@x.y.z` is required. The hash is optional but strongly recommended as a security practice. Permitted values for the package manager are `yarn`, `npm`, and `pnpm`.
 
 ## Known Good Releases
 
