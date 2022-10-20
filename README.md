@@ -147,14 +147,16 @@ This command will retrieve the given package manager from the specified archive 
 
 ## Contributing
 
-If you want to build corepack yourself, you can build the project like this:
+If you want to build Corepack yourself, you can build the project like this:
 
-1. Clone this repository
-2. Run `yarn build` (no need for `yarn install`)
-3. The `dist/` directory now contains the corepack build and the shims
-4. Call `node ./dist/corepack --help` and behold
+1. Clone this repository.
+2. Run `yarn install` (or `corepack yarn install` if the global version of
+   `yarn` is not provided by Corepack).
+3. Run `yarn build` (or `corepack yarn build`).
 
-You can also run the tests with `yarn jest` (still no install needed).
+The `dist/` directory now contains the corepack build and the shims.
+Call `node ./dist/corepack --help` and behold.
+You can also run the tests with `yarn test`.
 
 ## Design
 
