@@ -270,8 +270,14 @@ it(`should refuse to run a different package manager within a configured project
     process.env.COREPACK_ENABLE_STRICT = `0`;
 
     try {
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `1.0.0\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
         exitCode: 0,
       });
     } finally {
