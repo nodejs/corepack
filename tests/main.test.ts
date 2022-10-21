@@ -287,6 +287,31 @@ it(`should refuse to run a different package manager within a configured project
   });
 });
 
+
+it(`should always use fallback version when project spec env is disabled`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.0.0`,
+    });
+    process.env.COREPACK_ENABLE_PROJECT_SPEC = `0`;
+
+    try {
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_PROJECT_SPEC;
+    }
+  });
+});
+
 it(`should allow to call "prepare" with --all to prepare all package managers`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {

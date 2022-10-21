@@ -134,8 +134,17 @@ This command will retrieve the given package manager from the specified archive 
   manager versions that will be required for the projects you'll run, using
   `corepack hydrate`).
 
-- `COREPACK_ENABLE_STRICT` can be set to `0` to prevent Corepack from checking
+- `COREPACK_ENABLE_STRICT` can be set to `0` to prevent Corepack from throwing error
+  if the package manager does not correspond to the one defined for the current project.
+  This means that if a user is using the package manager specified in the current project,
+  it will use the version specified by the project's `packageManager` field.
+  But if the user is using other package manager different from the one specified
+  for the current project, it will use the system-wide package manager version.
+
+- `COREPACK_ENABLE_PROJECT_SPEC` can be set to `0` to prevent Corepack from checking
   if the package manager corresponds to the one defined for the current project.
+  This means that it will always use the system-wide package manager regardless of
+  what is being specified in the project's `packageManager` field.
 
 - `COREPACK_HOME` can be set in order to define where Corepack should install
   the package managers. By default it is set to `%LOCALAPPDATA%\node\corepack`
