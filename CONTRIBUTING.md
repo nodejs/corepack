@@ -1,4 +1,9 @@
-# Developer's Certificate of Origin 1.1
+# Contributing to Corepack
+
+See [Contributing](README.md#contributing) section in the README for
+instructions on how to setup your local environment.
+
+## Developer's Certificate of Origin 1.1
 
 By making a contribution to this project, I certify that:
 
