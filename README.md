@@ -147,25 +147,12 @@ This command will retrieve the given package manager from the specified archive 
 
 ## Contributing
 
-If you want to build corepack yourself, you can build the project like this:
-
-1. Clone this repository
-2. Run `yarn build` (no need for `yarn install`)
-3. The `dist/` directory now contains the corepack build and the shims
-4. Call `node ./dist/corepack --help` and behold
-
-You can also run the tests with `yarn jest` (still no install needed).
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Design
 
-Various tidbits about Corepack's design are explained in more details in [DESIGN.md](/DESIGN.md).
+See [`DESIGN.md`](/DESIGN.md).
 
 ## License (MIT)
 
-> **Copyright © Corepack contributors**
->
-> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
->
-> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
->
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+See [`LICENSE.md`](./LICENSE.md).
