@@ -1,7 +1,15 @@
 # Contributing to Corepack
 
-See [Contributing](README.md#contributing) section in the README for
-instructions on how to setup your local environment.
+If you want to build Corepack yourself, you can build the project like this:
+
+1. Clone this repository.
+2. Run `yarn install` (or `corepack yarn install` if the global version of
+   `yarn` is not provided by Corepack).
+3. Run `yarn build` (or `corepack yarn build`).
+
+The `dist/` directory now contains the corepack build and the shims.
+Call `node ./dist/corepack --help` and behold.
+You can also run the tests with `yarn test`.
 
 ## Developer's Certificate of Origin 1.1
 
