@@ -44,7 +44,11 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
   // A locator is a valid descriptor (but not the other way around)
   const fallbackLocator = {name: locator.name, range: locator.reference};
 
-  if (process.env.COREPACK_ENABLE_STRICT === `0`) return fallbackLocator;
+  if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
+    return fallbackLocator;
+
+  if (process.env.COREPACK_ENABLE_STRICT === `0`)
+    transparent = true;
 
   while (true) {
     const result = await loadSpec(initialCwd);
