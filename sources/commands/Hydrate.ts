@@ -37,9 +37,6 @@ export class HydrateCommand extends Command<Context> {
 
     const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
 
-    // Recreate the folder in case it was deleted somewhere else:
-    await mkdir(installFolder, {recursive: true});
-
     await tar.t({file: fileName, onentry: entry => {
       const segments = entry.header.path.split(/\//g);
 
@@ -66,6 +63,9 @@ export class HydrateCommand extends Command<Context> {
           this.context.stdout.write(`Hydrating ${name}@${reference} for immediate activation...\n`);
         else
           this.context.stdout.write(`Hydrating ${name}@${reference}...\n`);
+
+        // Recreate the folder in case it was deleted somewhere else:
+        await mkdir(installFolder, {recursive: true});
 
         await tar.x({file: fileName, cwd: installFolder}, [`${name}/${reference}`]);
 
