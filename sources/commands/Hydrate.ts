@@ -1,6 +1,6 @@
 import {Command, Option, UsageError} from 'clipanion';
+import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
-import {existsSync, mkdirSync}       from 'fs';
 
 import * as folderUtils              from '../folderUtils';
 import {Context}                     from '../main';
@@ -37,8 +37,8 @@ export class HydrateCommand extends Command<Context> {
 
     const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
 
-    if (!existsSync(installFolder))
-      mkdirSync(installFolder, {recursive: true});
+    // Recreate the folder in case it was deleted somewhere else:
+    await mkdir(installFolder, {recursive: true});
 
     await tar.t({file: fileName, onentry: entry => {
       const segments = entry.header.path.split(/\//g);

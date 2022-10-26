@@ -373,6 +373,44 @@ it(`should support hydrating package managers from cached archives`, async () =>
   });
 });
 
+it(`should support hydrating package managers if cache folder does not exist`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `-o`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+    });
+
+    // Use a new cache
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+
+    // Simulate cache removal
+    await xfs.removePromise(npath.toPortablePath(process.env.COREPACK_HOME));
+
+    // Disable the network to make sure we don't succeed by accident
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+    try {
+      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
+        stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@2.2.2`,
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `2.2.2\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_NETWORK;
+    }
+  });
+});
+
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `pnpm@5.8.0`, `-o`])).resolves.toMatchObject({

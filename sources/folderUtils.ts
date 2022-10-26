@@ -25,7 +25,6 @@ export function getInstallFolder() {
       mkdirSync(newCorepackDefaultHome, {recursive: true});
       renameSync(oldCorepackDefaultHome, newCorepackDefaultHome);
     }
-
     return newCorepackDefaultHome;
   }
   return (
