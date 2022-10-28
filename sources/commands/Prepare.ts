@@ -117,6 +117,8 @@ export class PrepareCommand extends Command<Context> {
         this.context.stdout.write(`Packing the selected tools in ${path.basename(outputPath)}...\n`);
 
       const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
+      // Recreate the folder in case it was deleted somewhere else:
+      await mkdir(baseInstallFolder, {recursive: true});
       await tar.c({gzip: true, cwd: baseInstallFolder, file: path.resolve(outputPath)}, installLocations.map(location => {
         return path.relative(baseInstallFolder, location);
       }));
