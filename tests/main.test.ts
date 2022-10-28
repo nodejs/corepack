@@ -404,7 +404,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
   });
 });
 
-it(`should support hydrating package managers if cache folder does not exist`, async () => {
+it(`should support hydrating package managers if cache folder was removed`, async () => {
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `-o`])).resolves.toMatchObject({
       exitCode: 0,
