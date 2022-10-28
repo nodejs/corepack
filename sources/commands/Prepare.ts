@@ -1,4 +1,5 @@
 import {Command, Option, UsageError} from 'clipanion';
+import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
 
 import * as folderUtils              from '../folderUtils';
