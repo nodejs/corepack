@@ -1,4 +1,5 @@
 import {Command, Option, UsageError} from 'clipanion';
+import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
 
 import * as folderUtils              from '../folderUtils';
@@ -62,6 +63,9 @@ export class HydrateCommand extends Command<Context> {
           this.context.stdout.write(`Hydrating ${name}@${reference} for immediate activation...\n`);
         else
           this.context.stdout.write(`Hydrating ${name}@${reference}...\n`);
+
+        // Recreate the folder in case it was deleted somewhere else:
+        await mkdir(installFolder, {recursive: true});
 
         await tar.x({file: fileName, cwd: installFolder}, [`${name}/${reference}`]);
 
