@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "9.1.2+sha1.0cf57d747a84fcc32ed397545f5bea6dbb014141",
+      "default": "9.2.0+sha1.f4ced5247b703103c6fc7b6e7ec2927c8f0a3d21",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "npm"
@@ -32,7 +32,7 @@
       }
     },
     "pnpm": {
-      "default": "7.17.0+sha1.3470fe6fbeee107f01cb1878a27c931099c36e3a",
+      "default": "7.21.0+sha1.9015edbc6e5303a26d5bcccf5fb766ce812e2898",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "pnpm"
@@ -84,7 +84,7 @@
         "package": "yarn"
       },
       "transparent": {
-        "default": "3.3.0+sha224.c2301c8aea8dc8a09277d8e580d29ec51bd2d4aaec28617a8c65f870",
+        "default": "3.3.1+sha224.1c866bd0fca5cf439c5b6a019f1653906d5e7ea807b01a9c7b18adab",
         "commands": [
           [
             "yarn",
