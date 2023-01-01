@@ -560,7 +560,10 @@ it(`should not override the package manager exit code`, async () => {
   });
 });
 
-it(`should not override the package manager exit code when it throws`, async () => {
+it(`should not preserve the process.exitCode when a package manager throws`, async () => {
+  // Node.js doesn't preserve process.exitCode when an exception is thrown
+  // so we need to make sure we don't break this behaviour.
+
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@2.2.2`,
@@ -575,9 +578,9 @@ it(`should not override the package manager exit code when it throws`, async () 
     `);
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 42,
-      stdout: expect.stringContaining(`foo`),
-      stderr: ``,
+      exitCode: 1,
+      stdout: ``,
+      stderr: expect.stringContaining(`foo`),
     });
   });
 });
@@ -602,6 +605,31 @@ it(`should not set the exit code after successfully launching the package manage
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 42,
       stdout: ``,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should support package managers in ESM format`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    const yarnDir = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2` as PortablePath);
+
+    await xfs.mkdirPromise(yarnDir, {recursive: true});
+    await xfs.writeFilePromise(ppath.join(yarnDir, `yarn.js` as PortablePath), `
+      import 'fs';
+      console.log(42);
+    `);
+    await xfs.writeJsonPromise(ppath.join(yarnDir, `package.json` as PortablePath), {
+      type: `module`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `42\n`,
       stderr: ``,
     });
   });
