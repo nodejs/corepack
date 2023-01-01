@@ -184,7 +184,8 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
-  nodeUtils.registerV8CompileCache();
+  // @ts-expect-error - No types
+  await import(`v8-compile-cache`);
 
   // We load the binary into the current process,
   // while making it think it was spawned.
