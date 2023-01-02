@@ -6,9 +6,6 @@ import {Engine}                     from './sources/Engine';
 import {SupportedPackageManagerSet} from './sources/types';
 
 function shouldGenerateShim(name: string) {
-  if (name.startsWith(`vendors`))
-    return false;
-
   return !name.startsWith(`vendors`);
 }
 
