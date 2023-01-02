@@ -1,8 +1,7 @@
-const TerserPlugin = require(`terser-webpack-plugin`);
 const webpack = require(`webpack`);
 
 module.exports = {
-  mode: `development`,
+  mode: `production`,
   devtool: false,
   target: `node`,
   entry: {
@@ -10,6 +9,7 @@ module.exports = {
   },
   output: {
     libraryTarget: `commonjs`,
+    chunkFilename: `chunks/[name].cjs`,
   },
   resolve: {
     extensions: [`.ts`, `.js`],
@@ -33,11 +33,7 @@ module.exports = {
     assetsSort: `!size`,
   },
   optimization: {
-    minimizer: [
-      new TerserPlugin({
-        extractComments: false,
-      }),
-    ],
+    minimize: false,
   },
   plugins: [
     new webpack.BannerPlugin({

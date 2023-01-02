@@ -6,7 +6,7 @@ import {Engine}                     from './sources/Engine';
 import {SupportedPackageManagerSet} from './sources/types';
 
 function shouldGenerateShim(name: string) {
-  return !name.startsWith(`vendors`);
+  return name !== `chunks`;
 }
 
 const engine = new Engine();
