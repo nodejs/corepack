@@ -49,11 +49,11 @@
   "scripts": {
     "build": "rm -rf dist shims && webpack && ts-node ./mkshims.ts",
     "corepack": "ts-node ./sources/_entryPoint.ts",
-    "lint": "yarn eslint",
+    "lint": "eslint .",
     "prepack": "yarn build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",
-    "test": "yarn jest"
+    "test": "jest"
   },
   "files": [
     "dist",
