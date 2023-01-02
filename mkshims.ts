@@ -9,7 +9,7 @@ function shouldGenerateShim(name: string) {
   if (name.startsWith(`vendors`))
     return false;
 
-  return true;
+  return !name.startsWith(`vendors`);
 }
 
 const engine = new Engine();
