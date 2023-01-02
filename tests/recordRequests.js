@@ -39,7 +39,7 @@ switch (process.env.NOCK_ENV || ``) {
           req.rawHeaders = filterHeaders(req.rawHeaders);
 
       const serialized = v8.serialize(nockCallObjects);
-      fs.mkdirSync(path.dirname(getNockFile()), { recursive: true });
+      fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
       fs.writeFileSync(getNockFile(), serialized);
     });
     break;
