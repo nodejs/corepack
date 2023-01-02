@@ -6,12 +6,7 @@ import {Engine}                     from './sources/Engine';
 import {SupportedPackageManagerSet} from './sources/types';
 
 function shouldGenerateShim(name: string) {
-  if (name === 'vcc.js') {
-    return false;
-  } else if (name.startsWith('vendors')) {
-    return false;
-  }
-  return true;
+  return !name.startsWith(`vendors`);
 }
 
 const engine = new Engine();

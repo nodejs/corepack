@@ -7,7 +7,6 @@ module.exports = {
   target: `node`,
   entry: {
     [`corepack`]: `./sources/_entryPoint.ts`,
-    [`vcc`]: `v8-compile-cache`,
   },
   output: {
     libraryTarget: `commonjs`,
