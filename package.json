@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/nodejs/corepack.git"
   },
+  "engines": {
+    "node": ">=14.14.0"
+  },
   "license": "MIT",
   "packageManager": "yarn@4.0.0-rc.15+sha224.7fa5c1d1875b041cea8fcbf9a364667e398825364bf5c5c8cd5f6601",
   "devDependencies": {

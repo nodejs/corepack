@@ -22,7 +22,7 @@ module.exports = {
         loader: `ts-loader`,
         options: {
           compilerOptions: {
-            module: `es2020`,
+            module: `ES2020`,
             noEmit: false,
           },
         },
