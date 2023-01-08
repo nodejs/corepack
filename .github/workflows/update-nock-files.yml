@@ -8,6 +8,9 @@ on:
         type: number
         required: true
 
+env:
+  YARN_ENABLE_GLOBAL_CACHE: false
+
 jobs:
   build-and-update-nock-files:
     runs-on: ubuntu-latest

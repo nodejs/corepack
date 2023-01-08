@@ -1,12 +1,6 @@
 import Module from 'module';
 import path   from 'path';
 
-declare const __non_webpack_require__: NodeRequire | undefined;
-
-export const dynamicRequire: NodeRequire = typeof __non_webpack_require__ !== `undefined`
-  ? __non_webpack_require__
-  : require;
-
 /**
  * Loads a module as a main module, enabling the `require.main === module` pattern.
  */
