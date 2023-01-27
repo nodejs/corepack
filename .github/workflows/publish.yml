@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  YARN_ENABLE_GLOBAL_CACHE: false
+
 jobs:
   release-please:
     runs-on: ubuntu-latest

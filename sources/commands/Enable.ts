@@ -5,7 +5,6 @@ import path                                                              from 'p
 import which                                                             from 'which';
 
 import {Context}                                                         from '../main';
-import * as nodeUtils                                                    from '../nodeUtils';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
 export class EnableCommand extends Command<Context> {
@@ -51,8 +50,7 @@ export class EnableCommand extends Command<Context> {
     // install directory is within a symlink
     installDirectory = fs.realpathSync(installDirectory);
 
-    // We use `eval` so that Webpack doesn't statically transform it.
-    const manifestPath = nodeUtils.dynamicRequire.resolve(`corepack/package.json`);
+    const manifestPath = require.resolve(`corepack/package.json`);
 
     const distFolder = path.join(path.dirname(manifestPath), `dist`);
     if (!fs.existsSync(distFolder))

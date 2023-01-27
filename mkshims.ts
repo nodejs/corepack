@@ -6,7 +6,8 @@ import {Engine}                     from './sources/Engine';
 import {SupportedPackageManagerSet} from './sources/types';
 
 function shouldGenerateShim(name: string) {
-  return name !== `chunks`;
+  // No filtering needed at the moment
+  return true;
 }
 
 const engine = new Engine();
