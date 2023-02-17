@@ -3,8 +3,8 @@ import fs                                                                from 'f
 import path                                                              from 'path';
 import which                                                             from 'which';
 
-import type { NodeError }                                                from '../nodeUtils';
 import {Context}                                                         from '../main';
+import type {NodeError}                                                  from '../nodeUtils';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
 export class DisableCommand extends Command<Context> {

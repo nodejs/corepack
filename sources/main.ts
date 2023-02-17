@@ -1,5 +1,7 @@
 import {BaseContext, Builtins, Cli, Command, Option, UsageError} from 'clipanion';
 
+import {version as corepackVersion}                              from '../package.json';
+
 import {Engine}                                                  from './Engine';
 import {DisableCommand}                                          from './commands/Disable';
 import {EnableCommand}                                           from './commands/Enable';
@@ -87,8 +89,6 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
 }
 
 async function main(argv: Array<string>) {
-  const corepackVersion = require(`../package.json`).version;
-
   // Because we load the binaries in the same process, we don't support custom contexts.
   const context = {
     ...Cli.defaultContext,

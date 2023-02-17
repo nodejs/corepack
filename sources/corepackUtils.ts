@@ -95,7 +95,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
 }
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
-  const {default: tar} = await import(/* webpackMode: 'eager' */ `tar`);
+  const {default: tar} = await import(`tar`);
   const {version, build} = semver.parse(locator.reference)!;
 
   const installFolder = path.join(installTarget, locator.name, version);
@@ -190,7 +190,8 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
-  nodeUtils.registerV8CompileCache();
+  // @ts-expect-error - No types
+  await import(`v8-compile-cache`);
 
   // We load the binary into the current process,
   // while making it think it was spawned.
@@ -199,7 +200,7 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   // - Yarn uses process.argv[1] to determine its own path: https://github.com/yarnpkg/berry/blob/0da258120fc266b06f42aed67e4227e81a2a900f/packages/yarnpkg-cli/sources/main.ts#L80
   // - pnpm uses `require.main == null` to determine its own version: https://github.com/pnpm/pnpm/blob/e2866dee92991e979b2b0e960ddf5a74f6845d90/packages/cli-meta/src/index.ts#L14
 
-  process.env.COREPACK_ROOT = path.dirname(eval(`__dirname`));
+  process.env.COREPACK_ROOT = path.dirname(require.resolve(`corepack/package.json`));
 
   process.argv = [
     process.execPath,

@@ -9,4 +9,3 @@ lines.sort((a, b) => {
 
 for (const version of lines)
   console.log(`"${version}": "${process.argv[2]}",`);
-
