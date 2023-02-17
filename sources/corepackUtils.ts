@@ -104,7 +104,13 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     return installFolder;
   }
 
-  const url = spec.url.replace(`{}`, version);
+  const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
+  const url = process.env.COREPACK_NPM_REGISTRY ?
+    defaultNpmRegistryURL.replace(
+      npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+      () => process.env.COREPACK_NPM_REGISTRY!,
+    ) :
+    defaultNpmRegistryURL;
 
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
