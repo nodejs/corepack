@@ -6,6 +6,7 @@
 ### Features
 
 * update package manager versions ([#228](https://github.com/nodejs/corepack/issues/228)) ([bb000f9](https://github.com/nodejs/corepack/commit/bb000f9c10a1fbd85f2c15a90218d90b42473130))
+* build: migrate to ESBuild ([#229](https://github.com/nodejs/corepack/pull/229)) ([15ceb83](https://github.com/nodejs/corepack/commit/15ceb832a34a223efbe3d3f9cb792d9101a7022a))
 
 
 ### Bug Fixes
