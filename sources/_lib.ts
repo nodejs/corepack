@@ -1,0 +1,1 @@
+export {runMain} from './main';
