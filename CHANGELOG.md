@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.18.0](https://github.com/nodejs/corepack/compare/v0.17.1...v0.18.0) (2023-04-07)
+## [0.17.2](https://github.com/nodejs/corepack/compare/v0.17.1...v0.17.2) (2023-04-07)
 
 
 ### Features
