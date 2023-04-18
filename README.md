@@ -15,7 +15,7 @@ use npm.
 
 ### Default Installs
 
-Corepack is distributed by default with Node.js 14.19.0 and 16.9.0, but is
+Corepack is distributed by default with all recent Node.js versions, but is
 opt-in for the time being. Run `corepack enable` to install the required shims.
 
 ### Manual Installs

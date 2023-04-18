@@ -10,7 +10,7 @@
     "url": "https://github.com/nodejs/corepack.git"
   },
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=16.20.0"
   },
   "exports": {
     "./package.json": "./package.json"
