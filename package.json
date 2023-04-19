@@ -51,7 +51,7 @@
   },
   "scripts": {
     "build": "rm -rf dist shims && run build:bundle && ts-node ./mkshims.ts",
-    "build:bundle": "esbuild ./sources/_entryPoint.ts --bundle --platform=node --target=node14.14.0 --external:corepack --outfile='./dist/corepack.js' --resolve-extensions='.ts,.mjs,.js'",
+    "build:bundle": "esbuild ./sources/_entryPoint.ts --bundle --platform=node --target=node16.20.0 --external:corepack --outfile='./dist/corepack.js' --resolve-extensions='.ts,.mjs,.js'",
     "corepack": "ts-node ./sources/_entryPoint.ts",
     "lint": "eslint .",
     "prepack": "yarn build",
