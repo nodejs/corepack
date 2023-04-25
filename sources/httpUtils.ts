@@ -22,7 +22,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
     });
 
     request.on(`error`, err => {
-      reject(new Error(`Error when performing the request`));
+      reject(new Error(`Error when performing the request; this may be due to a DNS error, try \`curl ${url}\` to help diagnose the issue`));
     });
   });
 }
