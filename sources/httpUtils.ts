@@ -22,7 +22,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
     });
 
     request.on(`error`, err => {
-      reject(new Error(`Error when performing the request`));
+      reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
     });
   });
 }
