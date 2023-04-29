@@ -16,13 +16,13 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
     const request = https.get(url, {...options, agent: proxyAgent}, response => {
       const statusCode = response.statusCode ?? 500;
       if (!(statusCode >= 200 && statusCode < 300))
-        return reject(new Error(`Server answered with HTTP ${statusCode} when requesting ${url}`));
+        return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
 
       return resolve(response);
     });
 
     request.on(`error`, err => {
-      reject(new Error(`Error when performing the request ${url}`));
+      reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
     });
   });
 }
