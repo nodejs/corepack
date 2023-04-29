@@ -15,7 +15,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
   return new Promise<IncomingMessage>((resolve, reject) => {
     const request = https.get(url, {...options, agent: proxyAgent}, response => {
       const statusCode = response.statusCode;
-      if (statusCode && statusCode >= 200 && statusCode < 300)
+      if (statusCode != null && statusCode >= 200 && statusCode < 300)
         return resolve(response);
 
       return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
