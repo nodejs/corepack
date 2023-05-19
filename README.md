@@ -131,11 +131,36 @@ on a project where the `packageManager` field references `pnpm`).
 | --------------------- | --------------------------------------- |
 | `--install-directory` | Add the shims to the specified location |
 
-This command will detect where Node.js is installed and will create shims next
+This command will detect where Corepack is installed and will create shims next
 to it for each of the specified package managers (or all of them if the command
 is called without parameters). Note that the npm shims will not be installed
 unless explicitly requested, as npm is currently distributed with Node.js
 through other means.
+
+If the file system where the `corepack` binary is located is read-only, this
+command will fail. A workaround is to add the binaries as alias in your
+shell configuration file (e.g. in `~/.bash_aliases`):
+
+```sh
+alias yarn="corepack yarn"
+alias yarnpkg="corepack yarnpkg"
+alias pnpm="corepack pnpm"
+alias pnpx="corepack pnpx"
+alias npm="corepack npm"
+alias npx="corepack npx"
+```
+
+On Windows PowerShell, you can add functions using the `$PROFILE` automatic
+variable:
+
+```powershell
+echo "function yarn { corepack yarn `$args }" >> $PROFILE
+echo "function yarnpkg { corepack yarnpkg `$args }" >> $PROFILE
+echo "function pnpm { corepack pnpm `$args }" >> $PROFILE
+echo "function pnpx { corepack pnpx `$args }" >> $PROFILE
+echo "function npm { corepack npm `$args }" >> $PROFILE
+echo "function npx { corepack npx `$args }" >> $PROFILE
+```
 
 ### `corepack disable [... name]`
 
