@@ -38,7 +38,7 @@ export class HydrateCommand extends Command<Context> {
     const {default: tar} = await import(`tar`);
 
     await tar.t({file: fileName, onentry: entry => {
-      const segments = entry.header.path.split(/\//g);
+      const segments = entry.path.split(/\//g);
 
       if (segments.length < 3) {
         hasShortEntries = true;

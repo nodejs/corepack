@@ -8,21 +8,21 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const {default: https} = await import(`https`);
 
-  const {default: ProxyAgent} = await import(`proxy-agent`);
+  const {ProxyAgent} = await import(`proxy-agent`);
 
   const proxyAgent = new ProxyAgent();
 
   return new Promise<IncomingMessage>((resolve, reject) => {
     const request = https.get(url, {...options, agent: proxyAgent}, response => {
-      const statusCode = response.statusCode ?? 500;
-      if (!(statusCode >= 200 && statusCode < 300))
-        return reject(new Error(`Server answered with HTTP ${statusCode}`));
+      const statusCode = response.statusCode;
+      if (statusCode != null && statusCode >= 200 && statusCode < 300)
+        return resolve(response);
 
-      return resolve(response);
+      return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
     });
 
     request.on(`error`, err => {
-      reject(new Error(`Error when performing the request`));
+      reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
     });
   });
 }
