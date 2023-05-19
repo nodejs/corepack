@@ -52,6 +52,6 @@ jobs:
           YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Add Corepack executable to GitHub release
-        run: gh release upload ${{ needs.release-please.outputs.release_tag }} dist/corepack.js
+        run: gh release upload ${{ needs.release-please.outputs.release_tag }} dist/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
