@@ -85,6 +85,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
     // If the dirname correspond to an in-range version and is not lower than
     // the previous best match (or if there is not yet a previous best match),
     // it's our new best match.
+    // @ts-expect-error TODO: decipher why this produces an error
     if (range.test(name) && maxSV?.compare(name) !== 1) {
       bestMatch = name;
       maxSV = new semver.SemVer(bestMatch);

@@ -16,11 +16,12 @@
     "./package.json": "./package.json"
   },
   "license": "MIT",
-  "packageManager": "yarn@4.0.0-rc.15+sha224.7fa5c1d1875b041cea8fcbf9a364667e398825364bf5c5c8cd5f6601",
+  "packageManager": "yarn@4.0.0-rc.44+sha224.6526204ca38ed0105e81ba52d83dc0c7b8ee63600a13dc332914fde0",
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-transform-modules-commonjs": "^7.14.0",
     "@babel/preset-typescript": "^7.13.0",
+    "@jest/globals": "^29.0.0",
     "@types/debug": "^4.1.5",
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
@@ -45,7 +46,7 @@
     "supports-color": "^9.0.0",
     "tar": "^6.0.1",
     "ts-node": "^10.0.0",
-    "typescript": "^5.0.2",
+    "typescript": "^5.0.4",
     "v8-compile-cache": "^2.3.0",
     "which": "^3.0.0"
   },

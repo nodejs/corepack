@@ -878,7 +878,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/globals@npm:^29.5.0":
+"@jest/globals@npm:^29.0.0, @jest/globals@npm:^29.5.0":
   version: 29.5.0
   resolution: "@jest/globals@npm:29.5.0"
   dependencies:
@@ -2176,6 +2176,7 @@ __metadata:
     "@babel/core": "npm:^7.14.3"
     "@babel/plugin-transform-modules-commonjs": "npm:^7.14.0"
     "@babel/preset-typescript": "npm:^7.13.0"
+    "@jest/globals": "npm:^29.0.0"
     "@types/debug": "npm:^4.1.5"
     "@types/jest": "npm:^29.0.0"
     "@types/node": "npm:^20.0.0"
@@ -2200,7 +2201,7 @@ __metadata:
     supports-color: "npm:^9.0.0"
     tar: "npm:^6.0.1"
     ts-node: "npm:^10.0.0"
-    typescript: "npm:^5.0.2"
+    typescript: "npm:^5.0.4"
     v8-compile-cache: "npm:^2.3.0"
     which: "npm:^3.0.0"
   languageName: unknown
@@ -2966,7 +2967,7 @@ __metadata:
 
 "fsevents@patch:fsevents@npm%3A^2.3.2#optional!builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#optional!builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#optional!builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
   dependencies:
     node-gyp: "npm:latest"
   conditions: os=darwin
@@ -5161,7 +5162,7 @@ __metadata:
 
 "resolve@patch:resolve@npm%3A^1.20.0#optional!builtin<compat/resolve>":
   version: 1.22.3
-  resolution: "resolve@patch:resolve@npm%3A1.22.3#optional!builtin<compat/resolve>::version=1.22.3&hash=07638b"
+  resolution: "resolve@patch:resolve@npm%3A1.22.3#optional!builtin<compat/resolve>::version=1.22.3&hash=c3c19d"
   dependencies:
     is-core-module: "npm:^2.12.0"
     path-parse: "npm:^1.0.7"
@@ -5174,7 +5175,7 @@ __metadata:
 
 "resolve@patch:resolve@npm%3A^2.0.0-next.4#optional!builtin<compat/resolve>":
   version: 2.0.0-next.4
-  resolution: "resolve@patch:resolve@npm%3A2.0.0-next.4#optional!builtin<compat/resolve>::version=2.0.0-next.4&hash=07638b"
+  resolution: "resolve@patch:resolve@npm%3A2.0.0-next.4#optional!builtin<compat/resolve>::version=2.0.0-next.4&hash=c3c19d"
   dependencies:
     is-core-module: "npm:^2.9.0"
     path-parse: "npm:^1.0.7"
@@ -5725,7 +5726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.2":
+"typescript@npm:^5.0.4":
   version: 5.0.4
   resolution: "typescript@npm:5.0.4"
   bin:
@@ -5735,13 +5736,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.0.2#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.0.4#optional!builtin<compat/typescript>":
   version: 5.0.4
-  resolution: "typescript@patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=a1c5e5"
+  resolution: "typescript@patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: be94f10d96a8443e5524bce56705712ae1aa6c67618dd2c316ddb616ea614a3eb675c34e4af16ab09f1a0ab694173c704ba5b23d8b8bda31cb31c1ca078c486f
+  checksum: e4296a207d18264eb9b17a912b0929c4e8be5a4e48aefa016e952eaa445e5a4ed363a72d9023f151dc7f100d48d4bfa35480aec199f123a664ef8a622355ae4f
   languageName: node
   linkType: hard
 
@@ -5851,7 +5852,7 @@ __metadata:
 
 "vm2@patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::locator=corepack%40workspace%3A.":
   version: 3.9.9
-  resolution: "vm2@patch:vm2@npm%3A3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::version=3.9.9&hash=20da8d&locator=corepack%40workspace%3A."
+  resolution: "vm2@patch:vm2@npm%3A3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::version=3.9.9&hash=9a9032&locator=corepack%40workspace%3A."
   dependencies:
     acorn: "npm:^8.7.0"
     acorn-walk: "npm:^8.2.0"
