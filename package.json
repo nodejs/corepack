@@ -10,7 +10,7 @@
     "url": "https://github.com/nodejs/corepack.git"
   },
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=16.20.0"
   },
   "exports": {
     "./package.json": "./package.json"
@@ -51,7 +51,7 @@
   },
   "scripts": {
     "build": "rm -rf dist shims && run build:bundle && ts-node ./mkshims.ts",
-    "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node14.14.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
+    "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node16.20.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
     "corepack": "ts-node ./sources/_cli.ts",
     "lint": "eslint .",
     "prepack": "yarn build",
