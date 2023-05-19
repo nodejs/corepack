@@ -143,6 +143,7 @@ shell configuration file (e.g. in `~/.bash_aliases`):
 
 ```sh
 alias yarn="corepack yarn"
+alias yarnpkg="corepack yarnpkg"
 alias pnpm="corepack pnpm"
 alias pnpx="corepack pnpx"
 alias npm="corepack npm"
@@ -154,6 +155,7 @@ variable:
 
 ```powershell
 echo "function yarn { corepack yarn `$args }" >> $PROFILE
+echo "function yarnpkg { corepack yarnpkg `$args }" >> $PROFILE
 echo "function pnpm { corepack pnpm `$args }" >> $PROFILE
 echo "function pnpx { corepack pnpx `$args }" >> $PROFILE
 echo "function npm { corepack npm `$args }" >> $PROFILE
