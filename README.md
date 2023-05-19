@@ -217,6 +217,16 @@ network interaction.
 - `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through
   [`node-proxy-agent`](https://github.com/TooTallNate/node-proxy-agent).
 
+## Troubleshooting
+
+### Networking
+
+There are a wide variety of networking issues that can occur while running `corepack` commands. Things to check:
+
+- Make sure your network connection is active.
+- Make sure the host for your request can be resolved by your DNS; try using `curl [URL]` from your shell.
+- Check your proxy settings (see [Environment Variables](#environment-variables)).
+
 ## Contributing
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
