@@ -1,3 +1,7 @@
+import {jest, describe, beforeEach, afterEach, it, expect}      from '@jest/globals';
+import {Buffer}                                                 from 'node:buffer';
+import process                                                  from 'node:process';
+
 import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
 import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources/npmRegistryUtils';
 

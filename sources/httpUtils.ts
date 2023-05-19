@@ -8,7 +8,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const {default: https} = await import(`https`);
 
-  const {default: ProxyAgent} = await import(`proxy-agent`);
+  const {ProxyAgent} = await import(`proxy-agent`);
 
   const proxyAgent = new ProxyAgent();
 
