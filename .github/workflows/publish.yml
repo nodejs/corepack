@@ -51,7 +51,8 @@ jobs:
         env:
           YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      - name: Add Corepack executable to GitHub release
-        run: gh release upload ${{ needs.release-please.outputs.release_tag }} dist/
+      - run: corepack yarn pack --out corepack.tgz
+      - name: Add Corepack package archive to GitHub release
+        run: gh release upload ${{ needs.release-please.outputs.release_tag }} corepack.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
