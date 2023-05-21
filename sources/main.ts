@@ -88,7 +88,7 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
   return await corepackUtils.runVersion(installSpec, binaryName, args);
 }
 
-async function main(argv: Array<string>) {
+export async function runMain(argv: Array<string>) {
   // Because we load the binaries in the same process, we don't support custom contexts.
   const context = {
     ...Cli.defaultContext,
@@ -99,10 +99,9 @@ async function main(argv: Array<string>) {
   const [firstArg, ...restArgs] = argv;
   const request = getPackageManagerRequestFromCli(firstArg, context);
 
-  let cli: Cli<Context>;
   if (!request) {
     // If the first argument doesn't match any supported package manager, we fallback to the standard Corepack CLI
-    cli = new Cli({
+    const cli = new Cli({
       binaryLabel: `Corepack`,
       binaryName: `corepack`,
       binaryVersion: corepackVersion,
@@ -116,7 +115,7 @@ async function main(argv: Array<string>) {
     cli.register(HydrateCommand);
     cli.register(PrepareCommand);
 
-    return await cli.run(argv, context);
+    await cli.runExit(argv, context);
   } else {
     // Otherwise, we create a single-command CLI to run the specified package manager (we still use Clipanion in order to pretty-print usage errors).
     const cli = new Cli({
@@ -132,16 +131,9 @@ async function main(argv: Array<string>) {
       }
     });
 
-    return await cli.run(restArgs, context);
+    const code = await cli.run(restArgs, context);
+    if (code !== 0) {
+      process.exitCode ??= code;
+    }
   }
-}
-
-// Important: this is the only function that the corepack binary exports.
-export function runMain(argv: Array<string>) {
-  main(argv).then(exitCode => {
-    process.exitCode = exitCode;
-  }, err => {
-    console.error(err.stack);
-    process.exitCode = 1;
-  });
 }
