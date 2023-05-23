@@ -538,3 +538,71 @@ it(`should handle parallel installs`, async () => {
     ]);
   });
 });
+
+it(`should not override the package manager exit code`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+
+    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
+    await xfs.writeFilePromise(yarnPath, `
+      process.exitCode = 42;
+    `);
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 42,
+      stdout: ``,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should not override the package manager exit code when it throws`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+
+    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
+    await xfs.writeFilePromise(yarnPath, `
+      process.exitCode = 42;
+      throw new Error('foo');
+    `);
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 42,
+      stdout: expect.stringContaining(`foo`),
+      stderr: ``,
+    });
+  });
+});
+
+it(`should not set the exit code after successfully launching the package manager`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+
+    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
+    await xfs.writeFilePromise(yarnPath, `
+      process.once('beforeExit', () => {
+        if (process.exitCode === undefined) {
+          process.exitCode = 42;
+        }
+      });
+    `);
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 42,
+      stdout: ``,
+      stderr: ``,
+    });
+  });
+});
