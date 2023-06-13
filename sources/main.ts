@@ -85,7 +85,7 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
 
   const installSpec = await context.engine.ensurePackageManager(resolved);
 
-  return await corepackUtils.runVersion(installSpec, binaryName, args);
+  return await corepackUtils.runVersion(resolved, installSpec, binaryName, args);
 }
 
 export async function runMain(argv: Array<string>) {
