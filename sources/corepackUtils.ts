@@ -2,6 +2,7 @@ import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
 import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
+import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
 
@@ -214,5 +215,10 @@ export async function runVersion(locator: Locator, installSpec: { location: stri
   ];
   process.execArgv = [];
 
-  return nodeUtils.loadMainModule(binPath);
+  // Unset the mainModule and let Node.js set it when needed.
+  process.mainModule = undefined;
+
+  // Use nextTick to unwind the stack, and consequently remove Corepack from
+  // the stack trace of the package manager.
+  process.nextTick(Module.runMain, binPath);
 }
