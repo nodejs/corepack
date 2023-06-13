@@ -170,7 +170,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 /**
  * Loads the binary, taking control of the current process.
  */
-export async function runVersion(installSpec: { location: string, spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
+export async function runVersion(locator: Locator, installSpec: { location: string, spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
   let binPath: string | null = null;
   if (Array.isArray(installSpec.spec.bin)) {
     if (installSpec.spec.bin.some(bin => bin === binName)) {
@@ -192,8 +192,12 @@ export async function runVersion(installSpec: { location: string, spec: PackageM
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
-  // @ts-expect-error - No types
-  await import(`v8-compile-cache`);
+  // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
+  // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
+  // [SIGSEGV]
+  if (locator.name !== `npm` || semver.lt(locator.reference, `9.7.0`))
+    // @ts-expect-error - No types
+    await import(`v8-compile-cache`);
 
   // We load the binary into the current process,
   // while making it think it was spawned.
