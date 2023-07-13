@@ -1558,12 +1558,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.4.1, acorn@npm:^8.7.0, acorn@npm:^8.8.0":
+"acorn@npm:^8.4.1, acorn@npm:^8.8.0":
   version: 8.8.2
   resolution: "acorn@npm:8.8.2"
   bin:
     acorn: bin/acorn
   checksum: 5a47325f0aa08202080cb167d5b8103720d8a1d199f57988afa48bdfbc3c9973270b00e38c2c874240a49929625beaaae8c4ec683f5272b5f07f1119a457e5d0
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^8.7.0":
+  version: 8.10.0
+  resolution: "acorn@npm:8.10.0"
+  bin:
+    acorn: bin/acorn
+  checksum: 5de0f8f7507bdd36c764431cb91c97d99ba15b6f04dbfe4375151aff3caf9566e3c98d340f128a56a5fa930164d7be12c93d8f0f0fe795b9b310888a781c789c
   languageName: node
   linkType: hard
 
@@ -1576,12 +1585,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agent-base@npm:^7.0.1, agent-base@npm:^7.0.2":
-  version: 7.0.2
-  resolution: "agent-base@npm:7.0.2"
+"agent-base@npm:^7.0.1, agent-base@npm:^7.0.2, agent-base@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "agent-base@npm:7.1.0"
   dependencies:
     debug: "npm:^4.3.4"
-  checksum: a2971dc6447e3730faa25bb7c04f3b0ef9be373dff8b2d7e84bbb7baf2621b61bcd649c6eac7eb08adb4b42e0c7f525a632ccaaae4e1a0ad8eb8c738b37a02bd
+  checksum: d1c9dc1b33f675df816ef3556c34533dae85f71bea4c22b6e1d4716fdf97cb34d24c1cb9d43fae0a3d148675e1cb8dd3f45813cf3e42139edd6680a77deff660
   languageName: node
   linkType: hard
 
@@ -1764,7 +1773,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ast-types@npm:^0.13.2":
+"ast-types@npm:^0.13.4":
   version: 0.13.4
   resolution: "ast-types@npm:0.13.4"
   dependencies:
@@ -2196,7 +2205,7 @@ __metadata:
     eslint-plugin-arca: "npm:^0.15.0"
     jest: "npm:^29.0.0"
     nock: "npm:^13.0.4"
-    proxy-agent: "npm:^6.0.0"
+    proxy-agent: "npm:^6.2.2"
     semver: "npm:^7.5.2"
     supports-color: "npm:^9.0.0"
     tar: "npm:^6.0.1"
@@ -2275,15 +2284,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"degenerator@npm:^4.0.1":
-  version: 4.0.2
-  resolution: "degenerator@npm:4.0.2"
+"degenerator@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "degenerator@npm:4.0.4"
   dependencies:
-    ast-types: "npm:^0.13.2"
-    escodegen: "npm:^1.8.1"
-    esprima: "npm:^4.0.0"
-    vm2: "npm:^3.9.17"
-  checksum: 99337dd3547d6ed71b411055c2af911ba2ec5a526a53a4de14cab571012d50c9233526c9abe48a8eea1f007f4c8e07a1e59474bd9b09c2d0d9f7e5c9dee4a808
+    ast-types: "npm:^0.13.4"
+    escodegen: "npm:^1.14.3"
+    esprima: "npm:^4.0.1"
+    vm2: "npm:^3.9.19"
+  checksum: 105bd28952324cfcb3c779ff5cabe0a6b3ae4ee02d64774158a78bc297b8908137c55c4b7b0cc7e1b15abb2aea68b6f34adb31f2b3cbb04956c02da1e668c9fc
   languageName: node
   linkType: hard
 
@@ -2580,7 +2589,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"escodegen@npm:^1.8.1":
+"escodegen@npm:^1.14.3":
   version: 1.14.3
   resolution: "escodegen@npm:1.14.3"
   dependencies:
@@ -3279,13 +3288,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-proxy-agent@npm:^6.0.1":
-  version: 6.1.0
-  resolution: "http-proxy-agent@npm:6.1.0"
+"http-proxy-agent@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "http-proxy-agent@npm:7.0.0"
   dependencies:
-    agent-base: "npm:^7.0.2"
+    agent-base: "npm:^7.1.0"
     debug: "npm:^4.3.4"
-  checksum: 3d220db0219bddb606d99b45ccd9f2738bffbb9bdaa1bdf1d0515374274e6921ca641b540c9d12faad8127b5287b5b024844be0a1f511aa919ad0e4b039bba69
+  checksum: a02887855507855b0a6af8899c42bb21ebe13ee4ccffcaa54d34814e4f02c2c8f4f6e3c3d584fc51de7b4e6da942628c375b207d8391efa79ece9b3d3f121be0
   languageName: node
   linkType: hard
 
@@ -3299,13 +3308,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^6.1.0":
-  version: 6.2.0
-  resolution: "https-proxy-agent@npm:6.2.0"
+"https-proxy-agent@npm:^7.0.0":
+  version: 7.0.1
+  resolution: "https-proxy-agent@npm:7.0.1"
   dependencies:
     agent-base: "npm:^7.0.2"
     debug: "npm:4"
-  checksum: 9a7617e5128e581e440a919cd524d588c13b9abdc534d13e406044398a7591d652f5305dc90080d82fe950c382160df38bc0519e47a09a4d8652ef24bfcec5dc
+  checksum: 4fc3e7f50cfc7195551f9a603fef7eb04ce64b24008f37380aa273e57873a6943dbd70a3f9516c118ffb4cde11e41d32208d271b98c9e5e7408b6e8fbcea43aa
   languageName: node
   linkType: hard
 
@@ -3412,7 +3421,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ip@npm:^1.1.5":
+"ip@npm:^1.1.8":
   version: 1.1.8
   resolution: "ip@npm:1.1.8"
   checksum: bb1850e7b6573a53b7fd8becad4c81e0026b94d2a3322bb8540ab67fa3987c7401d1f2986fe6119f1578464ac465dad2c8b243c08c748f1f88c350c64cc9d134
@@ -4835,29 +4844,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pac-proxy-agent@npm:^6.0.2":
-  version: 6.0.2
-  resolution: "pac-proxy-agent@npm:6.0.2"
+"pac-proxy-agent@npm:^6.0.4":
+  version: 6.0.4
+  resolution: "pac-proxy-agent@npm:6.0.4"
   dependencies:
-    agent-base: "npm:^7.0.1"
+    agent-base: "npm:^7.0.2"
     debug: "npm:^4.3.4"
     get-uri: "npm:^6.0.1"
-    http-proxy-agent: "npm:^6.0.1"
-    https-proxy-agent: "npm:^6.1.0"
+    http-proxy-agent: "npm:^7.0.0"
+    https-proxy-agent: "npm:^7.0.0"
     pac-resolver: "npm:^6.0.1"
     socks-proxy-agent: "npm:^8.0.1"
-  checksum: 0b263da7a61f1f87c718e3072c4a7170271972cb784de332d4a2f7e35b3e81b5a7fc30e577756e58d8893c60a1c8559236e41d6cb4da34c72990a6f6c3e5ec31
+  checksum: 26e60ad16f53d7bd798eebb99e5f35e229f463d0cf4a6859e2e6ba339812f038b80095e02014b1944fc5fe01c2ae7af15e6e7ea783c58295889df5a55fea2afd
   languageName: node
   linkType: hard
 
 "pac-resolver@npm:^6.0.1":
-  version: 6.0.1
-  resolution: "pac-resolver@npm:6.0.1"
+  version: 6.0.2
+  resolution: "pac-resolver@npm:6.0.2"
   dependencies:
-    degenerator: "npm:^4.0.1"
-    ip: "npm:^1.1.5"
+    degenerator: "npm:^4.0.4"
+    ip: "npm:^1.1.8"
     netmask: "npm:^2.0.2"
-  checksum: cbe90f8f12852590399c664d1d45131c8f8852b8cd81c81c63dd677e8b58cf055dee74815baff61dd06b225470edd64c06b795abe02acfb009881d5e2025f439
+  checksum: e77d61b35db5b762efd817e4696f48398eef71f7ad8b68ab0627b184a3eee18eda943f28552ccc420001378e8e3cc402c7d370ab410c2c1a84b2940b6fe42f2d
   languageName: node
   linkType: hard
 
@@ -5017,19 +5026,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-agent@npm:^6.0.0":
-  version: 6.2.0
-  resolution: "proxy-agent@npm:6.2.0"
+"proxy-agent@npm:^6.2.2":
+  version: 6.2.2
+  resolution: "proxy-agent@npm:6.2.2"
   dependencies:
-    agent-base: "npm:^7.0.1"
+    agent-base: "npm:^7.0.2"
     debug: "npm:^4.3.4"
-    http-proxy-agent: "npm:^6.0.1"
-    https-proxy-agent: "npm:^6.1.0"
+    http-proxy-agent: "npm:^7.0.0"
+    https-proxy-agent: "npm:^7.0.0"
     lru-cache: "npm:^7.14.1"
-    pac-proxy-agent: "npm:^6.0.2"
+    pac-proxy-agent: "npm:^6.0.4"
     proxy-from-env: "npm:^1.1.0"
     socks-proxy-agent: "npm:^8.0.1"
-  checksum: bd8415b36a8e54ab74d90db5a1766491d24c82849a9e57889231ddb58b45efc567419449612057c7fa4b49ac512a72f6a18d08ae62178ac62f1123423ad50204
+  checksum: 481d168121bea864531fd055f60724cea49bb9c5efb6e534ab0fa9ef53eab36a6c0374c4c0cc5c08d34e5c49c2cce6e1e1fb6eb2c92e06c904ed11820b477976
   languageName: node
   linkType: hard
 
@@ -5663,9 +5672,9 @@ __metadata:
   linkType: hard
 
 "tslib@npm:^2.0.1":
-  version: 2.5.2
-  resolution: "tslib@npm:2.5.2"
-  checksum: ed22e23f3d390c305c714064679149f3dd298bc7473697480343c6ec4d2afc94270f85d947fca2ccc6324a22602ef04fe2c7177dda317fbea55f7da1dca3fa36
+  version: 2.6.0
+  resolution: "tslib@npm:2.6.0"
+  checksum: 702dfe42c86eb380ff985fd76ddf7f10375a2f9d0c2a3aae2a5553a74e0720f49899c9ba145152ccc02efbb6c5272a62b2913ee29a994d59749117c2193b9cfb
   languageName: node
   linkType: hard
 
