@@ -96,6 +96,6 @@
     ]
   },
   "resolutions": {
-    "degenerator": "patch:degenerator@npm%3A4.0.4#~/.yarn/patches/degenerator-npm-4.0.4-1f9c4b67eb.patch"
+    "vm2": "portal:./vm2"
   }
 }

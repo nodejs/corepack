@@ -2275,25 +2275,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"degenerator@npm:4.0.4":
+"degenerator@npm:^4.0.4":
   version: 4.0.4
   resolution: "degenerator@npm:4.0.4"
   dependencies:
     ast-types: "npm:^0.13.4"
     escodegen: "npm:^1.14.3"
     esprima: "npm:^4.0.1"
+    vm2: "npm:^3.9.19"
   checksum: 105bd28952324cfcb3c779ff5cabe0a6b3ae4ee02d64774158a78bc297b8908137c55c4b7b0cc7e1b15abb2aea68b6f34adb31f2b3cbb04956c02da1e668c9fc
-  languageName: node
-  linkType: hard
-
-"degenerator@patch:degenerator@npm%3A4.0.4#~/.yarn/patches/degenerator-npm-4.0.4-1f9c4b67eb.patch":
-  version: 4.0.4
-  resolution: "degenerator@patch:degenerator@npm%3A4.0.4#~/.yarn/patches/degenerator-npm-4.0.4-1f9c4b67eb.patch::version=4.0.4&hash=815e73"
-  dependencies:
-    ast-types: "npm:^0.13.4"
-    escodegen: "npm:^1.14.3"
-    esprima: "npm:^4.0.1"
-  checksum: b97a185962bb076db2e6bfe00a7f060a8a8795440c9278a14baab89c24859a09ef298dcf8cb2f003b1b364c3abaa623f1e8b20835b0ac3b57592c8ba5133d042
   languageName: node
   linkType: hard
 
@@ -5858,6 +5848,12 @@ __metadata:
   checksum: 33066fd1d97888d05c15ea015253d35510ea975a80fd2f96e4cd1b40420c3180f6af747e90a2729ea934a91d3b8b17d18b92a30fc9bca3dfde43bca679366514
   languageName: node
   linkType: hard
+
+"vm2@portal:./vm2::locator=corepack%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "vm2@portal:./vm2::locator=corepack%40workspace%3A."
+  languageName: node
+  linkType: soft
 
 "walker@npm:^1.0.8":
   version: 1.0.8
