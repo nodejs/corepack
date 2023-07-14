@@ -96,6 +96,6 @@
     ]
   },
   "resolutions": {
-    "vm2": "patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch"
+    "vm2": "patch:vm2@npm%3A3.9.19#~/.yarn/patches/vm2-npm-3.9.19-c8bfadc28f.patch"
   }
 }

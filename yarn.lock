@@ -5858,27 +5858,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vm2@npm:3.9.9":
-  version: 3.9.9
-  resolution: "vm2@npm:3.9.9"
+"vm2@npm:3.9.19":
+  version: 3.9.19
+  resolution: "vm2@npm:3.9.19"
   dependencies:
     acorn: "npm:^8.7.0"
     acorn-walk: "npm:^8.2.0"
   bin:
     vm2: bin/vm2
-  checksum: d704e9fb7171ba7083f9f72fc7bbfecd161d11ba51abb5ed3e83d921fcf33f578c2a6b09ef0fd10030a3bc6f01323c4b6d241aa1d432484965d3ec13457dfe53
+  checksum: a4f06051d25686370131148674ff65c4e869824baeea6e502292fa8062d6fad2447803170647fed9f0fcd2238582c28e73d8dded6b463aa3154344bd773ce2b4
   languageName: node
   linkType: hard
 
-"vm2@patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::locator=corepack%40workspace%3A.":
-  version: 3.9.9
-  resolution: "vm2@patch:vm2@npm%3A3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::version=3.9.9&hash=9a9032&locator=corepack%40workspace%3A."
+"vm2@patch:vm2@npm%3A3.9.19#~/.yarn/patches/vm2-npm-3.9.19-c8bfadc28f.patch":
+  version: 3.9.19
+  resolution: "vm2@patch:vm2@npm%3A3.9.19#~/.yarn/patches/vm2-npm-3.9.19-c8bfadc28f.patch::version=3.9.19&hash=2ea384"
   dependencies:
     acorn: "npm:^8.7.0"
     acorn-walk: "npm:^8.2.0"
   bin:
     vm2: bin/vm2
-  checksum: d283b74b742b738b4c1040bc76d8b506a5b44264c05307b7eb99a44a909a69bb7377ee4bcf276b9795dd81795de448ed103b1d986554355d6deb4332293073fa
+  checksum: afb06dcf79d87f27bd6172da243247d33c3221af77e4d4c3384b241edb2a2af432617e9e3669bb19e9d5af330b70fad59add9485cda4e2bc003c6a52e93cf131
   languageName: node
   linkType: hard
 

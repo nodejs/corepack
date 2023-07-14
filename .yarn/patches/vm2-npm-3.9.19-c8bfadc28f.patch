@@ -12,7 +12,7 @@ index 7c446f8eca50266f5fe400437c83510d8440f145..10975644b54be698ee9c4136c7f62805
 +  VMScript: function VMScript() {},
 +};
 diff --git a/package.json b/package.json
-index 331ca6e121e3fa88561c945f7440c93fec1fc929..98b6ee63d4c79ede22a70d538bdbbd0341c8fd3b 100644
+index dc004c114063cc7e41371cbee1dc31969e0bd47e..d17233f13eb8f8d1a4b9401d162447da75874bd7 100644
 --- a/package.json
 +++ b/package.json
 @@ -18,10 +18,6 @@
