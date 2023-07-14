@@ -1,0 +1,30 @@
+diff --git a/dist/index.js b/dist/index.js
+index 6278ce6fcc2a9f08e2275e691701732df6f026f2..e8933bdf45006a6b4e8d41f93c8dfe4d79fe0495 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -5,7 +5,10 @@ const util_1 = require("util");
+ const escodegen_1 = require("escodegen");
+ const esprima_1 = require("esprima");
+ const ast_types_1 = require("ast-types");
+-const vm2_1 = require("vm2");
++const vm2_1 = {
++    VM(){},
++    VMScript() {},
++};
+ /**
+  * Compiles sync JavaScript code into JavaScript with async Functions.
+  *
+diff --git a/package.json b/package.json
+index d64f5aef955ceb98b01163b747220456ea78902d..5be2e21139feed90abd82000f8503f409232ae47 100644
+--- a/package.json
++++ b/package.json
+@@ -20,8 +20,7 @@
+   "dependencies": {
+     "ast-types": "^0.13.4",
+     "escodegen": "^1.14.3",
+-    "esprima": "^4.0.1",
+-    "vm2": "^3.9.19"
++    "esprima": "^4.0.1"
+   },
+   "devDependencies": {
+     "@types/escodegen": "^0.0.6",

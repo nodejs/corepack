@@ -1551,7 +1551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.2.0":
+"acorn-walk@npm:^8.1.1":
   version: 8.2.0
   resolution: "acorn-walk@npm:8.2.0"
   checksum: 389d3f19998ac0924a590485a6502b72059e3ab67cc820477c2c40cca06b6c50bb8d424bfbb8fe97955eb489b88cb5dc7ee6979fcf9321dce7eb451ba3456d3d
@@ -1564,15 +1564,6 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 5a47325f0aa08202080cb167d5b8103720d8a1d199f57988afa48bdfbc3c9973270b00e38c2c874240a49929625beaaae8c4ec683f5272b5f07f1119a457e5d0
-  languageName: node
-  linkType: hard
-
-"acorn@npm:^8.7.0":
-  version: 8.10.0
-  resolution: "acorn@npm:8.10.0"
-  bin:
-    acorn: bin/acorn
-  checksum: 5de0f8f7507bdd36c764431cb91c97d99ba15b6f04dbfe4375151aff3caf9566e3c98d340f128a56a5fa930164d7be12c93d8f0f0fe795b9b310888a781c789c
   languageName: node
   linkType: hard
 
@@ -2284,15 +2275,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"degenerator@npm:^4.0.4":
+"degenerator@npm:4.0.4":
   version: 4.0.4
   resolution: "degenerator@npm:4.0.4"
   dependencies:
     ast-types: "npm:^0.13.4"
     escodegen: "npm:^1.14.3"
     esprima: "npm:^4.0.1"
-    vm2: "npm:^3.9.19"
   checksum: 105bd28952324cfcb3c779ff5cabe0a6b3ae4ee02d64774158a78bc297b8908137c55c4b7b0cc7e1b15abb2aea68b6f34adb31f2b3cbb04956c02da1e668c9fc
+  languageName: node
+  linkType: hard
+
+"degenerator@patch:degenerator@npm%3A4.0.4#~/.yarn/patches/degenerator-npm-4.0.4-1f9c4b67eb.patch":
+  version: 4.0.4
+  resolution: "degenerator@patch:degenerator@npm%3A4.0.4#~/.yarn/patches/degenerator-npm-4.0.4-1f9c4b67eb.patch::version=4.0.4&hash=815e73"
+  dependencies:
+    ast-types: "npm:^0.13.4"
+    escodegen: "npm:^1.14.3"
+    esprima: "npm:^4.0.1"
+  checksum: b97a185962bb076db2e6bfe00a7f060a8a8795440c9278a14baab89c24859a09ef298dcf8cb2f003b1b364c3abaa623f1e8b20835b0ac3b57592c8ba5133d042
   languageName: node
   linkType: hard
 
@@ -5855,30 +5856,6 @@ __metadata:
     "@types/istanbul-lib-coverage": "npm:^2.0.1"
     convert-source-map: "npm:^1.6.0"
   checksum: 33066fd1d97888d05c15ea015253d35510ea975a80fd2f96e4cd1b40420c3180f6af747e90a2729ea934a91d3b8b17d18b92a30fc9bca3dfde43bca679366514
-  languageName: node
-  linkType: hard
-
-"vm2@npm:3.9.19":
-  version: 3.9.19
-  resolution: "vm2@npm:3.9.19"
-  dependencies:
-    acorn: "npm:^8.7.0"
-    acorn-walk: "npm:^8.2.0"
-  bin:
-    vm2: bin/vm2
-  checksum: a4f06051d25686370131148674ff65c4e869824baeea6e502292fa8062d6fad2447803170647fed9f0fcd2238582c28e73d8dded6b463aa3154344bd773ce2b4
-  languageName: node
-  linkType: hard
-
-"vm2@patch:vm2@npm%3A3.9.19#~/.yarn/patches/vm2-npm-3.9.19-c8bfadc28f.patch":
-  version: 3.9.19
-  resolution: "vm2@patch:vm2@npm%3A3.9.19#~/.yarn/patches/vm2-npm-3.9.19-c8bfadc28f.patch::version=3.9.19&hash=2ea384"
-  dependencies:
-    acorn: "npm:^8.7.0"
-    acorn-walk: "npm:^8.2.0"
-  bin:
-    vm2: bin/vm2
-  checksum: afb06dcf79d87f27bd6172da243247d33c3221af77e4d4c3384b241edb2a2af432617e9e3669bb19e9d5af330b70fad59add9485cda4e2bc003c6a52e93cf131
   languageName: node
   linkType: hard
 
