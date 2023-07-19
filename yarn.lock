@@ -5950,9 +5950,9 @@ __metadata:
   linkType: hard
 
 "word-wrap@npm:^1.2.3, word-wrap@npm:~1.2.3":
-  version: 1.2.3
-  resolution: "word-wrap@npm:1.2.3"
-  checksum: 17267cdb6baa9d5452b0998531adafd2df52a25159f27cbb754b2fdcff4af8808019efe4c0a2bcc5ceb63becb30df07c792c0125ad21991266aefadb940df74a
+  version: 1.2.4
+  resolution: "word-wrap@npm:1.2.4"
+  checksum: bbb228fa48e543a238720376073b0e7f1980e8d0930120fb048aa66de56e8a7678f1394a69ebde0def43392be8e4b5508127055229915dcf3e188525ad26e2bf
   languageName: node
   linkType: hard
 
