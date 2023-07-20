@@ -1551,7 +1551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.2.0":
+"acorn-walk@npm:^8.1.1":
   version: 8.2.0
   resolution: "acorn-walk@npm:8.2.0"
   checksum: 389d3f19998ac0924a590485a6502b72059e3ab67cc820477c2c40cca06b6c50bb8d424bfbb8fe97955eb489b88cb5dc7ee6979fcf9321dce7eb451ba3456d3d
@@ -1564,15 +1564,6 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 5a47325f0aa08202080cb167d5b8103720d8a1d199f57988afa48bdfbc3c9973270b00e38c2c874240a49929625beaaae8c4ec683f5272b5f07f1119a457e5d0
-  languageName: node
-  linkType: hard
-
-"acorn@npm:^8.7.0":
-  version: 8.10.0
-  resolution: "acorn@npm:8.10.0"
-  bin:
-    acorn: bin/acorn
-  checksum: 5de0f8f7507bdd36c764431cb91c97d99ba15b6f04dbfe4375151aff3caf9566e3c98d340f128a56a5fa930164d7be12c93d8f0f0fe795b9b310888a781c789c
   languageName: node
   linkType: hard
 
@@ -5858,29 +5849,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vm2@npm:3.9.9":
-  version: 3.9.9
-  resolution: "vm2@npm:3.9.9"
-  dependencies:
-    acorn: "npm:^8.7.0"
-    acorn-walk: "npm:^8.2.0"
-  bin:
-    vm2: bin/vm2
-  checksum: d704e9fb7171ba7083f9f72fc7bbfecd161d11ba51abb5ed3e83d921fcf33f578c2a6b09ef0fd10030a3bc6f01323c4b6d241aa1d432484965d3ec13457dfe53
+"vm2@portal:./vm2::locator=corepack%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "vm2@portal:./vm2::locator=corepack%40workspace%3A."
   languageName: node
-  linkType: hard
-
-"vm2@patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::locator=corepack%40workspace%3A.":
-  version: 3.9.9
-  resolution: "vm2@patch:vm2@npm%3A3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch::version=3.9.9&hash=9a9032&locator=corepack%40workspace%3A."
-  dependencies:
-    acorn: "npm:^8.7.0"
-    acorn-walk: "npm:^8.2.0"
-  bin:
-    vm2: bin/vm2
-  checksum: d283b74b742b738b4c1040bc76d8b506a5b44264c05307b7eb99a44a909a69bb7377ee4bcf276b9795dd81795de448ed103b1d986554355d6deb4332293073fa
-  languageName: node
-  linkType: hard
+  linkType: soft
 
 "walker@npm:^1.0.8":
   version: 1.0.8

@@ -96,6 +96,6 @@
     ]
   },
   "resolutions": {
-    "vm2": "patch:vm2@npm:3.9.9#.yarn/patches/vm2-npm-3.9.9-03fd1f4dc5.patch"
+    "vm2": "portal:./vm2"
   }
 }
