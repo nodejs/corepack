@@ -101,9 +101,20 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const {version, build} = semver.parse(locator.reference)!;
 
   const installFolder = path.join(installTarget, locator.name, version);
-  if (fs.existsSync(installFolder)) {
+  const corepackFile = path.join(installFolder, `.corepack`);
+
+  // Older versions of Corepack didn't generate the `.corepack` file; in
+  // that case we just download the package manager anew.
+  if (fs.existsSync(corepackFile)) {
+    const corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
+    const corepackData = JSON.parse(corepackContent);
+
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
-    return installFolder;
+
+    return {
+      hash: corepackData.hash as string,
+      location: installFolder,
+    };
   }
 
   const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
@@ -137,15 +148,25 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   stream.pipe(sendTo);
 
-  const hash = build[0]
-    ? stream.pipe(createHash(build[0]))
-    : null;
-
+  const hash = stream.pipe(createHash(build[0] ?? `sha256`));
   await once(sendTo, `finish`);
 
-  const actualHash = hash?.digest(`hex`);
-  if (actualHash !== build[1])
+  const actualHash = hash.digest(`hex`);
+  if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+
+  await fs.promises.writeFile(path.join(tmpFolder, `.corepack`), JSON.stringify({
+    locator,
+    hash: actualHash,
+  }));
+
+  // The target folder may exist if a previous version of Corepack installed
+  // it but didn't create the `.corepack` file. In this case we need to
+  // remove it first.
+  await fs.promises.rm(installFolder, {
+    recursive: true,
+    force: true,
+  });
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
@@ -164,7 +185,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   debugUtils.log(`Install finished`);
-  return installFolder;
+
+  return {
+    location: installFolder,
+    hash: actualHash,
+  };
 }
 
 /**

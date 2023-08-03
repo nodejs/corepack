@@ -5,8 +5,13 @@ import {version as corepackVersion}                              from '../packag
 import {Engine}                                                  from './Engine';
 import {DisableCommand}                                          from './commands/Disable';
 import {EnableCommand}                                           from './commands/Enable';
-import {HydrateCommand}                                          from './commands/Hydrate';
-import {PrepareCommand}                                          from './commands/Prepare';
+import {InstallGlobalCommand}                                    from './commands/InstallGlobal';
+import {InstallLocalCommand}                                     from './commands/InstallLocal';
+import {PackCommand}                                             from './commands/Pack';
+import {UpCommand}                                               from './commands/Up';
+import {UseCommand}                                              from './commands/Use';
+import {HydrateCommand}                                          from './commands/deprecated/Hydrate';
+import {PrepareCommand}                                          from './commands/deprecated/Prepare';
 import * as corepackUtils                                        from './corepackUtils';
 import * as miscUtils                                            from './miscUtils';
 import * as specUtils                                            from './specUtils';
@@ -99,6 +104,8 @@ export async function runMain(argv: Array<string>) {
   const [firstArg, ...restArgs] = argv;
   const request = getPackageManagerRequestFromCli(firstArg, context);
 
+  let code: number;
+
   if (!request) {
     // If the first argument doesn't match any supported package manager, we fallback to the standard Corepack CLI
     const cli = new Cli({
@@ -110,12 +117,19 @@ export async function runMain(argv: Array<string>) {
     cli.register(Builtins.HelpCommand);
     cli.register(Builtins.VersionCommand);
 
-    cli.register(EnableCommand);
     cli.register(DisableCommand);
+    cli.register(EnableCommand);
+    cli.register(InstallGlobalCommand);
+    cli.register(InstallLocalCommand);
+    cli.register(PackCommand);
+    cli.register(UpCommand);
+    cli.register(UseCommand);
+
+    // Deprecated commands
     cli.register(HydrateCommand);
     cli.register(PrepareCommand);
 
-    await cli.runExit(argv, context);
+    code = await cli.run(argv, context);
   } else {
     // Otherwise, we create a single-command CLI to run the specified package manager (we still use Clipanion in order to pretty-print usage errors).
     const cli = new Cli({
@@ -131,9 +145,10 @@ export async function runMain(argv: Array<string>) {
       }
     });
 
-    const code = await cli.run(restArgs, context);
-    if (code !== 0) {
-      process.exitCode ??= code;
-    }
+    code = await cli.run(restArgs, context);
+  }
+
+  if (code !== 0) {
+    process.exitCode ??= code;
   }
 }

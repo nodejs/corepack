@@ -2,40 +2,15 @@ import {Command, Option, UsageError} from 'clipanion';
 import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
 
-import * as folderUtils              from '../folderUtils';
-import {Context}                     from '../main';
-import * as specUtils                from '../specUtils';
-import {Descriptor}                  from '../types';
+import * as folderUtils              from '../../folderUtils';
+import {Context}                     from '../../main';
+import * as specUtils                from '../../specUtils';
+import {Descriptor}                  from '../../types';
 
 export class PrepareCommand extends Command<Context> {
   static paths = [
     [`prepare`],
   ];
-
-  static usage = Command.Usage({
-    description: `Generate a package manager archive`,
-    details: `
-      This command makes sure that the specified package managers are installed in the local cache. Calling this command explicitly unless you operate in an environment without network access (in which case you'd have to call \`prepare\` while building your image, to make sure all tools are available for later use).
-
-      When the \`-o,--output\` flag is set, Corepack will also compress the resulting package manager into a format suitable for \`corepack hydrate\`, and will store it at the specified location on the disk.
-    `,
-    examples: [[
-      `Prepare the package manager from the active project`,
-      `$0 prepare`,
-    ], [
-      `Prepare a specific Yarn version`,
-      `$0 prepare yarn@2.2.2`,
-    ], [
-      `Prepare the latest available pnpm version`,
-      `$0 prepare pnpm@latest --activate`,
-    ], [
-      `Generate an archive for a specific Yarn version`,
-      `$0 prepare yarn@2.2.2 -o`,
-    ], [
-      `Generate a named archive`,
-      `$0 prepare yarn@2.2.2 --output=yarn.tgz`,
-    ]],
-  });
 
   activate = Option.Boolean(`--activate`, false, {
     description: `If true, this release will become the default one for this package manager`,
