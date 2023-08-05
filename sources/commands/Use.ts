@@ -10,7 +10,7 @@ export class UseCommand extends BaseCommand {
   static usage = Command.Usage({
     description: `Define the package manager to use for the current project`,
     details: `
-      When run, this command will retrieve the latest release matching the provided descriptor, assign it to the project's package.json file, and automatically perform an install.
+      Retrieve the latest release matching the provided descriptor, assign it to the project's package.json file, and automatically perform an install.
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,

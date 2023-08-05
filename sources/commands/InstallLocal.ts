@@ -1,6 +1,6 @@
-import {Command, Option, UsageError} from 'clipanion';
+import {Command, UsageError} from 'clipanion';
 
-import {BaseCommand}                 from './Base';
+import {BaseCommand}         from './Base';
 
 export class InstallLocalCommand extends BaseCommand {
   static paths = [

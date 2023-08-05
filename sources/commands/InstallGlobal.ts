@@ -1,12 +1,12 @@
-import {Command, Option, UsageError}           from 'clipanion';
-import fs                                      from 'fs';
-import path                                    from 'path';
+import {Command, Option, UsageError}                    from 'clipanion';
+import fs                                               from 'fs';
+import path                                             from 'path';
 
-import * as folderUtils                        from '../folderUtils';
-import * as specUtils                          from '../specUtils';
-import {Descriptor, isSupportedPackageManager} from '../types';
+import * as folderUtils                                 from '../folderUtils';
+import * as specUtils                                   from '../specUtils';
+import {Descriptor, Locator, isSupportedPackageManager} from '../types';
 
-import {BaseCommand}                           from './Base';
+import {BaseCommand}                                    from './Base';
 
 export class InstallGlobalCommand extends BaseCommand {
   static paths = [
@@ -16,7 +16,7 @@ export class InstallGlobalCommand extends BaseCommand {
   static usage = Command.Usage({
     description: `Install package managers on the system`,
     details: `
-      Install the selected package managers and install them on the system.
+      Download the selected package managers and install them on the system.
 
       Package managers thus installed will be configured as the new default when calling their respective binaries outside of projects defining the 'packageManager' field.
     `,
@@ -35,6 +35,10 @@ export class InstallGlobalCommand extends BaseCommand {
 
   all = Option.Boolean(`--all`, false, {
     description: `If true, all available default package managers will be installed`,
+  });
+
+  cacheOnly = Option.Boolean(`--cache-only`, false, {
+    description: `If true, the package managers will only be cached, not set as new defaults`,
   });
 
   args = Option.Rest();
@@ -58,15 +62,25 @@ export class InstallGlobalCommand extends BaseCommand {
     }
   }
 
+  log(locator: Locator) {
+    if (this.cacheOnly) {
+      this.context.stdout.write(`Adding ${locator.name}@${locator.reference} to the cache...\n`);
+    } else {
+      this.context.stdout.write(`Installing ${locator.name}@${locator.reference}...\n`);
+    }
+  }
+
   async installFromDescriptor(descriptor: Descriptor) {
     const resolved = await this.context.engine.resolveDescriptor(descriptor, {allowTags: true, useCache: false});
     if (resolved === null)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-    this.context.stdout.write(`Installing ${resolved.name}@${resolved.reference}...\n`);
+    this.log(resolved);
     await this.context.engine.ensurePackageManager(resolved);
 
-    await this.context.engine.activatePackageManager(resolved);
+    if (!this.cacheOnly) {
+      await this.context.engine.activatePackageManager(resolved);
+    }
   }
 
   async installFromTarball(p: string) {
@@ -102,13 +116,16 @@ export class InstallGlobalCommand extends BaseCommand {
         if (!isSupportedPackageManager(name))
           throw new UsageError(`Unsupported package manager '${name}'`);
 
-        this.context.stdout.write(`Installing ${name}@${reference}...\n`);
+        this.log({name, reference});
 
         // Recreate the folder in case it was deleted somewhere else:
         await fs.promises.mkdir(installFolder, {recursive: true});
 
         await tar.x({file: p, cwd: installFolder}, [`${name}/${reference}`]);
-        await this.context.engine.activatePackageManager({name, reference});
+
+        if (!this.cacheOnly) {
+          await this.context.engine.activatePackageManager({name, reference});
+        }
       }
     }
   }
