@@ -212,10 +212,10 @@ Retrieve the latest available version for the current major release line of
 the package manager used in the local project, and update the project to use
 it.
 
-Unlike `corepack use` this command doesn't accept/need a version range, as it
-will always select the latest available version from the same major line.
-Should you need to upgrade to a new major, use an explicit
-`corepack use {name}@^{version}` call.
+Unlike `corepack use` this command doesn't take a package manager name nor a
+version range, as it will always select the latest available version from the
+same major line. Should you need to upgrade to a new major, use an explicit
+`corepack use {name}@latest` call.
 
 ## Environment Variables
 

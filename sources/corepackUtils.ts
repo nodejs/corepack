@@ -14,7 +14,7 @@ import * as nodeUtils                                          from './nodeUtils
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
-export async function fetchLatestStableVersion(spec: RegistrySpec) {
+export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<string> {
   switch (spec.type) {
     case `npm`: {
       return await npmRegistryUtils.fetchLatestStableVersion(spec.package);
@@ -148,16 +148,19 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   stream.pipe(sendTo);
 
-  const hash = stream.pipe(createHash(build[0] ?? `sha256`));
+  const algo = build[0] ?? `sha256`;
+  const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
   const actualHash = hash.digest(`hex`);
   if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
+  const serializedHash = `${algo}.${actualHash}`;
+
   await fs.promises.writeFile(path.join(tmpFolder, `.corepack`), JSON.stringify({
     locator,
-    hash: actualHash,
+    hash: serializedHash,
   }));
 
   // The target folder may exist if a previous version of Corepack installed
@@ -188,7 +191,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   return {
     location: installFolder,
-    hash: actualHash,
+    hash: serializedHash,
   };
 }
 

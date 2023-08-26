@@ -11,9 +11,14 @@ export class UpCommand extends BaseCommand {
   static usage = Command.Usage({
     description: `Update the package manager used in the current project`,
     details: `
-      Retrieve the latest available version for the current major release line of the package manager used in the local project, and update the project to use it.
+      Retrieve the latest available version for the current major release line
+      of the package manager used in the local project, and update the project
+      to use it.
 
-      Unlike \`corepack use\` this command doesn't accept/need a version range, as it will always select the latest available version from the same major line. Should you need to upgrade to a new major, use an explicit \`corepack use {name}@^{version}\` call.
+      Unlike \`corepack use\` this command doesn't take a package manager name
+      nor a version range, as it will always select the latest available
+      version from the same major line. Should you need to upgrade to a new
+      major, use an explicit \`corepack use '{name}@*'\` call.
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,
