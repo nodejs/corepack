@@ -31,11 +31,12 @@ export async function fetchAsJson(packageName: string) {
 
 export async function fetchLatestStableVersion(packageName: string) {
   const metadata = await fetchAsJson(packageName);
+
   const {latest} = metadata[`dist-tags`];
-  if (latest === undefined) throw new Error(`${packageName} does not have a "latest" tag.`);
+  if (latest === undefined)
+    throw new Error(`${packageName} does not have a "latest" tag.`);
 
   const {shasum} = metadata.versions[latest].dist;
-
   return `${latest}+sha1.${shasum}`;
 }
 

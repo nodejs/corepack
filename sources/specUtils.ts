@@ -77,7 +77,7 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, spec: Descriptor};
+    | {type: `Found`, target: string, spec: Descriptor};
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -121,6 +121,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 
   return {
     type: `Found`,
+    target: selection.manifestPath,
     spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
   };
 }

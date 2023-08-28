@@ -1238,13 +1238,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/emscripten@npm:^1.39.6":
-  version: 1.39.6
-  resolution: "@types/emscripten@npm:1.39.6"
-  checksum: 0b2219f4c4a5126433135c331047be50bdfabac1cc39b37a8a2d8aec9cdfa62148bc80a485956924751d5007254f82ad8fc56f001999d79bdeea298a4ec4c712
-  languageName: node
-  linkType: hard
-
 "@types/graceful-fs@npm:^4.1.3":
   version: 4.1.6
   resolution: "@types/graceful-fs@npm:4.1.6"
@@ -1303,10 +1296,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.0.0":
+"@types/node@npm:*":
   version: 20.2.1
   resolution: "@types/node@npm:20.2.1"
   checksum: d8431e663a93580f9b8f87c5f3db3cdaa32d3ffbe806820975d90f8d2c571928b67e35314dc3abe9a6cd590329fd8030ba7295e824262d5604d922bce6750348
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.4.6":
+  version: 20.4.6
+  resolution: "@types/node@npm:20.4.6"
+  checksum: 0eadb1f9691ffd4d0ea33d85436a9ea15145b396b8258db3b3de966e908cf513da54cc8132e1b4f786b7cc2e6b298248fe2b07be90e72db861aca675c0ad283d
   languageName: node
   linkType: hard
 
@@ -1504,23 +1504,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/fslib@npm:^2.1.0":
-  version: 2.10.3
-  resolution: "@yarnpkg/fslib@npm:2.10.3"
+"@yarnpkg/fslib@npm:^3.0.0-rc.48":
+  version: 3.0.0-rc.48
+  resolution: "@yarnpkg/fslib@npm:3.0.0-rc.48"
   dependencies:
-    "@yarnpkg/libzip": "npm:^2.3.0"
-    tslib: "npm:^1.13.0"
-  checksum: d7f0c9de3f4cf6134e63147dcfa4d333c716ee2242675e7d6523ebaa952af0683b5a3538da08726a0872fc68dac0cb095a9c8f2692fceaf473095ce199f346b7
-  languageName: node
-  linkType: hard
-
-"@yarnpkg/libzip@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "@yarnpkg/libzip@npm:2.3.0"
-  dependencies:
-    "@types/emscripten": "npm:^1.39.6"
-    tslib: "npm:^1.13.0"
-  checksum: c8d403d4411e30716d2d72c763eca620d96c75348402f943c1137e70ed4f9ed65d624109233c0e98b70708bfe3f28bdf7d49207190c2472a7aea66b91cb23a7a
+    tslib: "npm:^2.4.0"
+  checksum: 3b0dbacf6277041d6de89c905503486b8280b5c1bc8428066c72e2e27a7821407a6591ebd2e107c306539bbfc33ca9cbc02154b1e24c02894e231388a1865355
   languageName: node
   linkType: hard
 
@@ -2179,14 +2168,14 @@ __metadata:
     "@jest/globals": "npm:^29.0.0"
     "@types/debug": "npm:^4.1.5"
     "@types/jest": "npm:^29.0.0"
-    "@types/node": "npm:^20.0.0"
+    "@types/node": "npm:^20.4.6"
     "@types/semver": "npm:^7.1.0"
     "@types/tar": "npm:^6.0.0"
     "@types/which": "npm:^3.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^5.0.0"
     "@typescript-eslint/parser": "npm:^5.0.0"
     "@yarnpkg/eslint-config": "npm:^0.6.0-rc.7"
-    "@yarnpkg/fslib": "npm:^2.1.0"
+    "@yarnpkg/fslib": "npm:^3.0.0-rc.48"
     "@zkochan/cmd-shim": "npm:^6.0.0"
     babel-plugin-dynamic-import-node: "npm:^2.3.3"
     clipanion: "npm:^3.0.1"
@@ -5655,7 +5644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^1.13.0, tslib@npm:^1.8.1":
+"tslib@npm:^1.8.1":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: 441af59dc42ad4ae57140e62cb362369620c6076845c2c2b0ecc863c1d719ce24fdbc301e9053433fef43075e061bf84b702318ff1204b496a5bba10baf9eb9f
@@ -5666,6 +5655,13 @@ __metadata:
   version: 2.6.0
   resolution: "tslib@npm:2.6.0"
   checksum: 702dfe42c86eb380ff985fd76ddf7f10375a2f9d0c2a3aae2a5553a74e0720f49899c9ba145152ccc02efbb6c5272a62b2913ee29a994d59749117c2193b9cfb
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.4.0":
+  version: 2.6.1
+  resolution: "tslib@npm:2.6.1"
+  checksum: 401069a2e407204fb442e3367efd49ed8698a93a6ce998d8fae5764439d3e395550f036426a22e7b024b4b8593728044bef79187c97df321718631c71664aa5a
   languageName: node
   linkType: hard
 
