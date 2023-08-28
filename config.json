@@ -27,6 +27,9 @@
           "registry": {
             "type": "npm",
             "package": "npm"
+          },
+          "commands": {
+            "use": ["npm", "install"]
           }
         }
       }
@@ -62,6 +65,9 @@
           "registry": {
             "type": "npm",
             "package": "pnpm"
+          },
+          "commands": {
+            "use": ["pnpm", "install"]
           }
         },
         ">=6.0.0": {
@@ -73,6 +79,9 @@
           "registry": {
             "type": "npm",
             "package": "pnpm"
+          },
+          "commands": {
+            "use": ["pnpm", "install"]
           }
         }
       }
@@ -102,6 +111,9 @@
           "registry": {
             "type": "npm",
             "package": "yarn"
+          },
+          "commands": {
+            "use": ["yarn", "install"]
           }
         },
         ">=2.0.0": {
@@ -118,6 +130,9 @@
               "tags": "latest",
               "versions": "tags"
             }
+          },
+          "commands": {
+            "use": ["yarn", "install"]
           }
         }
       }

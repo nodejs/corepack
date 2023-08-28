@@ -6,8 +6,12 @@ import config                                      from '../config.json';
 
 import {runCli}                                    from './_runCli';
 
+let corepackHome!: PortablePath;
+
 beforeEach(async () => {
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  corepackHome = await xfs.mktempPromise();
+
+  process.env.COREPACK_HOME = npath.fromPortablePath(corepackHome);
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
@@ -191,9 +195,9 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
   });
 });
 
-it(`should allow updating the pinned version using the "prepare" command`, async () => {
+it(`should allow updating the pinned version using the "corepack install -g" command`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`prepare`, `--activate`, `yarn@1.0.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `yarn@1.0.0`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -210,9 +214,9 @@ it(`should allow updating the pinned version using the "prepare" command`, async
   });
 });
 
-it(`should allow to call "prepare" with a tag`, async () => {
+it(`should allow to call "corepack install -g" with a tag`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`prepare`, `--activate`, `npm@latest-7`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `npm@latest-7`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -229,13 +233,13 @@ it(`should allow to call "prepare" with a tag`, async () => {
   });
 });
 
-it(`should allow to call "prepare" without arguments within a configured project`, async () => {
+it(`should allow to call "corepack install" without arguments within a configured project`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@1.0.0`,
     });
 
-    await expect(runCli(cwd, [`prepare`, `--activate`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -314,13 +318,13 @@ it(`should always use fallback version when project spec env is disabled`, async
   });
 });
 
-it(`should allow to call "prepare" with --all to prepare all package managers`, async () => {
+it(`should allow to call "corepack install -g --all" to prepare all package managers`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`prepare`, `--all`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `--all`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -373,9 +377,9 @@ it(`should support disabling the network accesses from the environment`, async (
 
 it(`should support hydrating package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `-o`])).resolves.toMatchObject({
-      exitCode: 0,
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
       stderr: ``,
+      exitCode: 0,
     });
 
     // Use a new cache
@@ -385,8 +389,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
-        stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
+      await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
         stderr: ``,
         exitCode: 0,
       });
@@ -408,7 +411,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
 
 it(`should support hydrating package managers if cache folder was removed`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `-o`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -423,8 +426,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
-        stdout: `Hydrating yarn@2.2.2...\nAll done!\n`,
+      await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
         stderr: ``,
         exitCode: 0,
       });
@@ -446,7 +448,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`prepare`, `yarn@2.2.2`, `pnpm@5.8.0`, `-o`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -458,8 +460,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     try {
-      await expect(runCli(cwd, [`hydrate`, `corepack.tgz`])).resolves.toMatchObject({
-        stdout: `Hydrating yarn@2.2.2...\nHydrating pnpm@5.8.0...\nAll done!\n`,
+      await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
         stderr: ``,
         exitCode: 0,
       });
@@ -545,10 +546,11 @@ it(`should not override the package manager exit code`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    await xfs.mkdirPromise(yarnFolder, {recursive: true});
+    await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
-    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
-    await xfs.writeFilePromise(yarnPath, `
+    await xfs.writeFilePromise(ppath.join(yarnFolder, `yarn.js`), `
       process.exitCode = 42;
     `);
 
@@ -569,10 +571,11 @@ it(`should not preserve the process.exitCode when a package manager throws`, asy
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    await xfs.mkdirPromise(yarnFolder, {recursive: true});
+    await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
-    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
-    await xfs.writeFilePromise(yarnPath, `
+    await xfs.writeFilePromise(ppath.join(yarnFolder, `yarn.js`), `
       process.exitCode = 42;
       throw new Error('foo');
     `);
@@ -591,10 +594,11 @@ it(`should not set the exit code after successfully launching the package manage
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnPath = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2/yarn.js` as PortablePath);
+    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    await xfs.mkdirPromise(yarnFolder, {recursive: true});
+    await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
-    await xfs.mkdirPromise(ppath.dirname(yarnPath), {recursive: true});
-    await xfs.writeFilePromise(yarnPath, `
+    await xfs.writeFilePromise(ppath.join(yarnFolder, `yarn.js`), `
       process.once('beforeExit', () => {
         if (process.exitCode === undefined) {
           process.exitCode = 42;
@@ -616,14 +620,16 @@ it(`should support package managers in ESM format`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnDir = ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `yarn/2.2.2` as PortablePath);
+    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    await xfs.mkdirPromise(yarnFolder, {recursive: true});
+    await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
-    await xfs.mkdirPromise(yarnDir, {recursive: true});
-    await xfs.writeFilePromise(ppath.join(yarnDir, `yarn.js` as PortablePath), `
+    await xfs.writeFilePromise(ppath.join(yarnFolder, `yarn.js`), `
       import 'fs';
       console.log(42);
     `);
-    await xfs.writeJsonPromise(ppath.join(yarnDir, `package.json` as PortablePath), {
+
+    await xfs.writeJsonPromise(ppath.join(yarnFolder, `package.json`), {
       type: `module`,
     });
 
