@@ -14,7 +14,7 @@ export abstract class BaseCommand extends Command<Context> {
 
     const resolvedSpecs = all
       ? await this.context.engine.getDefaultDescriptors()
-      : patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
+      : patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`));
 
     if (resolvedSpecs.length === 0) {
       const lookup = await specUtils.loadSpec(this.context.cwd);
