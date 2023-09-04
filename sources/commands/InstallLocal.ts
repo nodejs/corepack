@@ -29,6 +29,8 @@ export class InstallLocalCommand extends BaseCommand {
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
     this.context.stdout.write(`Adding ${resolved.name}@${resolved.reference} to the cache...\n`);
-    await this.context.engine.ensurePackageManager(resolved);
+    const packageManagerInfo = await this.context.engine.ensurePackageManager(resolved);
+
+    await this.setLocalPackageManager(packageManagerInfo);
   }
 }
