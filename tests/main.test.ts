@@ -260,7 +260,6 @@ it(`should allow to call "corepack install" without arguments within a configure
 });
 
 it(`should refuse to run a different package manager within a configured project`, async () => {
-
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@1.0.0`,
