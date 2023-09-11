@@ -136,6 +136,40 @@
           }
         }
       }
+    },
+    "bun": {
+      "default": "1.0.0",
+      "fetchLatestFrom": {
+        "type": "npm",
+        "package": "bun"
+      },
+      "transparent": {
+        "commands": [
+          [
+            "bun",
+            "init"
+          ],
+          [
+            "bunx"
+          ]
+        ]
+      },
+      "ranges": {
+        "*": {
+          "url": "https://registry.npmjs.org/bun/-/bun-{}.tgz",
+          "bin": {
+            "bun": "./bin/bun",
+            "bunx": "./bin/bun"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "bun"
+          },
+          "commands": {
+            "use": ["bun", "install"]
+          }
+        }
+      }
     }
   }
 }
