@@ -138,7 +138,7 @@
       }
     },
     "bun": {
-      "default": "1.0.0",
+      "default": "1.0.0+sha1.318110dc2c46e1559fb5fef40884ebe77b711934",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "bun"

@@ -26,6 +26,7 @@ jobs:
           LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
           LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
           LATEST_BERRY=$(jq -n '$version + "+sha224." + $checksum' --arg version "$LATEST_BERRY_VERSION" --arg checksum "$(curl https://repo.yarnpkg.com/"$LATEST_BERRY_VERSION"/packages/yarnpkg-cli/bin/yarn.js | openssl dgst -sha224 | cut -d' ' -f2)")
+          LATEST_BUN=$(curl https://registry.npmjs.org/bun | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
 
           git --no-pager show HEAD:config.json | jq '. * '"{
             definitions: {
@@ -41,6 +42,9 @@ jobs:
                   default: $LATEST_BERRY,
                 },
               },
+              bun: {
+                default: $LATEST_BUN,
+              }
             },
           }" > config.json
 

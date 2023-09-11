@@ -71,7 +71,9 @@
       "pnpm": "./dist/pnpm.js",
       "pnpx": "./dist/pnpx.js",
       "yarn": "./dist/yarn.js",
-      "yarnpkg": "./dist/yarnpkg.js"
+      "yarnpkg": "./dist/yarnpkg.js",
+      "bun": "./dist/bun",
+      "bunx": "./dist/bunx"
     },
     "executableFiles": [
       "./dist/npm.js",
@@ -81,6 +83,7 @@
       "./dist/yarn.js",
       "./dist/yarnpkg.js",
       "./dist/corepack.js",
+      "./dist/bun",
       "./shims/npm",
       "./shims/npm.ps1",
       "./shims/npx",
