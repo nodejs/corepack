@@ -48,6 +48,8 @@ const testedPackageManagers: Array<[string, string]> = [
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
+  [`bun`, `1.0.0`],
+  [`bun`, `1.0.0+sha1.318110dc2c46e1559fb5fef40884ebe77b711934`],
 ];
 
 for (const [name, version] of testedPackageManagers) {
@@ -189,6 +191,12 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
 
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
+      exitCode: 0,
+    });
+
+    await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+      stdout: `${config.definitions.bun.default.split(`+`, 1)[0]}\n`,
       stderr: ``,
       exitCode: 0,
     });
