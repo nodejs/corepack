@@ -29,6 +29,40 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
+it(`should require a version to be specified`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: ``,
+      stdout: /expected a semver version/,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@stable`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: ``,
+      stdout: /expected a semver version/,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@^1.0.0`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: ``,
+      stdout: /expected a semver version/,
+    });
+  });
+});
+
 const testedPackageManagers: Array<[string, string]> = [
   [`yarn`, `1.22.4`],
   [`yarn`, `1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`],
