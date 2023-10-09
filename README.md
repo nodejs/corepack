@@ -76,10 +76,13 @@ Set your package's manager with the `packageManager` field in `package.json`:
 ```
 
 Here, `yarn` is the name of the package manager, specified at version `3.2.3`,
-along with the SHA-224 hash of this version for validation.
-`packageManager@x.y.z` is required. The hash is optional but strongly
+along with the SHA-224 hash of this version for validation. The hash is optional but strongly
 recommended as a security practice. Permitted values for the package manager are
 `yarn`, `npm`, and `pnpm`.
+
+To set this string, it is recommended to use the
+[`corepack use` command](#corepack-use-nameversion), which will resolve the
+full version number and set the hash appropriately.
 
 ## Known Good Releases
 

@@ -29,7 +29,7 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
-it(`should reify a fuzzy version from package.json`, async () => {
+it(`should resolve version from package.json`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn`,
@@ -37,11 +37,8 @@ it(`should reify a fuzzy version from package.json`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /\d+\.\d+\.\d+/,
-    });
-
-    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
-      packageManager: `yarn`,
+      stderr: ``,
+      stdout: /1\./,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -50,18 +47,18 @@ it(`should reify a fuzzy version from package.json`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /\d+\.\d+\.\d+/,
+      stderr: ``,
+      stdout: /1\./,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@^1.0.0`,
     });
-    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
-      packageManager: /yarn@1\.\d+\.\d+/,
-    });
+
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /1\.\d+\.\d+/,
+      stderr: ``,
+      stdout: /1\./,
     });
   });
 });
@@ -279,10 +276,6 @@ it(`should allow to call "corepack install" without arguments within a configure
     await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
-    });
-
-    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
-      packageManager: /yarn@1.0.0\+sha256\./,
     });
 
     // Disable the network to make sure we don't succeed by accident
