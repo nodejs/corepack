@@ -29,16 +29,19 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
-it(`should require a version to be specified`, async () => {
+it(`should reify a fuzzy version from package.json`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      exitCode: 0,
+      stdout: /\d+\.\d+\.\d+/,
+    });
+
+    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
+      packageManager: `yarn`,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -46,19 +49,19 @@ it(`should require a version to be specified`, async () => {
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      exitCode: 0,
+      stdout: /\d+\.\d+\.\d+/,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@^1.0.0`,
     });
-
+    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
+      packageManager: /yarn@1\.\d+\.\d+/,
+    });
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      exitCode: 0,
+      stdout: /1\.\d+\.\d+/,
     });
   });
 });
@@ -276,6 +279,10 @@ it(`should allow to call "corepack install" without arguments within a configure
     await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
+    });
+
+    await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
+      packageManager: /yarn@1.0.0\+sha256\./,
     });
 
     // Disable the network to make sure we don't succeed by accident
