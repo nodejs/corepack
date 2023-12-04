@@ -117,7 +117,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     };
   }
 
-  const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
+  const defaultNpmRegistryURL = spec.url.replace(/\{\}/g, version);
   const url = process.env.COREPACK_NPM_REGISTRY ?
     defaultNpmRegistryURL.replace(
       npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,

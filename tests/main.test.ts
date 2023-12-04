@@ -79,6 +79,7 @@ const testedPackageManagers: Array<[string, string]> = [
   [`pnpm`, `6.6.2`],
   [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
   [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
+  [`cnpm`, `9.3.1`],
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
@@ -94,7 +95,7 @@ for (const [name, version] of testedPackageManagers) {
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
-        stdout: `${version.split(`+`, 1)[0]}\n`,
+        stdout: expect.stringMatching(new RegExp(version.split(`+`, 1)[0])),
       });
     });
   });
@@ -221,6 +222,12 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
       exitCode: 0,
     });
 
+    await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+      stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
+      stderr: ``,
+      exitCode: 0,
+    });
+
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
       stderr: ``,
@@ -306,6 +313,11 @@ it(`should refuse to run a different package manager within a configured project
       exitCode: 1,
     });
 
+    await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+      stdout: `Usage Error: This project is configured to use yarn\n\n$ cnpm ...\n`,
+      exitCode: 1,
+    });
+
     // Disable strict checking to workaround the UsageError.
     process.env.COREPACK_ENABLE_STRICT = `0`;
 
@@ -317,6 +329,11 @@ it(`should refuse to run a different package manager within a configured project
       });
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+      await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
         stderr: ``,
         exitCode: 0,
       });
@@ -343,6 +360,11 @@ it(`should always use fallback version when project spec env is disabled`, async
       });
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+      await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
         stderr: ``,
         exitCode: 0,
       });
@@ -374,6 +396,12 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
         stderr: ``,
         exitCode: 0,
       });
@@ -482,7 +510,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`, `cnpm@9.3.1`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -515,6 +543,16 @@ it(`should support hydrating multiple package managers from cached archives`, as
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `5.8.0\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `cnpm@9.3.1`,
+      });
+
+      await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
+        stdout: expect.stringMatching(/cnpm@9\.3\.1/),
         stderr: ``,
         exitCode: 0,
       });

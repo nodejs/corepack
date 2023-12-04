@@ -5,6 +5,7 @@ export enum SupportedPackageManagers {
   Npm = `npm`,
   Pnpm = `pnpm`,
   Yarn = `yarn`,
+  Cnpm = `cnpm`,
 }
 
 export const SupportedPackageManagerSet = new Set<SupportedPackageManagers>(

@@ -37,6 +37,44 @@
         }
       }
     },
+    "cnpm": {
+      "default": "9.3.1+sha1.426460446f57dcf31b5a90fb59e35a8353d0d186",
+      "fetchLatestFrom": {
+        "type": "url",
+        "url": "https://registry.npmmirror.com/cnpm",
+        "fields": {
+          "tags": "latest",
+          "versions": "tags"
+        }
+      },
+      "transparent": {
+        "commands": [
+          [
+            "cnpm",
+            "sync"
+          ]
+        ]
+      },
+      "ranges": {
+        "*": {
+          "url": "https://cdn.npmmirror.com/packages/cnpm/{}/cnpm-{}.tgz",
+          "bin": {
+            "cnpm": "./bin/cnpm"
+          },
+          "commands": {
+            "use": ["cnpm", "-v"]
+          },
+          "registry": {
+            "type": "url",
+            "url": "https://registry.npmmirror.com/cnpm",
+            "fields": {
+              "versions": "versions",
+              "tags": "dist-tags"
+            }
+          }
+        }
+      }
+    },
     "pnpm": {
       "default": "8.10.2+sha1.e0b68270e89c817ff88b7be62466a2128c53af02",
       "fetchLatestFrom": {

@@ -22,9 +22,10 @@ jobs:
         run: |
           LATEST_BERRY_VERSION=$(curl https://repo.yarnpkg.com/tags | jq -r '.latest.stable')
 
-          LATEST_NPM=$(curl https://registry.npmjs.org/npm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
-          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
-          LATEST_YARN=$(curl https://registry.npmjs.org/yarn | jq '.["dist-tags"].latest + "+sha1." + .versions[.["dist-tags"].latest].dist.shasum')
+          LATEST_NPM=$(curl https://registry.npmjs.org/npm/latest | jq '"+sha1." + .dist.shasum')
+          LATEST_PNPM=$(curl https://registry.npmjs.org/pnpm/latest | jq '"+sha1." + .dist.shasum')
+          LATEST_YARN=$(curl https://registry.npmjs.org/yarn/latest | jq '"+sha1." + .dist.shasum')
+          LATEST_CNPM=$(curl https://registry.npmmirror.com/cnpm/latest | jq '"+sha1." + .dist.shasum')
           LATEST_BERRY=$(jq -n '$version + "+sha224." + $checksum' --arg version "$LATEST_BERRY_VERSION" --arg checksum "$(curl https://repo.yarnpkg.com/"$LATEST_BERRY_VERSION"/packages/yarnpkg-cli/bin/yarn.js | openssl dgst -sha224 | cut -d' ' -f2)")
 
           git --no-pager show HEAD:config.json | jq '. * '"{
