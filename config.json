@@ -38,7 +38,7 @@
       }
     },
     "cnpm": {
-      "default": "9.3.1+sha1.426460446f57dcf31b5a90fb59e35a8353d0d186",
+      "default": "9.3.2+sha1.05a307b7c1d34a368b8d30ff159dfd0533c8c328",
       "fetchLatestFrom": {
         "type": "url",
         "url": "https://registry.npmmirror.com/cnpm",

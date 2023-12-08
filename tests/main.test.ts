@@ -79,7 +79,7 @@ const testedPackageManagers: Array<[string, string]> = [
   [`pnpm`, `6.6.2`],
   [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
   [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
-  [`cnpm`, `9.3.1`],
+  [`cnpm`, `9.3.2`],
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
@@ -510,7 +510,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`, `cnpm@9.3.1`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`, `cnpm@9.3.2`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -548,11 +548,11 @@ it(`should support hydrating multiple package managers from cached archives`, as
       });
 
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `cnpm@9.3.1`,
+        packageManager: `cnpm@9.3.2`,
       });
 
       await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringMatching(/cnpm@9\.3\.1/),
+        stdout: expect.stringMatching(/cnpm@9\.3\.2/),
         stderr: ``,
         exitCode: 0,
       });
