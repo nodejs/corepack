@@ -95,7 +95,7 @@ for (const [name, version] of testedPackageManagers) {
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
-        stdout: expect.stringMatching(new RegExp(version.split(`+`, 1)[0])),
+        stdout: expect.stringContaining(version.split(`+`, 1)[0]),
       });
     });
   });
@@ -223,7 +223,7 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
     });
 
     await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-      stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
+      stdout: expect.stringContaining(`cnpm@${config.definitions.cnpm.default.split(`+`, 1)[0]}`),
       stderr: ``,
       exitCode: 0,
     });
@@ -333,7 +333,7 @@ it(`should refuse to run a different package manager within a configured project
         exitCode: 0,
       });
       await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
+        stdout: expect.stringContaining(`cnpm@${config.definitions.cnpm.default.split(`+`, 1)[0]}`),
         stderr: ``,
         exitCode: 0,
       });
@@ -364,7 +364,7 @@ it(`should always use fallback version when project spec env is disabled`, async
         exitCode: 0,
       });
       await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
+        stdout: expect.stringContaining(`cnpm@${config.definitions.cnpm.default.split(`+`, 1)[0]}`),
         stderr: ``,
         exitCode: 0,
       });
@@ -401,7 +401,7 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
       });
 
       await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringMatching(new RegExp(config.definitions.cnpm.default.split(`+`, 1)[0])),
+        stdout: expect.stringContaining(`cnpm@${config.definitions.cnpm.default.split(`+`, 1)[0]}`),
         stderr: ``,
         exitCode: 0,
       });
@@ -552,7 +552,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
       });
 
       await expect(runCli(cwd, [`cnpm`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringMatching(/cnpm@9\.3\.2/),
+        stdout: expect.stringContaining(`cnpm@9.3.2`),
         stderr: ``,
         exitCode: 0,
       });

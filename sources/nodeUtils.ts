@@ -16,7 +16,7 @@ function getEndOfLine(content: string) {
 }
 
 export function normalizeLineEndings(originalContent: string, newContent: string) {
-  return newContent.replace(/\r?\n/g, getEndOfLine(originalContent));
+  return newContent.replaceAll(`{}`, getEndOfLine(originalContent));
 }
 
 function getIndent(content: string) {
