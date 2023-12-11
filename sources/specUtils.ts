@@ -11,8 +11,8 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || (enforceExactVersion && !semver.valid(match[2])))
+  const match = raw.match(/^(?!_)(.+)(@(.+))?$/);
+  if (match === null || (enforceExactVersion && (!match[2] || !semver.valid(match[2]))))
     throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
   if (!isSupportedPackageManager(match[1]))
@@ -20,7 +20,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 
   return {
     name: match[1],
-    range: match[2],
+    range: match[2] ?? `*`,
   };
 }
 
@@ -57,7 +57,7 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
       case `NoProject`:
       case `NoSpec`: {
         return fallbackLocator;
-      } break;
+      }
 
       case `Found`: {
         if (result.spec.name !== locator.name) {
@@ -69,7 +69,7 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
         } else {
           return result.spec;
         }
-      } break;
+      }
     }
   }
 }

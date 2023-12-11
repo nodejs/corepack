@@ -267,6 +267,25 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
   });
 });
 
+it(`should allow to call "corepack install -g" without any range`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`install`, `-g`, `yarn`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: expect.not.stringMatching(/^[123]\./),
+      stderr: ``,
+      exitCode: 0,
+    });
+  });
+});
+
 it(`should allow to call "corepack install" without arguments within a configured project`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
