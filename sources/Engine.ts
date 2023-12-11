@@ -156,7 +156,10 @@ export class Engine {
       const ranges = Object.keys(definition.ranges);
       const tagRange = ranges[ranges.length - 1];
 
-      const tags = await corepackUtils.fetchAvailableTags(definition.ranges[tagRange].registry);
+      const packageManagerSpec = definition.ranges[tagRange];
+      const registry = corepackUtils.getRegistryFromPackageManagerSpec(packageManagerSpec);
+
+      const tags = await corepackUtils.fetchAvailableTags(registry);
       if (!Object.prototype.hasOwnProperty.call(tags, descriptor.range))
         throw new UsageError(`Tag not found (${descriptor.range})`);
 
@@ -178,7 +181,10 @@ export class Engine {
       return {name: finalDescriptor.name, reference: finalDescriptor.range};
 
     const versions = await Promise.all(Object.keys(definition.ranges).map(async range => {
-      const versions = await corepackUtils.fetchAvailableVersions(definition.ranges[range].registry);
+      const packageManagerSpec = definition.ranges[range];
+      const registry = corepackUtils.getRegistryFromPackageManagerSpec(packageManagerSpec);
+
+      const versions = await corepackUtils.fetchAvailableVersions(registry);
       return versions.filter(version => semverUtils.satisfiesWithPrereleases(version, finalDescriptor.range));
     }));
 
