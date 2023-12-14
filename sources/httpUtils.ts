@@ -13,11 +13,11 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
   const proxyAgent = new ProxyAgent();
 
   return new Promise<IncomingMessage>((resolve, reject) => {
-    const creatRequest = (url: string) => https.get(url, {...options, agent: proxyAgent}, response => {
+    const createRequest = (url: string) => https.get(url, {...options, agent: proxyAgent}, response => {
       const statusCode = response.statusCode;
 
       if ([301, 302, 307, 308].includes(statusCode))
-        return creatRequest(response.headers.location);
+        return createRequest(response.headers.location);
 
       if (statusCode != null && statusCode >= 200 && statusCode < 300)
         return resolve(response);
@@ -25,7 +25,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
       return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
     });
 
-    const request = creatRequest(url);
+    const request = createRequest(url);
 
     request.on(`error`, err => {
       reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
