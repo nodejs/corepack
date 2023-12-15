@@ -62,7 +62,7 @@
             "cnpm": "./bin/cnpm"
           },
           "commands": {
-            "use": ["cnpm", "-v"]
+            "use": ["cnpm", "install"]
           },
           "registry": {
             "type": "url",
