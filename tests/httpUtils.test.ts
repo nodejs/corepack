@@ -8,7 +8,7 @@ describe(`http utils fetchUrlStream`, () => {
     `https://registry.example.org/answered/${statusCode}${redirectCode ? `?redirectCode=${redirectCode}` : ``}`;
 
   const httpsGetFn = jest.fn((url: string, _, callback: (response: any) => void) => {
-    const parsedUrl = new URL(url);
+    const parsedURL = new URL(url);
     const {1: statusCode} = parsedUrl.pathname.match(/\/(\d+|error)/) as Array<string>;
     const response = {url, statusCode: +statusCode};
     const errorCallbacks: Array<(err: string) => void> = [];
