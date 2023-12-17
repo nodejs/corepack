@@ -9,7 +9,7 @@ describe(`http utils fetchUrlStream`, () => {
 
   const httpsGetFn = jest.fn((url: string, _, callback: (response: any) => void) => {
     const parsedURL = new URL(url);
-    const {1: statusCode} = parsedUrl.pathname.match(/\/(\d+|error)/) as Array<string>;
+    const statusCode = parsedURL.pathname.slice(parsedURL.pathname.lastIndexOf(`/`) + 1);
     const response = {url, statusCode: +statusCode};
     const errorCallbacks: Array<(err: string) => void> = [];
 
