@@ -57,7 +57,7 @@ describe(`http utils fetchUrlStream`, () => {
     expect(httpsGetFn).toHaveBeenCalledTimes(2);
   });
 
-  it(`bed response`, async () => {
+  it(`bad response`, async () => {
     await expect(fetchUrlStream(getUrl(300))).rejects.toThrowError();
     await expect(fetchUrlStream(getUrl(199))).rejects.toThrowError();
   });
