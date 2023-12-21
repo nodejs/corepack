@@ -29,16 +29,16 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
-it(`should require a version to be specified`, async () => {
+it(`should resolve version from package.json`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
+      exitCode: 0,
       stderr: ``,
-      stdout: /expected a semver version/,
+      stdout: /1\./,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -46,9 +46,9 @@ it(`should require a version to be specified`, async () => {
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
+      exitCode: 0,
       stderr: ``,
-      stdout: /expected a semver version/,
+      stdout: /1\./,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -56,9 +56,9 @@ it(`should require a version to be specified`, async () => {
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
+      exitCode: 0,
       stderr: ``,
-      stdout: /expected a semver version/,
+      stdout: /1\./,
     });
   });
 });

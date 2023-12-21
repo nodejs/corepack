@@ -1,27 +1,29 @@
 import {UsageError}                                     from 'clipanion';
 import fs                                               from 'fs';
 import path                                             from 'path';
-import semver                                           from 'semver';
 
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
-export function parseSpec(raw: unknown, source: string, {enforceExactVersion = true} = {}): Descriptor {
+export function parseSpec(raw: unknown, source: string): Descriptor {
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || (enforceExactVersion && !semver.valid(match[2])))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+  const match = /^(@?[^@]+)(?:@(.+))?$/.exec(raw);
+  const name = match?.[1];
+  const range = match?.[2] ?? `*`;
 
-  if (!isSupportedPackageManager(match[1]))
+  if (!name) {
+    throw new UsageError(
+      `Invalid package manager specification in ${source}. Could not determine package manager name`,
+    );
+  }
+
+  if (!isSupportedPackageManager(name))
     throw new UsageError(`Unsupported package manager specification (${match})`);
 
-  return {
-    name: match[1],
-    range: match[2],
-  };
+  return {name, range};
 }
 
 /**

@@ -15,8 +15,14 @@ export class UseCommand extends BaseCommand {
       automatically perform an install.
     `,
     examples: [[
-      `Configure the project to use the latest Yarn release`,
-      `corepack use 'yarn@*'`,
+      `Configure the project to use the latest pnpm release`,
+      `corepack use pnpm`,
+    ], [
+      `Use a tagged version`,
+      `corepack use yarn@stable`,
+    ], [
+      `Use a partial version number`,
+      `corepack use 'yarn@3'`,
     ]],
   });
 

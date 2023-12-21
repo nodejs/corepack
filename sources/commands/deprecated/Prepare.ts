@@ -58,7 +58,7 @@ export class PrepareCommand extends Command<Context> {
 
     for (const request of specs) {
       const spec = typeof request === `string`
-        ? specUtils.parseSpec(request, `CLI arguments`, {enforceExactVersion: false})
+        ? specUtils.parseSpec(request, `CLI arguments`)
         : request;
 
       const resolved = await this.context.engine.resolveDescriptor(spec, {allowTags: true});

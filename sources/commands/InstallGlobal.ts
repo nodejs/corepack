@@ -52,7 +52,7 @@ export class InstallGlobalCommand extends BaseCommand {
         if (arg.endsWith(`.tgz`)) {
           await this.installFromTarball(path.resolve(this.context.cwd, arg));
         } else {
-          await this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`, {enforceExactVersion: false}));
+          await this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`));
         }
       }
     } else {
