@@ -11,9 +11,9 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)(.+)(@(.+))?$/);
+  const match = raw.match(/^(?!_)([^@]+)(?:@(.+))?$/);
   if (match === null || (enforceExactVersion && (!match[2] || !semver.valid(match[2]))))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+    throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
   if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
