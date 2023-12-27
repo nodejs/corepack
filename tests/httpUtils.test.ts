@@ -16,7 +16,7 @@ describe(`http utils fetchUrlStream`, () => {
     if ([301, 302, 307, 308].includes(+statusCode)) {
       const redirectCode = parsedURL.searchParams.get(`redirectCode`)!;
       // mock response.headers.location
-      Reflect.set(response, `headers`, {location: getUrl(redirectCode)});
+      if (redirectCode) Reflect.set(response, `headers`, {location: getUrl(redirectCode)});
     }
 
     // handle request.on('error', err => ...)
