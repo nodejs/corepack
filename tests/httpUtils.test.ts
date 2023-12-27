@@ -79,6 +79,8 @@ describe(`http utils fetchUrlStream`, () => {
   it(`redirection with bad response`, async () => {
     await expect(fetchUrlStream(getUrl(301, 300))).rejects.toThrowError();
     await expect(fetchUrlStream(getUrl(308, 199))).rejects.toThrowError();
+    await expect(fetchUrlStream(getUrl(301, 302))).rejects.toThrowError();
+    await expect(fetchUrlStream(getUrl(307))).rejects.toThrowError();
   });
 
   it(`rejects with error`, async () => {
