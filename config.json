@@ -139,7 +139,7 @@
             "type": "url",
             "url": "https://repo.yarnpkg.com/tags",
             "fields": {
-              "tags": "latest",
+              "tags": "aliases",
               "versions": "tags"
             }
           },
