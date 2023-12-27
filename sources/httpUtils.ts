@@ -17,7 +17,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
       const request: ClientRequest = https.get(url, {...options, agent: proxyAgent}, response => {
         const statusCode = response.statusCode;
 
-        if ([301, 302, 307, 308].includes(statusCode as number))
+        if ([301, 302, 307, 308].includes(statusCode as number) && response.headers.location)
           return createRequest(response.headers.location as string);
 
         if (statusCode != null && statusCode >= 200 && statusCode < 300)
