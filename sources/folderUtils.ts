@@ -39,7 +39,7 @@ export function getInstallFolder() {
 }
 
 export function getTemporaryFolder(target: string = tmpdir()) {
-  mkdirSync(target, {recursive: true});
+  mkdirSync(target, { recursive: true });
 
   while (true) {
     const rnd = Math.random() * 0x100000000;
@@ -52,6 +52,8 @@ export function getTemporaryFolder(target: string = tmpdir()) {
     } catch (error) {
       if ((error as NodeError).code === `EEXIST`) {
         continue;
+      } else if ((error as NodeError).code === `EACCES`) {
+        throw new Error(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`);
       } else {
         throw error;
       }
