@@ -30,7 +30,7 @@
     "@types/which": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^6.8.0",
-    "@yarnpkg/eslint-config": "^0.6.0-rc.7",
+    "@yarnpkg/eslint-config": "^1.0.0",
     "@yarnpkg/fslib": "^3.0.0-rc.48",
     "@zkochan/cmd-shim": "^6.0.0",
     "babel-plugin-dynamic-import-node": "^2.3.3",
