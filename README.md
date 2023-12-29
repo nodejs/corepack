@@ -204,8 +204,7 @@ suitable for use with `corepack install -g`.
 
 When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
-perform an install. If no version is provided, Corepack will use the latest
-release.
+perform an install.
 
 ### `corepack up`
 
