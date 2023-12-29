@@ -1,3 +1,4 @@
+import {UsageError}                        from 'clipanion';
 import {existsSync, mkdirSync, renameSync} from 'fs';
 import {homedir, tmpdir}                   from 'os';
 import {join}                              from 'path';
@@ -52,6 +53,8 @@ export function getTemporaryFolder(target: string = tmpdir()) {
     } catch (error) {
       if ((error as NodeError).code === `EEXIST`) {
         continue;
+      } else if ((error as NodeError).code === `EACCES`) {
+        throw new UsageError(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`);
       } else {
         throw error;
       }
