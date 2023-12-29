@@ -48,6 +48,7 @@ jobs:
         node:
           - 18
           - 20
+          - 21
         platform:
           - ubuntu-latest
           - macos-latest
