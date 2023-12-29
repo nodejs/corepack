@@ -14,6 +14,12 @@ import * as nodeUtils                                          from './nodeUtils
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 
+export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
+  return process.env.COREPACK_NPM_REGISTRY
+    ? spec.npmRegistry ?? spec.registry
+    : spec.registry;
+}
+
 export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<string> {
   switch (spec.type) {
     case `npm`: {

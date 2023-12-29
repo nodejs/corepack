@@ -143,6 +143,10 @@
               "versions": "tags"
             }
           },
+          "npmRegistry": {
+            "type": "npm",
+            "package": "@yarnpkg/cli-dist"
+          },
           "commands": {
             "use": [
               "yarn",
