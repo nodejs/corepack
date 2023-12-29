@@ -4,6 +4,7 @@ import {join}                              from 'path';
 import process                             from 'process';
 
 import type {NodeError}                    from './nodeUtils';
+import {UsageError}                        from 'clipanion';
 
 export function getInstallFolder() {
   if (process.env.COREPACK_HOME == null) {
@@ -53,7 +54,7 @@ export function getTemporaryFolder(target: string = tmpdir()) {
       if ((error as NodeError).code === `EEXIST`) {
         continue;
       } else if ((error as NodeError).code === `EACCES`) {
-        throw new Error(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`);
+        throw new UsageError(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`, {cause: error});
       } else {
         throw error;
       }
