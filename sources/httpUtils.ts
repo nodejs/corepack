@@ -1,6 +1,6 @@
-import {UsageError}      from 'clipanion';
-import {RequestOptions}  from 'https';
-import {IncomingMessage} from 'http';
+import {UsageError}                     from 'clipanion';
+import {RequestOptions}                 from 'https';
+import {IncomingMessage, ClientRequest} from 'http';
 
 export async function fetchUrlStream(url: string, options: RequestOptions = {}) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -13,17 +13,25 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
   const proxyAgent = new ProxyAgent();
 
   return new Promise<IncomingMessage>((resolve, reject) => {
-    const request = https.get(url, {...options, agent: proxyAgent}, response => {
-      const statusCode = response.statusCode;
-      if (statusCode != null && statusCode >= 200 && statusCode < 300)
-        return resolve(response);
+    const createRequest = (url: string) => {
+      const request: ClientRequest = https.get(url, {...options, agent: proxyAgent}, response => {
+        const statusCode = response.statusCode;
 
-      return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
-    });
+        if ([301, 302, 307, 308].includes(statusCode as number) && response.headers.location)
+          return createRequest(response.headers.location as string);
 
-    request.on(`error`, err => {
-      reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
-    });
+        if (statusCode != null && statusCode >= 200 && statusCode < 300)
+          return resolve(response);
+
+        return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
+      });
+
+      request.on(`error`, err => {
+        reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
+      });
+    };
+
+    createRequest(url);
   });
 }
 
