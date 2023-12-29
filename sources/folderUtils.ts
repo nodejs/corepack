@@ -1,10 +1,10 @@
+import {UsageError}                        from 'clipanion';
 import {existsSync, mkdirSync, renameSync} from 'fs';
 import {homedir, tmpdir}                   from 'os';
 import {join}                              from 'path';
 import process                             from 'process';
 
 import type {NodeError}                    from './nodeUtils';
-import {UsageError}                        from 'clipanion';
 
 export function getInstallFolder() {
   if (process.env.COREPACK_HOME == null) {
