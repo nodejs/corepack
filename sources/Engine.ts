@@ -85,7 +85,7 @@ export class Engine {
     }
 
     if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
-        Object.prototype.hasOwnProperty.call(lastKnownGood, packageManager)) {
+        Object.hasOwn(lastKnownGood, packageManager)) {
       const override = (lastKnownGood as any)[packageManager];
       if (typeof override === `string`) {
         return override;
@@ -160,7 +160,7 @@ export class Engine {
       const registry = corepackUtils.getRegistryFromPackageManagerSpec(packageManagerSpec);
 
       const tags = await corepackUtils.fetchAvailableTags(registry);
-      if (!Object.prototype.hasOwnProperty.call(tags, descriptor.range))
+      if (!Object.hasOwn(tags, descriptor.range))
         throw new UsageError(`Tag not found (${descriptor.range})`);
 
       finalDescriptor = {
