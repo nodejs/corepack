@@ -54,7 +54,7 @@ export function getTemporaryFolder(target: string = tmpdir()) {
       if ((error as NodeError).code === `EEXIST`) {
         continue;
       } else if ((error as NodeError).code === `EACCES`) {
-        throw new UsageError(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`, {cause: error});
+        throw new UsageError(`Failed to create cache directory. Please ensure the user has write access to the target directory (${target}). If the user's home directory does not exist, create it first.`);
       } else {
         throw error;
       }
