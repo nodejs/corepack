@@ -1,7 +1,7 @@
-import {describe, beforeEach, it, expect}     from '@jest/globals';
 import {Filename, ppath, xfs, npath}          from '@yarnpkg/fslib';
 import {delimiter}                            from 'node:path';
 import process                                from 'node:process';
+import {describe, beforeEach, it, expect}     from 'vitest';
 
 import {Engine}                               from '../sources/Engine';
 import {SupportedPackageManagerSetWithoutNpm} from '../sources/types';

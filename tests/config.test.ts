@@ -1,9 +1,9 @@
-import {jest, describe, it, expect} from '@jest/globals';
+import {vi, describe, it, expect} from 'vitest';
 
-import defaultConfig                from '../config.json';
-import {DEFAULT_NPM_REGISTRY_URL}   from '../sources/npmRegistryUtils';
+import defaultConfig              from '../config.json';
+import {DEFAULT_NPM_REGISTRY_URL} from '../sources/npmRegistryUtils';
 
-jest.mock(`../sources/httpUtils`);
+vi.mock(`../sources/httpUtils`);
 
 describe(`key store should be up-to-date`, () => {
   it(`should contain up-to-date npm keys`, async () => {
