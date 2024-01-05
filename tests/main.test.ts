@@ -1,6 +1,6 @@
-import {beforeEach, it, expect}                    from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import process                                     from 'node:process';
+import {beforeEach, it, expect}                    from 'vitest';
 
 import config                                      from '../config.json';
 import * as folderUtils                            from '../sources/folderUtils';
@@ -47,7 +47,7 @@ it(`should refuse to download a known package manager from a URL`, async () => {
   });
 });
 
-it.failing(`should refuse to download a known package manager from a URL in package.json`, async () => {
+it.fails(`should refuse to download a known package manager from a URL in package.json`, async () => {
   await xfs.mktempPromise(async cwd => {
     // Package managers known by Corepack cannot be loaded from a URL.
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {

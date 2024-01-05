@@ -1,15 +1,15 @@
-import {jest, describe, beforeEach, it, expect}                 from '@jest/globals';
 import {Buffer}                                                 from 'node:buffer';
 import process                                                  from 'node:process';
+import {describe, beforeEach, it, expect, vi}                   from 'vitest';
 
 import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
 import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources/npmRegistryUtils';
 
-jest.mock(`../sources/httpUtils`);
+vi.mock(`../sources/httpUtils`);
 
 describe(`npm registry utils fetchAsJson`, () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it(`throw usage error if COREPACK_ENABLE_NETWORK env is set to 0`, async () => {
