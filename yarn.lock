@@ -1398,7 +1398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clipanion@npm:^3.0.1":
+"clipanion@npm:3.2.1":
   version: 3.2.1
   resolution: "clipanion@npm:3.2.1"
   dependencies:
@@ -1406,6 +1406,17 @@ __metadata:
   peerDependencies:
     typanion: "*"
   checksum: 10c0/6c148bd01ae645031aeb6e9a1a16f3ce07eb754cd9981c91edcab82b09e063b805ac41e4f36039d07602334b6dbba036b030d1807c12acd7f90778a696b7ac6e
+  languageName: node
+  linkType: hard
+
+"clipanion@patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch":
+  version: 3.2.1
+  resolution: "clipanion@patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch::version=3.2.1&hash=cd5507"
+  dependencies:
+    typanion: "npm:^3.8.0"
+  peerDependencies:
+    typanion: "*"
+  checksum: 10c0/a833a309638d9d07eaa1e4729653944f06998ce9295bc7db5ddbffc136050e41397c4f04c25a5bdc9305ac540f5c7323b7b113a4d1da134c9c552fb3206355f6
   languageName: node
   linkType: hard
 
@@ -1462,7 +1473,7 @@ __metadata:
     "@yarnpkg/fslib": "npm:^3.0.0-rc.48"
     "@zkochan/cmd-shim": "npm:^6.0.0"
     better-sqlite3: "npm:^9.4.1"
-    clipanion: "npm:^3.0.1"
+    clipanion: "patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch"
     debug: "npm:^4.1.1"
     esbuild: "npm:0.19.5"
     eslint: "npm:^8.0.0"
