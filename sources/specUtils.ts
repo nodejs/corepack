@@ -1,8 +1,10 @@
 import {UsageError}                                     from 'clipanion';
+import {FileHandle}                                     from 'fs/promises';
 import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
+import {NodeError}                                      from './nodeUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
@@ -88,6 +90,8 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     manifestPath: string;
   } | null = null;
 
+  let file: FileHandle;
+
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
     currCwd = nextCwd;
     nextCwd = path.dirname(currCwd);
@@ -96,10 +100,15 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
-    if (!fs.existsSync(manifestPath))
-      continue;
+    try {
+      file = await fs.promises.open(manifestPath, `r`);
+    } catch (err) {
+      if ((err as NodeError)?.code === `ENOENT`) continue;
+      throw err;
+    }
 
-    const content = await fs.promises.readFile(manifestPath, `utf8`);
+    const content = await file.readFile(`utf8`);
+    await file.close();
 
     let data;
     try {
