@@ -24,17 +24,13 @@ export class InstallGlobalCommand extends BaseCommand {
       `Install the latest version of Yarn 1.x and make it globally available`,
       `corepack install -g yarn@^1`,
     ], [
-      `Install the latest version of all available package managers, and make them globally available`,
-      `corepack install -g --all`,
+      `Install the latest version of pnpm, and make them globally available`,
+      `corepack install -g pnpm`,
     ]],
   });
 
   global = Option.Boolean(`-g,--global`, {
     required: true,
-  });
-
-  all = Option.Boolean(`--all`, false, {
-    description: `If true, all available default package managers will be installed`,
   });
 
   cacheOnly = Option.Boolean(`--cache-only`, false, {
@@ -44,20 +40,14 @@ export class InstallGlobalCommand extends BaseCommand {
   args = Option.Rest();
 
   async execute() {
-    if (this.args.length === 0 && !this.all)
-      throw new UsageError(`No package managers specified; use --all to install all available package managers, or specify one or more package managers to proceed`);
+    if (this.args.length === 0)
+      throw new UsageError(`No package managers specified`);
 
-    if (!this.all) {
-      for (const arg of this.args) {
-        if (arg.endsWith(`.tgz`)) {
-          await this.installFromTarball(path.resolve(this.context.cwd, arg));
-        } else {
-          await this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`, {enforceExactVersion: false}));
-        }
-      }
-    } else {
-      for (const descriptor of await this.context.engine.getDefaultDescriptors()) {
-        await this.installFromDescriptor(descriptor);
+    for (const arg of this.args) {
+      if (arg.endsWith(`.tgz`)) {
+        await this.installFromTarball(path.resolve(this.context.cwd, arg));
+      } else {
+        await this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`, {enforceExactVersion: false}));
       }
     }
   }

@@ -102,9 +102,6 @@ The utility commands detailed in the next section.
   case you'll simply run `corepack pack` to make sure that your image
   includes the Last Known Good release for the specified package manager.
 
-  - If you want to have _all_ Last Known Good releases for all package managers,
-    just use the `--all` flag which will do just that.
-
 - Or you're publishing your project to a system where the network is
   unavailable, in which case you'll preemptively generate a package manager
   archive from your local computer (using `corepack pack -o`) before storing
@@ -124,17 +121,14 @@ Note that those commands still check whether the local project is configured for
 the given package manager (ie you won't be able to run `corepack yarn install`
 on a project where the `packageManager` field references `pnpm`).
 
-### `corepack enable [... name]`
+### `corepack enable name [...names]`
 
 | Option                | Description                             |
 | --------------------- | --------------------------------------- |
 | `--install-directory` | Add the shims to the specified location |
 
 This command will detect where Corepack is installed and will create shims next
-to it for each of the specified package managers (or all of them if the command
-is called without parameters). Note that the npm shims will not be installed
-unless explicitly requested, as npm is currently distributed with Node.js
-through other means.
+to it for each of the specified package managers.
 
 If the file system where the `corepack` binary is located is read-only, this
 command will fail. A workaround is to add the binaries as alias in your
@@ -177,11 +171,7 @@ This command doesn't change the global version used when running the package
 manager from outside the project (use the \`-g,--global\` flag if you wish
 to do this).
 
-### `corepack install <-g,--global> [--all] [... name[@<version>]]`
-
-| Option                | Description                                |
-| --------------------- | ------------------------------------------ |
-| `--all`               | Install all Last Known Good releases       |
+### `corepack install <-g,--global> [... name[@<version>]]`
 
 Install the selected package managers and install them on the system.
 
@@ -189,11 +179,10 @@ Package managers thus installed will be configured as the new default when
 calling their respective binaries outside of projects defining the
 `packageManager` field.
 
-### `corepack pack [--all] [... name[@<version>]]`
+### `corepack pack [... name[@<version>]]`
 
 | Option                | Description                                |
 | --------------------- | ------------------------------------------ |
-| `--all`               | Pack all Last Known Good releases          |
 | `--json `             | Print the output folder rather than logs   |
 | `-o,--output `        | Path where to generate the archive         |
 

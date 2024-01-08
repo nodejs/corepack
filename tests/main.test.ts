@@ -371,43 +371,6 @@ it(`should always use fallback version when project spec env is disabled`, async
   });
 });
 
-it(`should allow to call "corepack install -g --all" to prepare all package managers`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      // empty package.json file
-    });
-
-    await expect(runCli(cwd, [`install`, `-g`, `--all`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
-    });
-
-    process.env.COREPACK_ENABLE_NETWORK = `0`;
-
-    try {
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
-        stderr: ``,
-        exitCode: 0,
-      });
-
-      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
-        stderr: ``,
-        exitCode: 0,
-      });
-
-      await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-        stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
-        stderr: ``,
-        exitCode: 0,
-      });
-    } finally {
-      delete process.env.COREPACK_ENABLE_NETWORK;
-    }
-  });
-});
-
 it(`should support disabling the network accesses from the environment`, async () => {
   process.env.COREPACK_ENABLE_NETWORK = `0`;
 
