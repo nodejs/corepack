@@ -90,7 +90,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     manifestPath: string;
   } | null = null;
 
-  let file: FileHandle;
+  let content: string;
 
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
     currCwd = nextCwd;
@@ -101,14 +101,11 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 
     const manifestPath = path.join(currCwd, `package.json`);
     try {
-      file = await fs.promises.open(manifestPath, `r`);
+      content = await fs.promises.readFile(manifestPath, `utf8`);
     } catch (err) {
       if ((err as NodeError)?.code === `ENOENT`) continue;
       throw err;
     }
-
-    const content = await file.readFile(`utf8`);
-    await file.close();
 
     let data;
     try {
