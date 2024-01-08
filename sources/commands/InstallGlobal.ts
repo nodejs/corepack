@@ -24,7 +24,7 @@ export class InstallGlobalCommand extends BaseCommand {
       `Install the latest version of Yarn 1.x and make it globally available`,
       `corepack install -g yarn@^1`,
     ], [
-      `Install the latest version of pnpm, and make them globally available`,
+      `Install the latest version of pnpm, and make it globally available`,
       `corepack install -g pnpm`,
     ]],
   });

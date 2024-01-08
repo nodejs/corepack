@@ -121,14 +121,17 @@ Note that those commands still check whether the local project is configured for
 the given package manager (ie you won't be able to run `corepack yarn install`
 on a project where the `packageManager` field references `pnpm`).
 
-### `corepack enable name [...names]`
+### `corepack enable [... name]`
 
 | Option                | Description                             |
 | --------------------- | --------------------------------------- |
 | `--install-directory` | Add the shims to the specified location |
 
 This command will detect where Corepack is installed and will create shims next
-to it for each of the specified package managers.
+to it for each of the specified package managers (or all of them if the command
+is called without parameters). Note that the npm shims will not be installed
+unless explicitly requested, as npm is currently distributed with Node.js
+through other means.
 
 If the file system where the `corepack` binary is located is read-only, this
 command will fail. A workaround is to add the binaries as alias in your
