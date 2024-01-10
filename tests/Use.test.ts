@@ -35,6 +35,8 @@ describe(`UseCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
         exitCode: 0,
+        stdout: ``,
+        stderr: ``,
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -44,6 +46,7 @@ describe(`UseCommand`, () => {
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stdout: `1.22.4\n`,
+        stderr: ``,
       });
 
       // Ensure Corepack is able to detect package.json in parent directory
@@ -56,6 +59,7 @@ describe(`UseCommand`, () => {
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stdout: `2.2.2\n`,
+        stderr: ``,
       });
     });
   });
