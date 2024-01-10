@@ -1,5 +1,4 @@
 import {UsageError}                                     from 'clipanion';
-import {FileHandle}                                     from 'fs/promises';
 import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
