@@ -35,8 +35,7 @@ describe(`UseCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
         exitCode: 0,
-        stdout: ``,
-        stderr: ``,
+        stderr: `warning package.json: No license field\nwarning No license field\n`,
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -55,6 +54,7 @@ describe(`UseCommand`, () => {
 
       await expect(runCli(subfolder, [`use`, `yarn@2.2.2`])).resolves.toMatchObject({
         exitCode: 0,
+        stderr: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
