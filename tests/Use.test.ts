@@ -45,6 +45,18 @@ describe(`UseCommand`, () => {
         exitCode: 0,
         stdout: `1.22.4\n`,
       });
+
+      // Ensure Corepack is able to detect package.json in parent directory
+      const subfolder = ppath.join(cwd, `subfolder`);
+      await xfs.mkdirPromise(subfolder);
+
+      await expect(runCli(subfolder, [`use`, `yarn@2.2.2`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `2.2.2\n`,
+      });
     });
   });
 });
