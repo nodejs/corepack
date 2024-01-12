@@ -3,6 +3,7 @@ import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
+import {NodeError}                                      from './nodeUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
@@ -96,10 +97,13 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
-    if (!fs.existsSync(manifestPath))
-      continue;
-
-    const content = await fs.promises.readFile(manifestPath, `utf8`);
+    let content: string;
+    try {
+      content = await fs.promises.readFile(manifestPath, `utf8`);
+    } catch (err) {
+      if ((err as NodeError)?.code === `ENOENT`) continue;
+      throw err;
+    }
 
     let data;
     try {

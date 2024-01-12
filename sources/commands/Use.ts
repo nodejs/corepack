@@ -16,7 +16,7 @@ export class UseCommand extends BaseCommand {
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,
-      `corepack use 'yarn@*'`,
+      `corepack use yarn`,
     ]],
   });
 
