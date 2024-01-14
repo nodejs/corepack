@@ -1,4 +1,5 @@
 import {ppath, xfs, npath}        from '@yarnpkg/fslib';
+import assert                     from 'node:assert';
 import process                    from 'node:process';
 import {describe, beforeEach, it} from 'node:test';
 
@@ -15,15 +16,15 @@ describe(`UseCommand`, () => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
       });
 
-      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+      assert.deepStrictEqual(await runCli(cwd, [`use`, `yarn@1.22.4`]), {
         exitCode: 0,
       });
 
-      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+      assert.deepStrictEqual(await xfs.readJsonPromise(ppath.join(cwd, `package.json`)), {
         packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      assert.deepStrictEqual(await runCli(cwd, [`yarn`, `--version`]), {
         exitCode: 0,
         stdout: `1.22.4\n`,
       });
