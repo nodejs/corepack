@@ -50,7 +50,7 @@
     "prepack": "yarn build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --import tsx"
+    "test": "node --test --import tsx --import ./tests/setupTests.ts"
   },
   "files": [
     "dist",
