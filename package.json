@@ -43,6 +43,7 @@
     "nock": "^13.0.4",
     "proxy-agent": "^6.2.2",
     "semver": "^7.5.2",
+    "sucrase": "^3.35.0",
     "supports-color": "^9.0.0",
     "tar": "^6.0.1",
     "ts-node": "^10.0.0",
@@ -58,7 +59,7 @@
     "prepack": "yarn build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "yarn node --loader ./loader.mjs tests/index.ts"
   },
   "files": [
     "dist",

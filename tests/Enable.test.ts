@@ -1,7 +1,8 @@
-import {describe, beforeEach, it, expect}                               from '@jest/globals';
 import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
+import assert                                                           from 'node:assert';
 import {delimiter}                                                      from 'node:path';
 import process                                                          from 'node:process';
+import {describe, beforeEach, it}                                       from 'node:test';
 
 import {Engine}                                                         from '../sources/Engine';
 import {SupportedPackageManagers, SupportedPackageManagerSetWithoutNpm} from '../sources/types';
@@ -24,7 +25,8 @@ describe(`EnableCommand`, () => {
       const PATH = process.env.PATH;
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        const {stdout, stderr, exitCode} = await runCli(cwd, [`enable`]);
+        assert.deepStrictEqual({stdout, stderr, exitCode}, {
           stdout: ``,
           stderr: ``,
           exitCode: 0,
@@ -38,11 +40,12 @@ describe(`EnableCommand`, () => {
       });
 
       const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
+      console.log({SupportedPackageManagerSetWithoutNpm});
       for (const packageManager of SupportedPackageManagerSetWithoutNpm)
         for (const binName of engine.getBinariesFor(packageManager))
           expectedEntries.push(...getBinaryNames(binName));
 
-      await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+      assert.deepStrictEqual(await sortedEntries, expectedEntries.sort());
     });
   });
 
@@ -50,7 +53,8 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
-      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+      const {stdout, stderr, exitCode} = await runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)]);
+      assert.deepStrictEqual({stdout, stderr, exitCode}, {
         stdout: ``,
         stderr: ``,
         exitCode: 0,
@@ -65,7 +69,7 @@ describe(`EnableCommand`, () => {
         for (const binName of engine.getBinariesFor(packageManager))
           expectedEntries.push(...getBinaryNames(binName));
 
-      await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+      assert.deepStrictEqual(await sortedEntries, expectedEntries.sort());
     });
   });
 
@@ -76,7 +80,8 @@ describe(`EnableCommand`, () => {
       const PATH = process.env.PATH;
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
+        const {stdout, stderr, exitCode} = await runCli(cwd, [`enable`, `yarn`]);
+        assert.deepStrictEqual({stdout, stderr, exitCode}, {
           stdout: ``,
           stderr: ``,
           exitCode: 0,
@@ -93,7 +98,7 @@ describe(`EnableCommand`, () => {
       for (const binName of engine.getBinariesFor(SupportedPackageManagers.Yarn))
         expectedEntries.push(...getBinaryNames(binName));
 
-      await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+      assert.deepStrictEqual(await sortedEntries, expectedEntries.sort());
     });
   });
 });

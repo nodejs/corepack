@@ -1,12 +1,51 @@
-import {beforeEach, it, expect}                    from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
+import assert                                      from 'node:assert';
 import process                                     from 'node:process';
+import {beforeEach, it}                            from 'node:test';
 
 import config                                      from '../config.json';
 
 import {runCli}                                    from './_runCli';
 
 let corepackHome!: PortablePath;
+
+function expect(promise: Promise<Record<string, unknown> | Array<Record<string, unknown>>>) {
+  return {
+    resolves: {
+      async toMatchObject(expected: Record<string, unknown> | Array<Record<string, unknown>>) {
+        const result = await promise;
+
+        if (Array.isArray(expected) || Array.isArray(result)) {
+          await Promise.all((result as Array<Record<string, unknown>>).map(result => this.toMatchObject(result as any)));
+          return;
+        }
+
+
+        if (Object.values(expected).every(val => typeof val === `string` || typeof val === `number`)) {
+          assert.deepStrictEqual(result, expected);
+          return;
+        }
+        for (const key of Object.keys(expected)) {
+          if (typeof expected[key] === `function`) {
+            (expected[key] as (actual: unknown) => void)(result[key]);
+          } else if (typeof expected[key] !== `object`) {
+            assert.strictEqual(result[key], expected[key]);
+          } else if (expected[key] instanceof RegExp) {
+            assert.match(result[key] as string, expected[key] as RegExp);
+          } else {
+            assert.deepStrictEqual(result[key], expected[key]);
+          }
+        }
+      },
+    },
+  };
+}
+
+expect.not = {
+  stringMatching(regex: RegExp) {
+    return (str: string) => assert.doesNotMatch(str, regex);
+  },
+},
 
 beforeEach(async () => {
   corepackHome = await xfs.mktempPromise();
@@ -157,10 +196,9 @@ it(`should expose its root to spawned processes`, async () => {
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`npm`, `run`, `env`])).resolves.toMatchObject({
-      exitCode: 0,
-      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}`),
-    });
+    const result = await runCli(cwd, [`npm`, `run`, `env`]);
+    assert.ok(result.stdout.includes(`COREPACK_ROOT=${npath.dirname(__dirname)}`), new Error(`${result.stdout} does not contain ${`COREPACK_ROOT=${npath.dirname(__dirname)}`}`));
+    assert.strictEqual(result.exitCode, 0);
   });
 });
 
@@ -260,7 +298,7 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
     });
 
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      stdout: expect.stringMatching(/^7\./),
+      stdout: /^7\./,
       stderr: ``,
       exitCode: 0,
     });
@@ -418,7 +456,7 @@ it(`should support disabling the network accesses from the environment`, async (
       });
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        stdout: expect.stringContaining(`Network access disabled by the environment`),
+        stdout: /Network access disabled by the environment/,
         stderr: ``,
         exitCode: 1,
       });
@@ -636,7 +674,7 @@ it(`should not preserve the process.exitCode when a package manager throws`, asy
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
       stdout: ``,
-      stderr: expect.stringContaining(`foo`),
+      stderr: /foo/,
     });
   });
 });
