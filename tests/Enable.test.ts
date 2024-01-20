@@ -40,7 +40,6 @@ describe(`EnableCommand`, () => {
       });
 
       const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
-      console.log({SupportedPackageManagerSetWithoutNpm});
       for (const packageManager of SupportedPackageManagerSetWithoutNpm)
         for (const binName of engine.getBinariesFor(packageManager))
           expectedEntries.push(...getBinaryNames(binName));

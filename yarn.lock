@@ -2187,6 +2187,7 @@ __metadata:
     eslint-plugin-arca: "npm:^0.16.0"
     jest: "npm:^29.0.0"
     nock: "npm:^13.0.4"
+    pirates: "npm:^4.0.6"
     proxy-agent: "npm:^6.2.2"
     semver: "npm:^7.5.2"
     sucrase: "npm:^3.35.0"
@@ -5014,7 +5015,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pirates@npm:^4.0.1, pirates@npm:^4.0.4":
+"pirates@npm:^4.0.1, pirates@npm:^4.0.4, pirates@npm:^4.0.6":
   version: 4.0.6
   resolution: "pirates@npm:4.0.6"
   checksum: 00d5fa51f8dded94d7429700fb91a0c1ead00ae2c7fd27089f0c5b63e6eca36197fe46384631872690a66f390c5e27198e99006ab77ae472692ab9c2ca903f36
