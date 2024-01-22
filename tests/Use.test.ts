@@ -63,4 +63,23 @@ describe(`UseCommand`, () => {
       });
     });
   });
+
+  it(`should accept --from-npm CLI flag`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`use`, `test`])).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Invalid package manager specification in CLI arguments. Consider adding the `--from-npm` flag if you meant to use the npm package `test` as your package manager/,
+        stderr: ``,
+      });
+
+      await expect(runCli(cwd, [`use`, `test`, `--from-npm`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+      });
+
+      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+        packageManager: `test@https://registry.npmjs.com/test/-/test-3.3.0.tgz+sha1.a2b56c6aa386c5732065793e8d9d92074a9cdd41`,
+      });
+    });
+  });
 });

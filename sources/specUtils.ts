@@ -17,7 +17,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
     throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
   if (!isSupportedPackageManager(match[1]))
-    throw new UsageError(`Unsupported package manager specification (${match})`);
+    throw new UsageError(`Unsupported package manager specification (${match}) ${enforceExactVersion ? `` : `. Consider using the \`--from-npm\` flag if you meant to use the npm package \`${match[1]}\` as your package manager`}`);
 
   return {
     name: match[1],

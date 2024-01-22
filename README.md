@@ -200,11 +200,13 @@ calling their respective binaries outside of projects defining the
 Download the selected package managers and store them inside a tarball
 suitable for use with `corepack install -g`.
 
-### `corepack use <name[@<version>]>`
+### `corepack use <name[@<version>]> [--from-npm]`
 
 When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
 perform an install.
+When passing the `--from-npm` flag, Corepack will use the latest version of the
+package with the corresponding name from the npm registry.
 
 ### `corepack up`
 
