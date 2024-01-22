@@ -78,7 +78,7 @@ describe(`UseCommand`, () => {
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
-        packageManager: `test@https://registry.npmjs.com/test/-/test-3.3.0.tgz+sha1.a2b56c6aa386c5732065793e8d9d92074a9cdd41`,
+        packageManager: `test@https://registry.npmjs.com/test/-/test-3.3.0.tgz#sha1.a2b56c6aa386c5732065793e8d9d92074a9cdd41`,
       });
     });
   });

@@ -45,8 +45,10 @@ export class UseCommand extends BaseCommand {
       const location = `https://registry.npmjs.com/${this.pattern}/-/${this.pattern}-${version}.tgz`;
       packageManagerInfo = {
         locator: {
-          name: this.pattern as any,
-          reference: location,
+          // @ts-expect-error Needs type update from the other PR
+          name: this.pattern,
+          // @ts-expect-error Needs type update from the other PR
+          reference: new URL(location),
         },
         spec: {
           bin: {},
