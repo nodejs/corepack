@@ -1,16 +1,16 @@
-import {UsageError}                                                                                                    from 'clipanion';
-import fs                                                                                                              from 'fs';
-import path                                                                                                            from 'path';
-import process                                                                                                         from 'process';
-import semver                                                                                                          from 'semver';
+import {UsageError}                                           from 'clipanion';
+import fs                                                     from 'fs';
+import path                                                   from 'path';
+import process                                                from 'process';
+import semver                                                 from 'semver';
 
-import defaultConfig                                                                                                   from '../config.json';
+import defaultConfig                                          from '../config.json';
 
-import * as corepackUtils                                                                                              from './corepackUtils';
-import * as folderUtils                                                                                                from './folderUtils';
-import * as semverUtils                                                                                                from './semverUtils';
-import {Config, Descriptor, Locator, SupportedPackageManagerDescriptor, SupportedPackageManagerLocator, URLDescriptor} from './types';
-import {SupportedPackageManagers, SupportedPackageManagerSet}                                                          from './types';
+import * as corepackUtils                                     from './corepackUtils';
+import * as folderUtils                                       from './folderUtils';
+import * as semverUtils                                       from './semverUtils';
+import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
+import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -34,15 +34,19 @@ export class Engine {
     return null;
   }
 
-  getPackageManagerSpecFor(locator: Locator) {
+  getPackageManagerSpecFor(locator: Locator): PackageManagerSpec {
     if (!corepackUtils.isSupportedPackageManagerLocator(locator)) {
+      const url = `${locator.reference}`;
       return {
-        url: locator.reference,
+        url,
         bin: {},
         registry: {
           type: `url`,
-          url: locator.reference,
-          fields: {},
+          url,
+          fields: {
+            tags: ``,
+            versions: ``,
+          },
         },
       };
     }

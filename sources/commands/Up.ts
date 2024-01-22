@@ -1,7 +1,8 @@
-import {Command, UsageError} from 'clipanion';
-import semver                from 'semver';
+import {Command, UsageError}                 from 'clipanion';
+import semver                                from 'semver';
+import type {SupportedPackageManagerLocator} from 'sources/types';
 
-import {BaseCommand}         from './Base';
+import {BaseCommand}                         from './Base';
 
 export class UpCommand extends BaseCommand {
   static paths = [
@@ -39,7 +40,7 @@ export class UpCommand extends BaseCommand {
     if (!resolved)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-    const majorVersion = semver.major(resolved?.reference);
+    const majorVersion = semver.major((resolved as SupportedPackageManagerLocator)?.reference);
     const majorDescriptor = {name: descriptor.name, range: `^${majorVersion}.0.0`};
 
     const highestVersion = await this.context.engine.resolveDescriptor(majorDescriptor, {useCache: false});
