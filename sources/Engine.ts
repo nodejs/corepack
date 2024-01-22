@@ -1,16 +1,16 @@
-import {UsageError}                                           from 'clipanion';
-import fs                                                     from 'fs';
-import path                                                   from 'path';
-import process                                                from 'process';
-import semver                                                 from 'semver';
+import {UsageError}                                                                                                    from 'clipanion';
+import fs                                                                                                              from 'fs';
+import path                                                                                                            from 'path';
+import process                                                                                                         from 'process';
+import semver                                                                                                          from 'semver';
 
-import defaultConfig                                          from '../config.json';
+import defaultConfig                                                                                                   from '../config.json';
 
-import * as corepackUtils                                     from './corepackUtils';
-import * as folderUtils                                       from './folderUtils';
-import * as semverUtils                                       from './semverUtils';
-import {Config, Descriptor, Locator}                          from './types';
-import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import * as corepackUtils                                                                                              from './corepackUtils';
+import * as folderUtils                                                                                                from './folderUtils';
+import * as semverUtils                                                                                                from './semverUtils';
+import {Config, Descriptor, Locator, SupportedPackageManagerDescriptor, SupportedPackageManagerLocator, URLDescriptor} from './types';
+import {SupportedPackageManagers, SupportedPackageManagerSet}                                                          from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -35,6 +35,18 @@ export class Engine {
   }
 
   getPackageManagerSpecFor(locator: Locator) {
+    if (!corepackUtils.isSupportedPackageManagerLocator(locator)) {
+      return {
+        url: locator.reference,
+        bin: {},
+        registry: {
+          type: `url`,
+          url: locator.reference,
+          fields: {},
+        },
+      };
+    }
+
     const definition = this.config.definitions[locator.name];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${locator.name}) isn't supported by this corepack build`);
@@ -143,6 +155,13 @@ export class Engine {
   }
 
   async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
+    if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
+      return {
+        name: descriptor.name,
+        reference: new URL(descriptor.range),
+      };
+    }
+
     const definition = this.config.definitions[descriptor.name];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);

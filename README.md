@@ -81,6 +81,17 @@ along with the SHA-224 hash of this version for validation.
 recommended as a security practice. Permitted values for the package manager are
 `yarn`, `npm`, and `pnpm`.
 
+You can also provide a URL to a `.js` file (which will be interpreted as a
+CommonJS module) or a `.tgz` file (which will be interpreted as a package, and
+the `"bin"` field of the `package.json` will be used to determine which file to
+use in the archive).
+
+```json
+{
+  "packageManager": "yarn@https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b"
+}
+```
+
 ## Known Good Releases
 
 When running Corepack within projects that don't list a supported package

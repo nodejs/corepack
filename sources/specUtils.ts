@@ -12,16 +12,38 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)([^@]+)(?:@(.+))?$/);
-  if (match === null || (enforceExactVersion && (!match[2] || !semver.valid(match[2]))))
-    throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+  const atIndex = raw.indexOf(`@`);
 
-  if (!isSupportedPackageManager(match[1]))
-    throw new UsageError(`Unsupported package manager specification (${match})`);
+  if (atIndex === -1 || atIndex === raw.length - 1) {
+    if (enforceExactVersion)
+      throw new UsageError(`No version specified for ${raw} in "packageManager" of ${source}`);
+
+    const name = atIndex === -1 ? raw : raw.slice(0, -1);
+    if (!isSupportedPackageManager(name))
+      throw new UsageError(`Unsupported package manager specification (${name})`);
+
+    return {
+      name, range: `*`,
+    };
+  }
+
+  const name = raw.slice(0, atIndex);
+  const range = raw.slice(atIndex + 1);
+
+  const isURL = URL.canParse(range);
+  if (!isURL) {
+    if (enforceExactVersion && !semver.valid(range))
+      throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+
+    if (!isSupportedPackageManager(name)) {
+      throw new UsageError(`Unsupported package manager specification (${raw})`);
+    }
+  }
+
 
   return {
-    name: match[1],
-    range: match[2] ?? `*`,
+    name,
+    range,
   };
 }
 
