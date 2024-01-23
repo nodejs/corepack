@@ -12,6 +12,8 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const proxyAgent = new ProxyAgent();
 
+  console.log(`Corepack: Fetching ${url}...`);
+
   return new Promise<IncomingMessage>((resolve, reject) => {
     const createRequest = (url: string) => {
       const request: ClientRequest = https.get(url, {...options, agent: proxyAgent}, response => {
