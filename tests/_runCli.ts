@@ -1,7 +1,7 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
 import {spawn}               from 'child_process';
 
-export async function runCli(cwd: PortablePath, argv: Array<string>): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
+export async function runCli(cwd: PortablePath, argv: Array<string>, options?: Parameters<typeof spawn>[2]): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
   const out: Array<Buffer> = [];
   const err: Array<Buffer> = [];
 
@@ -11,6 +11,7 @@ export async function runCli(cwd: PortablePath, argv: Array<string>): Promise<{e
     const child = spawn(process.execPath, [`--no-warnings`, `-r`, require.resolve(`./recordRequests.js`), require.resolve(`../dist/corepack.js`), ...argv], {
       cwd: npath.fromPortablePath(cwd),
       env: process.env,
+      ...options,
       stdio: `pipe`,
     });
 

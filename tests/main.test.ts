@@ -29,6 +29,50 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
+it.failing(`should refuse to download a known package manager from a URL`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    // Package managers known by Corepack cannot be loaded from a URL.
+    await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: ``,
+      stdout: /Illegal use of URL for known package manager/,
+    });
+
+    // Unknown package managers can be loaded from a URL.
+    await expect(runCli(cwd, [`corepack@https://registry.npmjs.com/corepack/-/corepack-0.24.1.tgz`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `0.24.1\n`,
+    });
+  });
+});
+
+it.failing(`should refuse to download a known package manager from a URL in package.json`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    // Package managers known by Corepack cannot be loaded from a URL.
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: ``,
+      stdout: /Illegal use of URL for known package manager/,
+    });
+
+    // Unknown package managers can be loaded from a URL.
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `corepack@https://registry.npmjs.com/corepack/-/corepack-0.24.1.tgz`,
+    });
+
+    await expect(runCli(cwd, [`corepack`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `0.24.1\n`,
+    });
+  });
+});
+
 it(`should require a version to be specified`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -89,7 +133,8 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
 for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of testedPackageManagers) {
   it(`should use the right package manager version for a given project (${name}@${version})`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`${name}@${version}`, `--version`])).resolves.toMatchObject({
+      const env = {...process.env, COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM: `1`};
+      await expect(runCli(cwd, [`${name}@${version}`, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,
@@ -99,7 +144,7 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
         packageManager: `${name}@${version}`,
       });
 
-      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [name, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,

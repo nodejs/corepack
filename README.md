@@ -234,6 +234,10 @@ same major line. Should you need to upgrade to a new major, use an explicit
   not to lookup on the remote registry for the latest version of the selected
   package manager.
 
+- `COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM` can be set to `1` to allow use of
+  custom URLs to load a package manager known by Corepack (`yarn`, `npm`, and
+  `pnpm`).
+
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing
   the network (in which case you'll be responsible for hydrating the package
   manager versions that will be required for the projects you'll run, using
