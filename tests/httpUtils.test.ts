@@ -4,10 +4,10 @@ import {fetchUrlStream}                                    from '../sources/http
 
 
 describe(`http utils fetchUrlStream`, () => {
-  const getUrl = (statusCode: number | string, redirectCode?: number | string) =>
-    `https://registry.example.org/answered/${statusCode}${redirectCode ? `?redirectCode=${redirectCode}` : ``}`;
+  const getUrl = (statusCode: number | string, redirectCode?: number | string, protocol: string = `https:`) =>
+    `${protocol}//registry.example.org/answered/${statusCode}${redirectCode ? `?redirectCode=${redirectCode}` : ``}`;
 
-  const httpsGetFn = jest.fn((url: string, _, callback: (response: any) => void) => {
+  const mockGetImpl = (url: string, _, callback: (response: any) => void) => {
     const parsedURL = new URL(url);
     const statusCode = parsedURL.pathname.slice(parsedURL.pathname.lastIndexOf(`/`) + 1);
     const response = {url, statusCode: +statusCode};
@@ -34,12 +34,19 @@ describe(`http utils fetchUrlStream`, () => {
         }
       },
     };
-  });
+  };
+
+  const httpsGetFn = jest.fn(mockGetImpl);
+  const httpGetFn = jest.fn(mockGetImpl);
 
   beforeAll(() => {
     jest.doMock(`https`, () => ({
       get: httpsGetFn,
-      Agent: class Agent {},
+      Agent: class Agent { },
+    }));
+
+    jest.doMock(`http`, () => ({
+      get: httpGetFn,
     }));
   });
 
@@ -91,5 +98,13 @@ describe(`http utils fetchUrlStream`, () => {
 
   it(`rejects when redirection with error`, async () => {
     await expect(fetchUrlStream(getUrl(307, `error`))).rejects.toThrowError();
+  });
+
+  it(`supports http:// urls`, async () => {
+    await expect(fetchUrlStream(getUrl(200, undefined, `http:`))).resolves.toMatchObject({
+      statusCode: 200,
+    });
+
+    expect(httpGetFn).toHaveBeenCalledTimes(1);
   });
 });

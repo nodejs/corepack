@@ -6,7 +6,9 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${url}`);
 
-  const {default: https} = await import(`https`);
+  const {get} = url.startsWith(`http://`)
+    ? await import(`http`)
+    : await import(`https`);
 
   const {ProxyAgent} = await import(`proxy-agent`);
 
@@ -14,7 +16,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   return new Promise<IncomingMessage>((resolve, reject) => {
     const createRequest = (url: string) => {
-      const request: ClientRequest = https.get(url, {...options, agent: proxyAgent}, response => {
+      const request: ClientRequest = get(url, {...options, agent: proxyAgent}, response => {
         const statusCode = response.statusCode;
 
         if ([301, 302, 307, 308].includes(statusCode as number) && response.headers.location)
