@@ -223,6 +223,13 @@ same major line. Should you need to upgrade to a new major, use an explicit
   not to lookup on the remote registry for the latest version of the selected
   package manager.
 
+- `COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD` can be set to `0` to
+  prevent Corepack from asking for validation before downloading software from
+  the network, or on the contrary set to `1` to force Corepack to ask for
+  explicit consent. By default, Corepack will ask for explicit consent only when
+  Corepack is used implicitly (i.e. `corepack pnpm …` won't ask for explicit
+  consent, `pnpm …` would).
+
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing
   the network (in which case you'll be responsible for hydrating the package
   manager versions that will be required for the projects you'll run, using

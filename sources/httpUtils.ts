@@ -1,6 +1,8 @@
-import {UsageError}                     from 'clipanion';
-import {RequestOptions}                 from 'https';
-import {IncomingMessage, ClientRequest} from 'http';
+import {UsageError}                          from 'clipanion';
+import {once}                                from 'events';
+import type {RequestOptions}                 from 'https';
+import type {IncomingMessage, ClientRequest} from 'http';
+import {stderr, stdin}                       from 'process';
 
 export async function fetchUrlStream(url: string, options: RequestOptions = {}) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -12,7 +14,19 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const proxyAgent = new ProxyAgent();
 
-  console.log(`Corepack: Fetching ${url}...`);
+  if (process.env.COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD !== `0`) {
+    console.error(`Corepack is about to download ${url}.`);
+    stderr.write(`\nDo you want to continue? [Y/n] `);
+    stdin.resume();
+    const chars = await once(stdin, `data`);
+    stdin.pause();
+    if (
+      chars[0][0] === 0x6e || // n
+      chars[0][0] === 0x4e // N
+    ) {
+      throw new UsageError(`Aborted by the user`);
+    }
+  }
 
   return new Promise<IncomingMessage>((resolve, reject) => {
     const createRequest = (url: string) => {
