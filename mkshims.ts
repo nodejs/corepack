@@ -21,7 +21,7 @@ async function main() {
   const corepackPath = path.join(distDir, `corepack.js`);
   fs.writeFileSync(corepackPath, [
     `#!/usr/bin/env node`,
-    `process.env.COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD??='0'`,
+    `process.env.COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD??='0';`,
     `require('./lib/corepack.cjs').runMain(process.argv.slice(2));`,
   ].join(`\n`));
   fs.chmodSync(corepackPath, 0o755);

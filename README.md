@@ -224,11 +224,12 @@ same major line. Should you need to upgrade to a new major, use an explicit
   package manager.
 
 - `COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD` can be set to `0` to
-  prevent Corepack from asking for validation before downloading software from
-  the network, or on the contrary set to `1` to force Corepack to ask for
-  explicit consent. By default, Corepack will ask for explicit consent only when
-  Corepack is used implicitly (i.e. `corepack pnpm …` won't ask for explicit
-  consent, `pnpm …` would).
+  prevent Corepack showing the URL when it needs to download software, or can be
+  set to `1` to have the URL shown. By default, when Corepack is called
+  explicitly (e.g. `corepack pnpm …`), it is set to `0`; when Corepack is called
+  implicitely (e.g. `pnpm …`), it is set to `1`.
+  When standard input is a TTY and no CI environment is detected, Corepack will
+  ask for user input before starting the download.
 
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing
   the network (in which case you'll be responsible for hydrating the package
