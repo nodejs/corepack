@@ -3,6 +3,8 @@ import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
+import * as debugUtils                                  from './debugUtils';
+import {getInstallFolder}                               from './folderUtils';
 import {NodeError}                                      from './nodeUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
@@ -122,6 +124,27 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   const rawPmSpec = selection.data.packageManager;
   if (typeof rawPmSpec === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath};
+
+  const pathToListFile = path.join(getInstallFolder(), `packageJsonList.json`);
+  try {
+    const file = await fs.promises.open(pathToListFile, `r+`);
+    const list = JSON.parse(await file.readFile(`utf8`)) as Array<string>;
+    if (!list?.includes(selection.manifestPath)) {
+      list.push(selection.manifestPath);
+      await file.truncate(0);
+      await file.write(JSON.stringify(list), 0);
+    }
+    await file.close();
+  } catch (err) {
+    if ((err as NodeError)?.code === `ENOENT`) {
+      // If the file doesn't exist yet, we can create it.
+      await fs.promises.writeFile(pathToListFile, JSON.stringify([selection.manifestPath]))
+        .catch(debugUtils.log);
+    } else {
+      // In case of another error, ignore it.
+      debugUtils.log(`Failed to update packageJsonList file because of the following error: ${err}`);
+    }
+  }
 
   return {
     type: `Found`,
