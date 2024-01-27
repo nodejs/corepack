@@ -223,7 +223,7 @@ same major line. Should you need to upgrade to a new major, use an explicit
   not to lookup on the remote registry for the latest version of the selected
   package manager.
 
-- `COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD` can be set to `0` to
+- `COREPACK_ENABLE_DOWNLOAD_PROMPT` can be set to `0` to
   prevent Corepack showing the URL when it needs to download software, or can be
   set to `1` to have the URL shown. By default, when Corepack is called
   explicitly (e.g. `corepack pnpm …`), it is set to `0`; when Corepack is called

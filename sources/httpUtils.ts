@@ -14,7 +14,7 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
 
   const proxyAgent = new ProxyAgent();
 
-  if (process.env.COREPACK_ENABLE_EXPLICIT_VALIDATION_BEFORE_DOWNLOAD === `1`) {
+  if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
     console.error(`Corepack is about to download ${url}.`);
     if (stdin.isTTY && !process.env.CI) {
       stderr.write(`\nDo you want to continue? [Y/n] `);
