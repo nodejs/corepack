@@ -11,6 +11,7 @@ import * as folderUtils                                       from './folderUtil
 import * as semverUtils                                       from './semverUtils';
 import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import {isSupportedPackageManager}                            from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -159,7 +160,10 @@ export class Engine {
   }
 
   async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
-    if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
+    if (!corepackUtils.isNotURLDescriptor(descriptor)) {
+      if (process.env.COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM !== `1` && isSupportedPackageManager(descriptor.name))
+        throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM=1 in your environment (${raw})`);
+
       return {
         name: descriptor.name,
         reference: new URL(descriptor.range),

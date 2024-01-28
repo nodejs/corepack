@@ -29,7 +29,7 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
   });
 });
 
-it.failing(`should refuse to download a known package manager from a URL`, async () => {
+it(`should refuse to download a known package manager from a URL`, async () => {
   await xfs.mktempPromise(async cwd => {
     // Package managers known by Corepack cannot be loaded from a URL.
     await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
@@ -40,6 +40,13 @@ it.failing(`should refuse to download a known package manager from a URL`, async
 
     // Unknown package managers can be loaded from a URL.
     await expect(runCli(cwd, [`corepack@https://registry.npmjs.com/corepack/-/corepack-0.24.1.tgz`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `0.24.1\n`,
+    });
+
+    // URLs that contains `@` char should be supported
+    await expect(runCli(cwd, [`corepack@https://user:pass@registry.npmjs.com/corepack/-/corepack-0.24.1.tgz`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `0.24.1\n`,

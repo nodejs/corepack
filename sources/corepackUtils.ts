@@ -102,7 +102,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   return bestMatch;
 }
 
-export function   isSupportedPackageManagerDescriptor(descriptor: Descriptor): descriptor is SupportedPackageManagerDescriptor {
+export function isNotURLDescriptor(descriptor: Descriptor): descriptor is SupportedPackageManagerDescriptor {
   return !URL.canParse(descriptor.range);
 }
 
