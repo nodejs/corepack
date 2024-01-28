@@ -165,7 +165,6 @@ export class Engine {
     });
     try {
       await activatePackageManagerFromFileHandle(lastKnownGoodFile, emptyFile || await getJSONFileContent(lastKnownGoodFile), locator);
-      await lastKnownGoodFile.close();
     } finally {
       await lastKnownGoodFile.close();
     }
