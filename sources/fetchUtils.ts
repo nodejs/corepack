@@ -1,6 +1,8 @@
-import {UsageError} from 'clipanion';
-import fs           from 'node:fs';
-import path         from 'node:path';
+import {UsageError}    from 'clipanion';
+import {once}          from 'events';
+import fs              from 'node:fs';
+import path            from 'node:path';
+import {stderr, stdin} from 'process';
 
 let mocks: Map<string, {
   body: ArrayBuffer;
@@ -75,11 +77,42 @@ export async function fetch(input: string | URL, init?: RequestInit) {
   }
 }
 
+export async function fetchJSON(input: string | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    const truncated = text.length > 30
+      ? `${text.slice(0, 30)}...`
+      : text;
+
+    throw new Error(`Couldn't parse JSON data: ${JSON.stringify(truncated)}`);
+  }
+}
+
 async function fetchWrapper(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
   const agent = await getProxyAgent(input);
+
+  if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
+    console.error(`Corepack is about to download ${input}.`);
+    if (stdin.isTTY && !process.env.CI) {
+      stderr.write(`\nDo you want to continue? [Y/n] `);
+      stdin.resume();
+      const chars = await once(stdin, `data`);
+      stdin.pause();
+      if (
+        chars[0][0] === 0x6e || // n
+        chars[0][0] === 0x4e // N
+      ) {
+        throw new UsageError(`Aborted by the user`);
+      }
+    }
+  }
 
   let response;
   try {
