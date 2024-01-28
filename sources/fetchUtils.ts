@@ -13,12 +13,17 @@ export async function fetchWrapper(input: string | URL, init?: RequestInit) {
       dispatcher: agent,
     });
   } catch (error) {
-    throw new Error(`Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`, {cause: error});
+    throw new Error(
+      `Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
+      {cause: error},
+    );
   }
 
   if (!response.ok) {
     await response.arrayBuffer();
-    throw new Error(`Server answered with HTTP ${response.status} when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`);
+    throw new Error(
+      `Server answered with HTTP ${response.status} when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
+    );
   }
 
   return response;
@@ -29,8 +34,7 @@ async function getAgent(input: string | URL) {
 
   const proxy = getProxyForUrl(input.toString());
 
-  if (!proxy)
-    return undefined;
+  if (!proxy) return undefined;
 
   // Doing a deep import here since undici isn't tree-shakeable
   const {default: ProxyAgent} = (await import(
