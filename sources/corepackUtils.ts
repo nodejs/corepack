@@ -1,5 +1,6 @@
 import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
+import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
@@ -196,8 +197,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   if (process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
-    const lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
+    let lastKnownGoodFile: FileHandle;
     try {
+      lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
       const lastKnownGood = await engine.getJSONFileContent(lastKnownGoodFile);
       const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
       if (defaultVersion) {
@@ -206,8 +208,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
           await engine.activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, locator);
         }
       }
+    } catch (err) {
+      // ENOENT would mean there are no lastKnownGoodFile, in which case we can ignore.
+      if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
+        throw err;
+      }
     } finally {
-      await lastKnownGoodFile.close();
+      // @ts-expect-error used before assigned
+      await lastKnownGoodFile?.close();
     }
   }
 

@@ -10,6 +10,7 @@ import defaultConfig                                          from '../config.js
 import * as corepackUtils                                     from './corepackUtils';
 import * as debugUtils                                        from './debugUtils';
 import * as folderUtils                                       from './folderUtils';
+import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
 import {Config, Descriptor, Locator}                          from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
@@ -121,9 +122,17 @@ export class Engine {
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
-    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`);
+    let emptyFile = false;
+    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
+      if ((err as NodeError)?.code === `ENOENT`) {
+        emptyFile = true;
+        return getLastKnownGoodFile(`w`);
+      }
+
+      throw err;
+    });
     try {
-      const lastKnownGood = await getJSONFileContent(lastKnownGoodFile);
+      const lastKnownGood = emptyFile || await getJSONFileContent(lastKnownGoodFile);
       const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
       if (lastKnownGoodForThisPackageManager)
         return lastKnownGoodForThisPackageManager;
@@ -145,9 +154,17 @@ export class Engine {
   }
 
   async activatePackageManager(locator: Locator) {
-    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`);
+    let emptyFile = false;
+    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
+      if ((err as NodeError)?.code === `ENOENT`) {
+        emptyFile = true;
+        return getLastKnownGoodFile(`w`);
+      }
+
+      throw err;
+    });
     try {
-      await activatePackageManagerFromFileHandle(lastKnownGoodFile, await getJSONFileContent(lastKnownGoodFile), locator);
+      await activatePackageManagerFromFileHandle(lastKnownGoodFile, emptyFile || await getJSONFileContent(lastKnownGoodFile), locator);
       await lastKnownGoodFile.close();
     } finally {
       await lastKnownGoodFile.close();
