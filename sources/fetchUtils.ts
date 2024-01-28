@@ -8,7 +8,7 @@ export async function fetchWrapper(input: string | URL, init?: RequestInit) {
 
   let response;
   try {
-    response = await fetch(input, {
+    response = await globalThis.fetch(input, {
       ...init,
       dispatcher: agent,
     });
