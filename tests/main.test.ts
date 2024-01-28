@@ -100,7 +100,7 @@ for (const [name, version] of testedPackageManagers) {
   });
 }
 
-it(`should update the Known Good Release when the major matches`, async () => {
+it(`should update the Known Good Release only when the major matches`, async () => {
   await xfs.writeJsonPromise(ppath.join(corepackHome, `lastKnownGood.json`), {
     yarn: `1.0.0`,
   });
@@ -116,6 +116,24 @@ it(`should update the Known Good Release when the major matches`, async () => {
       exitCode: 0,
       stderr: ``,
       stdout: `1.22.4\n`,
+    });
+
+    await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `2.2.2\n`,
     });
 
     await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
