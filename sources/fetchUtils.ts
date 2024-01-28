@@ -10,7 +10,7 @@ let mocks: Map<string, {
   headers: Record<string, string>;
 }>;
 
-if (process.env.NODE_ENV === `test` && process.env.NOCK_ENV === `record`) {
+if (process.env.NOCK_ENV === `record`) {
   process.once(`exit`, () => {
     if (!mocks)
       return;
@@ -40,9 +40,7 @@ export async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
-  if (process.env.NODE_ENV !== `test`) {
-    return fetchWrapper(input, init);
-  } else if (process.env.NOCK_ENV === `record`) {
+  if (process.env.NOCK_ENV === `record`) {
     const response = await fetchWrapper(input, init);
     const data = await response.arrayBuffer();
 
