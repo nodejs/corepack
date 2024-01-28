@@ -41,8 +41,6 @@
     "eslint": "^8.0.0",
     "eslint-plugin-arca": "^0.16.0",
     "jest": "^29.0.0",
-    "nock": "^13.0.4",
-    "proxy-agent": "^6.2.2",
     "proxy-from-env": "^1.1.0",
     "semver": "^7.5.2",
     "supports-color": "^9.0.0",
@@ -97,8 +95,5 @@
       "./shims/yarnpkg",
       "./shims/yarnpkg.ps1"
     ]
-  },
-  "resolutions": {
-    "vm2": "portal:./vm2"
   }
 }
