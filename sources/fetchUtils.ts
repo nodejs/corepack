@@ -37,6 +37,9 @@ function getMocks() {
 }
 
 export async function fetch(input: string | URL, init?: RequestInit) {
+  if (process.env.COREPACK_ENABLE_NETWORK === `0`)
+    throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
+
   if (process.env.NODE_ENV !== `test`) {
     return fetchWrapper(input, init);
   } else if (process.env.NOCK_ENV === `record`) {
@@ -92,9 +95,6 @@ export async function fetchJSON(input: string | URL, init?: RequestInit) {
 }
 
 async function fetchWrapper(input: string | URL, init?: RequestInit) {
-  if (process.env.COREPACK_ENABLE_NETWORK === `0`)
-    throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
-
   const agent = await getProxyAgent(input);
 
   if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
