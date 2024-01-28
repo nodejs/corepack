@@ -37,10 +37,9 @@ function getMocks() {
 }
 
 export async function fetch(input: string | URL, init?: RequestInit) {
-  if (process.env.NODE_ENV !== `test`)
+  if (process.env.NODE_ENV !== `test`) {
     return fetchWrapper(input, init);
-
-  if (process.env.NOCK_ENV === `record`) {
+  } else if (process.env.NOCK_ENV === `record`) {
     const response = await fetchWrapper(input, init);
     const data = await response.arrayBuffer();
 
