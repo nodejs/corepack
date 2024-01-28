@@ -155,8 +155,8 @@ async function getProxyAgent(input: string | URL) {
 
 function getNockFile() {
   return path.join(
-    __dirname,
-    `../tests/nock`,
+    path.dirname(require.resolve(`corepack/package.json`)),
+    `tests/nock`,
     `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.json`,
   );
 }
