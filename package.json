@@ -47,6 +47,7 @@
     "tar": "^6.0.1",
     "ts-node": "^10.0.0",
     "typescript": "^5.0.4",
+    "undici": "^6.4.0",
     "v8-compile-cache": "^2.3.0",
     "which": "^4.0.0"
   },
