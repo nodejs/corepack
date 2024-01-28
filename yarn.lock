@@ -1318,6 +1318,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/proxy-from-env@npm:^1":
+  version: 1.0.4
+  resolution: "@types/proxy-from-env@npm:1.0.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: ff2baedf8b5513ebf76bbe1b80079be45cc84c603951080656d2df64fcea2d3206489f22ec76f64cc3123b1c2a6836f97ed131a7456c769e22059dbca5904c35
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.1.0, @types/semver@npm:^7.5.0":
   version: 7.5.6
   resolution: "@types/semver@npm:7.5.6"
@@ -2164,6 +2173,7 @@ __metadata:
     "@types/debug": "npm:^4.1.5"
     "@types/jest": "npm:^29.0.0"
     "@types/node": "npm:^20.4.6"
+    "@types/proxy-from-env": "npm:^1"
     "@types/semver": "npm:^7.1.0"
     "@types/tar": "npm:^6.0.0"
     "@types/which": "npm:^3.0.0"
@@ -2181,6 +2191,7 @@ __metadata:
     jest: "npm:^29.0.0"
     nock: "npm:^13.0.4"
     proxy-agent: "npm:^6.2.2"
+    proxy-from-env: "npm:^1.1.0"
     semver: "npm:^7.5.2"
     supports-color: "npm:^9.0.0"
     tar: "npm:^6.0.1"
