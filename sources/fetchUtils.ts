@@ -4,7 +4,7 @@ export async function fetchWrapper(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
-  const agent = await getAgent(input);
+  const agent = await getProxyAgent(input);
 
   let response;
   try {
@@ -29,7 +29,7 @@ export async function fetchWrapper(input: string | URL, init?: RequestInit) {
   return response;
 }
 
-async function getAgent(input: string | URL) {
+async function getProxyAgent(input: string | URL) {
   const {getProxyForUrl} = await import(`proxy-from-env`);
 
   const proxy = getProxyForUrl(input.toString());
