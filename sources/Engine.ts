@@ -207,8 +207,8 @@ export class Engine {
 
   async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
     if (!corepackUtils.isNotURLDescriptor(descriptor)) {
-      if (process.env.COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM !== `1` && isSupportedPackageManager(descriptor.name))
-        throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM=1 in your environment (${descriptor.name}@${descriptor.range})`);
+      if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
+        throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
 
       return {
         name: descriptor.name,

@@ -38,8 +38,8 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
     if (!isSupportedPackageManager(name)) {
       throw new UsageError(`Unsupported package manager specification (${raw})`);
     }
-  } else if (isSupportedPackageManager(name) && process.env.COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM !== `1`) {
-    throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM=1 in your environment (${raw})`);
+  } else if (isSupportedPackageManager(name) && process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1`) {
+    throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${raw})`);
   }
 
 

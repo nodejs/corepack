@@ -243,7 +243,7 @@ same major line. Should you need to upgrade to a new major, use an explicit
   When standard input is a TTY and no CI environment is detected, Corepack will
   ask for user input before starting the download.
 
-- `COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM` can be set to `1` to allow use of
+- `COREPACK_ENABLE_UNSAFE_CUSTOM_URLS` can be set to `1` to allow use of
   custom URLs to load a package manager known by Corepack (`yarn`, `npm`, and
   `pnpm`).
 
