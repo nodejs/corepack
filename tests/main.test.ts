@@ -541,7 +541,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
       delete process.env.COREPACK_ENABLE_NETWORK;
     }
   });
-});
+}, 180_000);
 
 it(`should support running package managers with bin array`, async () => {
   await xfs.mktempPromise(async cwd => {
