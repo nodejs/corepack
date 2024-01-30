@@ -95,15 +95,15 @@ use in the archive).
 ## Known Good Releases
 
 When running Corepack within projects that don't list a supported package
-manager, it will default to a set of Known Good Releases. In a way, you can
-compare this to Node.js, where each version ships with a specific version of
-npm.
+manager, it will default to a set of Known Good Releases.
 
 If there is no Known Good Release for the requested package manager, Corepack
 looks up the npm registry for the latest available version and cache it for
 future use.
 
 The Known Good Releases can be updated system-wide using `corepack install -g`.
+When Corepack downloads a new version of a given package manager on the same
+major line as the Known Good Release, it auto-updates it by default.
 
 ## Offline Workflow
 
@@ -232,7 +232,16 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
   not to lookup on the remote registry for the latest version of the selected
-  package manager.
+  package manager, and to not update the Last Known Good version when it
+  downloads a new version of the same major line.
+
+- `COREPACK_ENABLE_DOWNLOAD_PROMPT` can be set to `0` to
+  prevent Corepack showing the URL when it needs to download software, or can be
+  set to `1` to have the URL shown. By default, when Corepack is called
+  explicitly (e.g. `corepack pnpm …`), it is set to `0`; when Corepack is called
+  implicitely (e.g. `pnpm …`), it is set to `1`.
+  When standard input is a TTY and no CI environment is detected, Corepack will
+  ask for user input before starting the download.
 
 - `COREPACK_ENABLE_URL_VERSION_FOR_KNOWN_PM` can be set to `1` to allow use of
   custom URLs to load a package manager known by Corepack (`yarn`, `npm`, and

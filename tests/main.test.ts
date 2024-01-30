@@ -160,6 +160,52 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
   });
 }
 
+it(`should update the Known Good Release only when the major matches`, async () => {
+  await xfs.writeJsonPromise(ppath.join(corepackHome, `lastKnownGood.json`), {
+    yarn: `1.0.0`,
+  });
+
+  process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+
+    await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `2.2.2\n`,
+    });
+
+    await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+  });
+});
+
 it(`should ignore the packageManager field when found within a node_modules vendor`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.mkdirPromise(ppath.join(cwd, `node_modules/foo` as PortablePath), {recursive: true});
