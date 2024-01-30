@@ -77,21 +77,6 @@ export async function fetch(input: string | URL, init?: RequestInit) {
   }
 }
 
-export async function fetchJSON(input: string | URL, init?: RequestInit) {
-  const response = await fetch(input, init);
-  const text = await response.text();
-
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    const truncated = text.length > 30
-      ? `${text.slice(0, 30)}...`
-      : text;
-
-    throw new Error(`Couldn't parse JSON data: ${JSON.stringify(truncated)}`);
-  }
-}
-
 async function fetchWrapper(input: string | URL, init?: RequestInit) {
   const agent = await getProxyAgent(input);
 

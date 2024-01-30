@@ -1,6 +1,6 @@
 import {UsageError} from 'clipanion';
 
-import {fetchJSON}  from './fetchUtils';
+import {fetch}      from './fetchUtils';
 
 // load abbreviated metadata as that's all we need for these calls
 // see: https://github.com/npm/registry/blob/cfe04736f34db9274a780184d1cdb2fb3e4ead2a/docs/responses/package-metadata.md
@@ -25,7 +25,9 @@ export async function fetchAsJson(packageName: string) {
     headers.authorization = `Basic ${encodedCreds}`;
   }
 
-  return fetchJSON(`${npmRegistryUrl}/${packageName}`, {headers});
+  const response = await fetch(`${npmRegistryUrl}/${packageName}`, {headers});
+  const data: any = await response.json();
+  return data;
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
