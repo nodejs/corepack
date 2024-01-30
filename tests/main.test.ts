@@ -693,3 +693,21 @@ it(`should support package managers in ESM format`, async () => {
     });
   });
 });
+
+it(`should show a warning on stderr before downloading when enable`, async() => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+    try {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: `Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js.\n`,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT;
+    }
+  });
+});
