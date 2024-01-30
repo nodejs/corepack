@@ -14,7 +14,7 @@ jobs:
       release_created:  ${{ steps.release.outputs.release_created }}
       release_tag:  ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           release-type: node
