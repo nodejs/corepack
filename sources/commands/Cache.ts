@@ -9,7 +9,7 @@ import type {Context}     from '../main';
 import type {NodeError}   from '../nodeUtils';
 import {parseSpec}        from '../specUtils';
 
-export class CleanupCommand extends Command<Context> {
+export class CacheCommand extends Command<Context> {
   static paths = [
     [`cache`, `clean`],
   ];
