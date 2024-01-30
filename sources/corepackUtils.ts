@@ -120,7 +120,7 @@ function parseURLReference(locator: URLLocator) {
       build: hash.slice(1).split(`.`),
     };
   }
-  return {version: href, build: []};
+  return {version: encodeURIComponent(href), build: []};
 }
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
