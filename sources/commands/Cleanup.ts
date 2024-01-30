@@ -11,7 +11,7 @@ import {parseSpec}        from '../specUtils';
 
 export class CleanupCommand extends Command<Context> {
   static paths = [
-    [`cleanup`],
+    [`cache`, `clean`],
   ];
 
   static usage = Command.Usage({
