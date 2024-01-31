@@ -10,10 +10,14 @@ import {makeBin, getBinaryNames}                                        from './
 import {runCli}                                                         from './_runCli';
 
 const engine = new Engine();
+let env: Record<string, string>;
 
 beforeEach(async () => {
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
-  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
+  env = {
+    ...process.env,
+    COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
+    COREPACK_DEFAULT_TO_LATEST: `0`,
+  };
 });
 
 describe(`EnableCommand`, () => {
@@ -21,17 +25,12 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
-      const PATH = process.env.PATH;
-      try {
-        process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
-          stdout: ``,
-          stderr: ``,
-          exitCode: 0,
-        });
-      } finally {
-        process.env.PATH = PATH;
-      }
+      env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`], {env})).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
 
       const sortedEntries = xfs.readdirPromise(cwd).then(entries => {
         return entries.sort();
@@ -50,7 +49,7 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
-      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)], {env})).resolves.toMatchObject({
         stdout: ``,
         stderr: ``,
         exitCode: 0,
@@ -73,17 +72,12 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
-      const PATH = process.env.PATH;
-      try {
-        process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
-          stdout: ``,
-          stderr: ``,
-          exitCode: 0,
-        });
-      } finally {
-        process.env.PATH = PATH;
-      }
+      env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`, `yarn`], {env})).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
 
       const sortedEntries = xfs.readdirPromise(cwd).then(entries => {
         return entries.sort();

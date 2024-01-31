@@ -7,12 +7,16 @@ import config                                      from '../config.json';
 import {runCli}                                    from './_runCli';
 
 let corepackHome!: PortablePath;
+let env: Record<string, string>;
 
 beforeEach(async () => {
   corepackHome = await xfs.mktempPromise();
 
-  process.env.COREPACK_HOME = npath.fromPortablePath(corepackHome);
-  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
+  env = {
+    ...process.env,
+    COREPACK_HOME: npath.fromPortablePath(corepackHome),
+    COREPACK_DEFAULT_TO_LATEST: `0`,
+  };
 });
 
 it(`should refuse to download a package manager if the hash doesn't match`, async () => {
@@ -21,7 +25,7 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
       packageManager: `yarn@1.22.4+sha1.deadbeef`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stderr: ``,
       stdout: /Mismatch hashes/,
@@ -35,7 +39,7 @@ it(`should require a version to be specified`, async () => {
       packageManager: `yarn`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stderr: ``,
       stdout: /expected a semver version/,
@@ -45,7 +49,7 @@ it(`should require a version to be specified`, async () => {
       packageManager: `yarn@stable`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stderr: ``,
       stdout: /expected a semver version/,
@@ -55,7 +59,7 @@ it(`should require a version to be specified`, async () => {
       packageManager: `yarn@^1.0.0`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stderr: ``,
       stdout: /expected a semver version/,
@@ -91,7 +95,7 @@ for (const [name, version] of testedPackageManagers) {
         packageManager: `${name}@${version}`,
       });
 
-      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [name, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
         stdout: `${version.split(`+`, 1)[0]}\n`,
@@ -105,7 +109,7 @@ it(`should update the Known Good Release only when the major matches`, async () 
     yarn: `1.0.0`,
   });
 
-  const env = {...process.env, COREPACK_DEFAULT_TO_LATEST: `1`};
+  env.COREPACK_DEFAULT_TO_LATEST = `1`;
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -163,13 +167,13 @@ it(`should ignore the packageManager field when found within a node_modules vend
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `1.22.4\n`,
     });
 
-    await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `node_modules/@foo/bar` as PortablePath), [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `1.22.4\n`,
@@ -189,7 +193,7 @@ it(`should use the closest matching packageManager field`, async () => {
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `6.14.2\n`,
@@ -203,7 +207,7 @@ it(`should expose its root to spawned processes`, async () => {
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`npm`, `run`, `env`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm`, `run`, `env`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}`),
     });
@@ -216,7 +220,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stderr: ``,
     });
@@ -229,7 +233,7 @@ it(`should allow using transparent commands on npm-configured projects`, async (
       packageManager: `npm@6.14.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `dlx`, `--help`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -238,7 +242,7 @@ it(`should allow using transparent commands on npm-configured projects`, async (
 
 it(`should transparently use the preconfigured version when there is no local project`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -255,19 +259,19 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
       stderr: ``,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pnpm`, `--version`], {env})).resolves.toMatchObject({
       stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
       stderr: ``,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm`, `--version`], {env})).resolves.toMatchObject({
       stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
       stderr: ``,
       exitCode: 0,
@@ -277,7 +281,7 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
 
 it(`should allow updating the pinned version using the "corepack install -g" command`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`install`, `-g`, `yarn@1.0.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `yarn@1.0.0`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -286,7 +290,7 @@ it(`should allow updating the pinned version using the "corepack install -g" com
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `1.0.0\n`,
       stderr: ``,
       exitCode: 0,
@@ -296,7 +300,7 @@ it(`should allow updating the pinned version using the "corepack install -g" com
 
 it(`should allow to call "corepack install -g" with a tag`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`install`, `-g`, `npm@latest-7`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `npm@latest-7`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -305,7 +309,7 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm`, `--version`], {env})).resolves.toMatchObject({
       stdout: expect.stringMatching(/^7\./),
       stderr: ``,
       exitCode: 0,
@@ -315,7 +319,7 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
 
 it(`should allow to call "corepack install -g" without any range`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`install`, `-g`, `yarn`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `yarn`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -324,7 +328,7 @@ it(`should allow to call "corepack install -g" without any range`, async () => {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: expect.not.stringMatching(/^[123]\./),
       stderr: ``,
       exitCode: 0,
@@ -338,13 +342,13 @@ it(`should allow to call "corepack install" without arguments within a configure
       packageManager: `yarn@1.0.0`,
     });
 
-    await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
 
     // Disable the network to make sure we don't succeed by accident
-    const env = {...process.env, COREPACK_ENABLE_NETWORK: `0`};
+    env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `1.0.0\n`,
@@ -360,7 +364,7 @@ it(`should refuse to run a different package manager within a configured project
       packageManager: `yarn@1.0.0`,
     });
 
-    const env = {...process.env, FORCE_COLOR: `0`} as Record<string, string>;
+    env.FORCE_COLOR = `0`;
 
     await expect(runCli(cwd, [`pnpm`, `--version`], {env})).resolves.toMatchObject({
       stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
@@ -389,7 +393,7 @@ it(`should always use fallback version when project spec env is disabled`, async
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@1.0.0`,
     });
-    const env = {...process.env, COREPACK_ENABLE_PROJECT_SPEC: `0`};
+    env.COREPACK_ENABLE_PROJECT_SPEC = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
@@ -410,12 +414,12 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`install`, `-g`, `--all`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `--all`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
 
-    const env = {...process.env, COREPACK_ENABLE_NETWORK: `0`};
+    env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
@@ -455,13 +459,13 @@ it(`should support disabling the network accesses from the environment`, async (
 
 it(`should support hydrating package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`], {env})).resolves.toMatchObject({
       stderr: ``,
       exitCode: 0,
     });
 
-    const env = {
-      ...process.env,
+    env = {
+      ...env,
 
       // Use a new cache
       COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
@@ -489,13 +493,13 @@ it(`should support hydrating package managers from cached archives`, async () =>
 
 it(`should support hydrating package managers if cache folder was removed`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
 
-    const env = {
-      ...process.env,
+    env = {
+      ...env,
 
       // Use a new cache
       COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
@@ -507,7 +511,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
     // Simulate cache removal
     await xfs.removePromise(npath.toPortablePath(env.COREPACK_HOME));
 
-    await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`], {env})).resolves.toMatchObject({
       stderr: ``,
       exitCode: 0,
     });
@@ -516,7 +520,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
       packageManager: `yarn@2.2.2`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `2.2.2\n`,
       stderr: ``,
       exitCode: 0,
@@ -526,13 +530,13 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
 
-    const env = {
-      ...process.env,
+    env = {
+      ...env,
 
       // Use a new cache
       COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
@@ -574,13 +578,13 @@ it(`should support running package managers with bin array`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    await expect(runCli(cwd, [`yarnpkg`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarnpkg`, `--version`], {env})).resolves.toMatchObject({
       stdout: `2.2.2\n`,
       stderr: ``,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       stdout: `2.2.2\n`,
       stderr: ``,
       exitCode: 0,
@@ -595,9 +599,9 @@ it(`should handle parallel installs`, async () => {
     });
 
     await expect(Promise.all([
-      runCli(cwd, [`yarn`, `--version`]),
-      runCli(cwd, [`yarn`, `--version`]),
-      runCli(cwd, [`yarn`, `--version`]),
+      runCli(cwd, [`yarn`, `--version`], {env}),
+      runCli(cwd, [`yarn`, `--version`], {env}),
+      runCli(cwd, [`yarn`, `--version`], {env}),
     ])).resolves.toMatchObject([
       {
         stdout: `2.2.2\n`,
@@ -632,7 +636,7 @@ it(`should not override the package manager exit code`, async () => {
       process.exitCode = 42;
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 42,
       stdout: ``,
       stderr: ``,
@@ -658,7 +662,7 @@ it(`should not preserve the process.exitCode when a package manager throws`, asy
       throw new Error('foo');
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 1,
       stdout: ``,
       stderr: expect.stringContaining(`foo`),
@@ -684,7 +688,7 @@ it(`should not set the exit code after successfully launching the package manage
       });
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 42,
       stdout: ``,
       stderr: ``,
@@ -711,7 +715,7 @@ it(`should support package managers in ESM format`, async () => {
       type: `module`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
       exitCode: 0,
       stdout: `42\n`,
       stderr: ``,
@@ -721,7 +725,7 @@ it(`should support package managers in ESM format`, async () => {
 
 it(`should show a warning on stderr before downloading when enable`, async() => {
   await xfs.mktempPromise(async cwd => {
-    const env = {...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: `1`};
+    env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@3.0.0`,
     });

@@ -4,9 +4,14 @@ import process                            from 'node:process';
 
 import {runCli}                           from './_runCli';
 
+let env: Record<string, string>;
+
 beforeEach(async () => {
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
-  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
+  env = {
+    ...process.env,
+    COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
+    COREPACK_DEFAULT_TO_LATEST: `0`,
+  };
 });
 
 describe(`UseCommand`, () => {
@@ -16,7 +21,7 @@ describe(`UseCommand`, () => {
         packageManager: `yarn@1.0.0`,
       });
 
-      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`use`, `yarn@1.22.4`], {env})).resolves.toMatchObject({
         exitCode: 0,
       });
 
@@ -24,7 +29,7 @@ describe(`UseCommand`, () => {
         packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stdout: `1.22.4\n`,
       });
@@ -33,7 +38,7 @@ describe(`UseCommand`, () => {
 
   it(`should create a package.json if absent`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`use`, `yarn@1.22.4`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stderr: `warning package.json: No license field\nwarning No license field\n`,
       });
@@ -42,7 +47,7 @@ describe(`UseCommand`, () => {
         packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stdout: `1.22.4\n`,
         stderr: ``,
@@ -52,11 +57,11 @@ describe(`UseCommand`, () => {
       const subfolder = ppath.join(cwd, `subfolder`);
       await xfs.mkdirPromise(subfolder);
 
-      await expect(runCli(subfolder, [`use`, `yarn@2.2.2`])).resolves.toMatchObject({
+      await expect(runCli(subfolder, [`use`, `yarn@2.2.2`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
       });
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
         exitCode: 0,
         stdout: `2.2.2\n`,
         stderr: ``,
