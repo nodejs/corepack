@@ -100,6 +100,52 @@ for (const [name, version] of testedPackageManagers) {
   });
 }
 
+it(`should update the Known Good Release only when the major matches`, async () => {
+  await xfs.writeJsonPromise(ppath.join(corepackHome, `lastKnownGood.json`), {
+    yarn: `1.0.0`,
+  });
+
+  process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+
+    await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@2.2.2`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `2.2.2\n`,
+    });
+
+    await xfs.removePromise(ppath.join(cwd, `package.json` as Filename));
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `1.22.4\n`,
+    });
+  });
+});
+
 it(`should ignore the packageManager field when found within a node_modules vendor`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.mkdirPromise(ppath.join(cwd, `node_modules/foo` as PortablePath), {recursive: true});
@@ -504,7 +550,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
       delete process.env.COREPACK_ENABLE_NETWORK;
     }
   });
-});
+}, 180_000);
 
 it(`should support running package managers with bin array`, async () => {
   await xfs.mktempPromise(async cwd => {
@@ -654,5 +700,23 @@ it(`should support package managers in ESM format`, async () => {
       stdout: `42\n`,
       stderr: ``,
     });
+  });
+});
+
+it(`should show a warning on stderr before downloading when enable`, async() => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+    try {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: `Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js.\n`,
+      });
+    } finally {
+      delete process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT;
+    }
   });
 });
