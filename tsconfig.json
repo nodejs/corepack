@@ -14,7 +14,4 @@
     "strict": true,
     "target": "ES2022"
   },
-  "ts-node": {
-    "transpileOnly": true
-  }
 }

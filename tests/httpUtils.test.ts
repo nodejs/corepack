@@ -1,6 +1,6 @@
-import {jest, describe, beforeEach, beforeAll, it, expect} from '@jest/globals';
+import {describe, beforeEach, before, it} from 'node:test';
 
-import {fetchUrlStream}                                    from '../sources/httpUtils';
+import {fetchUrlStream}                   from '../sources/httpUtils';
 
 
 describe(`http utils fetchUrlStream`, () => {
@@ -36,7 +36,7 @@ describe(`http utils fetchUrlStream`, () => {
     };
   });
 
-  beforeAll(() => {
+  before(() => {
     jest.doMock(`https`, () => ({
       get: httpsGetFn,
       Agent: class Agent {},

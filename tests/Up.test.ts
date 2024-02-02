@@ -1,8 +1,8 @@
-import {describe, beforeEach, it, expect} from '@jest/globals';
-import {ppath, xfs, npath}                from '@yarnpkg/fslib';
-import process                            from 'node:process';
+import {ppath, xfs, npath}        from '@yarnpkg/fslib';
+import process                    from 'node:process';
+import {describe, beforeEach, it} from 'node:test';
 
-import {runCli}                           from './_runCli';
+import {runCli}                   from './_runCli';
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());

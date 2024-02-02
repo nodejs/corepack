@@ -1,13 +1,11 @@
-/* global jest, expect, beforeEach, afterAll */
+import crypto              from 'crypto';
+import {beforeEach, after} from 'node:test';
 
-const crypto = require(`crypto`);
-
-jest.retryTimes(2, {logErrorsBeforeRetry: true});
 
 switch (process.env.NOCK_ENV || ``) {
   case `record`:
   case `replay`:
-    beforeEach(() => {
+    beforeEach(context => {
       // To ensure we test the default behavior, we must remove these env vars
       // in case the local machine already set these values.
       delete process.env.COREPACK_DEFAULT_TO_LATEST;
@@ -20,14 +18,14 @@ switch (process.env.NOCK_ENV || ``) {
       delete process.env.COREPACK_NPM_USERNAME;
       delete process.env.FORCE_COLOR;
 
-      process.env.RUN_CLI_ID = 0;
+      process.env.RUN_CLI_ID = `0`;
       process.env.NOCK_FILE_NAME = crypto
         .createHash(`md5`)
-        .update(expect.getState().currentTestName)
+        .update(context.name)
         .digest(`base64url`);
     });
 
-    afterAll(() => {
+    after(() => {
       delete process.env.RUN_CLI_ID;
       delete process.env.NOCK_FILE_NAME;
     });

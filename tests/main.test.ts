@@ -1,6 +1,7 @@
-import {beforeEach, it, expect}                    from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
+import assert                                      from 'node:assert/strict';
 import process                                     from 'node:process';
+import {beforeEach, it}                            from 'node:test';
 
 import config                                      from '../config.json';
 
@@ -595,13 +596,13 @@ it(`should support running package managers with bin array`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    await expect(runCli(cwd, [`yarnpkg`, `--version`])).resolves.toMatchObject({
+    assert.deepEqual(await runCli(cwd, [`yarnpkg`, `--version`]), {
       stdout: `2.2.2\n`,
       stderr: ``,
       exitCode: 0,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    assert.deepEqual(await runCli(cwd, [`yarn`, `--version`]), {
       stdout: `2.2.2\n`,
       stderr: ``,
       exitCode: 0,
@@ -615,11 +616,11 @@ it(`should handle parallel installs`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    await expect(Promise.all([
+    assert.deepEqual(await Promise.all([
       runCli(cwd, [`yarn`, `--version`]),
       runCli(cwd, [`yarn`, `--version`]),
       runCli(cwd, [`yarn`, `--version`]),
-    ])).resolves.toMatchObject([
+    ]), [
       {
         stdout: `2.2.2\n`,
         stderr: ``,
@@ -653,7 +654,7 @@ it(`should not override the package manager exit code`, async () => {
       process.exitCode = 42;
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    assert.deepEqual(await runCli(cwd, [`yarn`, `--version`]), {
       exitCode: 42,
       stdout: ``,
       stderr: ``,
@@ -679,11 +680,12 @@ it(`should not preserve the process.exitCode when a package manager throws`, asy
       throw new Error('foo');
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    const result = await runCli(cwd, [`yarn`, `--version`]);
+    assert.deepEqual(result, {
       exitCode: 1,
       stdout: ``,
-      stderr: expect.stringContaining(`foo`),
     });
+    assert.match(result.stderr, /foo/);
   });
 });
 
@@ -705,7 +707,7 @@ it(`should not set the exit code after successfully launching the package manage
       });
     `);
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    assert.deepEqual(await runCli(cwd, [`yarn`, `--version`]), {
       exitCode: 42,
       stdout: ``,
       stderr: ``,
@@ -732,7 +734,7 @@ it(`should support package managers in ESM format`, async () => {
       type: `module`,
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    assert.deepEqual(await runCli(cwd, [`yarn`, `--version`]), {
       exitCode: 0,
       stdout: `42\n`,
       stderr: ``,

@@ -1,8 +1,9 @@
-import {describe, beforeEach, it, expect} from '@jest/globals';
-import {ppath, xfs, npath}                from '@yarnpkg/fslib';
-import process                            from 'node:process';
+import {ppath, xfs, npath}        from '@yarnpkg/fslib';
+import assert                     from 'node:assert';
+import process                    from 'node:process';
+import {describe, beforeEach, it} from 'node:test';
 
-import {runCli}                           from './_runCli';
+import {runCli}                   from './_runCli';
 
 beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
@@ -16,15 +17,15 @@ describe(`UseCommand`, () => {
         packageManager: `yarn@1.0.0`,
       });
 
-      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+      assert.deepStrictEqual(await runCli(cwd, [`use`, `yarn@1.22.4`]), {
         exitCode: 0,
       });
 
-      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+      assert.deepStrictEqual(await xfs.readJsonPromise(ppath.join(cwd, `package.json`)), {
         packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      assert.deepStrictEqual(await runCli(cwd, [`yarn`, `--version`]), {
         exitCode: 0,
         stdout: `1.22.4\n`,
       });
