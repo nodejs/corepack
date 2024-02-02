@@ -116,7 +116,7 @@ export class InstallGlobalCommand extends BaseCommand {
         if (!isSupportedPackageManager(name))
           throw new UsageError(`Unsupported package manager '${name}'`);
 
-        this.log({name, reference});
+        this.log({name, reference, isURL: false});
 
         // Recreate the folder in case it was deleted somewhere else:
         await fs.promises.mkdir(installFolder, {recursive: true});
@@ -124,7 +124,7 @@ export class InstallGlobalCommand extends BaseCommand {
         await tar.x({file: p, cwd: installFolder}, [`${name}/${reference}`]);
 
         if (!this.cacheOnly) {
-          await this.context.engine.activatePackageManager({name, reference});
+          await this.context.engine.activatePackageManager({name, reference, isURL: false});
         }
       }
     }

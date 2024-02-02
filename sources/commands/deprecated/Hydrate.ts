@@ -59,7 +59,7 @@ export class HydrateCommand extends Command<Context> {
         await tar.x({file: fileName, cwd: installFolder}, [`${name}/${reference}`]);
 
         if (this.activate) {
-          await this.context.engine.activatePackageManager({name, reference});
+          await this.context.engine.activatePackageManager({name, reference, isURL: false});
         }
       }
     }

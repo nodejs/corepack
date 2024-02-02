@@ -129,7 +129,7 @@ export class Engine {
     const locators: Array<Descriptor> = [];
 
     for (const name of SupportedPackageManagerSet as Set<SupportedPackageManagers>)
-      locators.push({name, range: await this.getDefaultVersion(name)});
+      locators.push({name, range: await this.getDefaultVersion(name), isURL: false});
 
     return locators;
   }
@@ -162,6 +162,7 @@ export class Engine {
       await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
         name: packageManager,
         reference,
+        isURL: false,
       });
 
       return reference;
@@ -205,14 +206,15 @@ export class Engine {
 
   }
 
-  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
+  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {
     if (!corepackUtils.isNotURLDescriptor(descriptor)) {
       if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
         throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
 
       return {
         name: descriptor.name,
-        reference: new URL(descriptor.range),
+        reference: descriptor.range,
+        isURL: true,
       };
     }
 
@@ -239,6 +241,7 @@ export class Engine {
       finalDescriptor = {
         name: descriptor.name,
         range: tags[descriptor.range],
+        isURL: false,
       };
     }
 
@@ -246,12 +249,12 @@ export class Engine {
     // from the remote listings
     const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
-      return {name: finalDescriptor.name, reference: cachedVersion};
+      return {name: finalDescriptor.name, reference: cachedVersion, isURL: false};
 
     // If the user asked for a specific version, no need to request the list of
     // available versions from the registry.
     if (semver.valid(finalDescriptor.range))
-      return {name: finalDescriptor.name, reference: finalDescriptor.range};
+      return {name: finalDescriptor.name, reference: finalDescriptor.range, isURL: false};
 
     const versions = await Promise.all(Object.keys(definition.ranges).map(async range => {
       const packageManagerSpec = definition.ranges[range];
@@ -265,6 +268,6 @@ export class Engine {
     if (highestVersion.length === 0)
       return null;
 
-    return {name: finalDescriptor.name, reference: highestVersion[0]};
+    return {name: finalDescriptor.name, reference: highestVersion[0], isURL: false};
   }
 }

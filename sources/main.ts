@@ -48,8 +48,9 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
 
 async function executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, args: Array<string>, context: Context) {
   let fallbackLocator: Locator = {
-    name: binaryName,
+    name: binaryName as SupportedPackageManagers,
     reference: undefined as any,
+    isURL: false,
   };
   let isTransparentCommand = false;
   if (packageManager != null) {
@@ -73,6 +74,7 @@ async function executePackageManagerRequest({packageManager, binaryName, binaryV
     fallbackLocator = {
       name: packageManager,
       reference: fallbackReference,
+      isURL: false,
     };
   }
 

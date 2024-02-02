@@ -111,11 +111,11 @@ export function isNotURLDescriptor(descriptor: Descriptor): descriptor is Suppor
 }
 
 export function isSupportedPackageManagerLocator(locator: Locator): locator is SupportedPackageManagerLocator {
-  return typeof locator.reference === `string`;
+  return !locator.isURL;
 }
 
 function parseURLReference(locator: URLLocator) {
-  const {hash, href} = locator.reference;
+  const {hash, href} = new URL(locator.reference);
   if (hash) {
     return {
       version: encodeURIComponent(href.slice(0, -hash.length)),
@@ -127,7 +127,8 @@ function parseURLReference(locator: URLLocator) {
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
-  const {version, build} = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
+  const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
+  const {version, build} = locatorReference;
 
   const installFolder = path.join(installTarget, locator.name, version);
   const corepackFile = path.join(installFolder, `.corepack`);
@@ -239,7 +240,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  if (process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
+  if (locatorIsASupportedPackageManager && process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
     let lastKnownGoodFile: FileHandle;
     try {
       lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
@@ -247,7 +248,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
       if (defaultVersion) {
         const currentDefault = semver.parse(defaultVersion)!;
-        if (currentDefault.major === locatorReference.major && semver.lt(currentDefault, locatorReference)) {
+        const downloadedVersion = locatorReference as semver.SemVer;
+        if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
           await engine.activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, locator);
         }
       }

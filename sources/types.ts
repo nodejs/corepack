@@ -107,6 +107,8 @@ export interface SupportedPackageManagerDescriptor {
      * The range of versions allowed.
      */
   range: string;
+
+  isURL: false;
 }
 interface URLDescriptor {
   /**
@@ -118,6 +120,8 @@ interface URLDescriptor {
      * The range of versions allowed.
      */
   range: string;
+
+  isURL: true;
 }
 
 /**
@@ -135,8 +139,11 @@ export interface SupportedPackageManagerLocator {
      * The exact version required.
      */
   reference: string;
+
+  isURL: false;
 }
 export interface URLLocator {
   name: string;
-  reference: URL;
+  reference: string;
+  isURL: true;
 }
