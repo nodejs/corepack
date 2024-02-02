@@ -1,7 +1,8 @@
-import {describe, beforeEach, it, expect}     from '@jest/globals';
 import {Filename, ppath, xfs, npath}          from '@yarnpkg/fslib';
+import assert                                 from 'node:assert';
 import {delimiter}                            from 'node:path';
 import process                                from 'node:process';
+import {describe, beforeEach, it}             from 'node:test';
 
 import {Engine}                               from '../sources/Engine';
 import {SupportedPackageManagerSetWithoutNpm} from '../sources/types';
@@ -29,9 +30,7 @@ describe(`DisableCommand`, () => {
       const PATH = process.env.PATH;
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`disable`])).resolves.toMatchObject({
-          exitCode: 0,
-        });
+        assert.strictEqual((await runCli(cwd, [`disable`])).exitCode, 0);
       } finally {
         process.env.PATH = PATH;
       }
@@ -40,7 +39,7 @@ describe(`DisableCommand`, () => {
         return entries.sort();
       });
 
-      await expect(sortedEntries).resolves.toEqual([
+      assert.deepStrictEqual(await sortedEntries, [
         ppath.basename(corepackBin),
         ppath.basename(dontRemoveBin),
       ]);
@@ -56,11 +55,10 @@ describe(`DisableCommand`, () => {
           for (const variant of getBinaryNames(binName))
             await makeBin(cwd, variant as Filename, {ignorePlatform: true});
 
-      await expect(runCli(cwd, [`disable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
-        exitCode: 0,
-      });
-
-      await expect(xfs.readdirPromise(cwd)).resolves.toEqual([
+      const runResult = await runCli(cwd, [`disable`, `--install-directory`, npath.fromPortablePath(cwd)]);
+      assert.strictEqual(runResult.exitCode, 0);
+      const readdirResult = await xfs.readdirPromise(cwd);
+      assert.deepStrictEqual(readdirResult, [
         ppath.basename(dontRemoveBin),
       ]);
     });
@@ -87,9 +85,8 @@ describe(`DisableCommand`, () => {
       const PATH = process.env.PATH;
       try {
         process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${PATH}`;
-        await expect(runCli(cwd, [`disable`, `yarn`])).resolves.toMatchObject({
-          exitCode: 0,
-        });
+        const runResult = await runCli(cwd, [`disable`, `yarn`]);
+        assert.strictEqual(runResult.exitCode, 0);
       } finally {
         process.env.PATH = PATH;
       }
@@ -99,11 +96,10 @@ describe(`DisableCommand`, () => {
       for (const variant of getBinaryNames(`yarnpkg`))
         binNames.delete(variant);
 
-      const sortedEntries = xfs.readdirPromise(cwd).then(entries => {
+      const sortedEntries = await xfs.readdirPromise(cwd).then(entries => {
         return entries.sort();
       });
-
-      await expect(sortedEntries).resolves.toEqual([...binNames].sort());
+      assert.deepStrictEqual(sortedEntries, [...binNames].sort());
     });
   });
 });

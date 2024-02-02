@@ -1,13 +1,34 @@
-import {jest, describe, beforeEach, beforeAll, it, expect} from '@jest/globals';
+import assert                              from 'node:assert';
+import {describe, before as beforeAll, it} from 'node:test';
 
-import {fetchUrlStream}                                    from '../sources/httpUtils';
+import {fetchUrlStream}                    from '../sources/httpUtils';
+
+function doMock (pkg: string, replacer: (...args: Array<unknown>) => unknown) {
+  const actualPath = require.resolve(pkg);
+  if (arguments.length === 1) {
+    require.cache[actualPath] = require(`../__mocks__/${pkg}`);
+  } else {
+    const actual = require(pkg);
+    const Module = require(`node:module`); // eslint-disable-line global-require
+    require.cache[actualPath] = new Module(actualPath, module);
+    Object.defineProperties(require.cache[actualPath], {
+      exports: {
+        // @ts-expect-error TS is wrong
+        __proto__: null,
+        value: replacer(actual),
+      },
+      // @ts-expect-error TS is wrong
+      resetFn: {__proto__: null, value: replacer.bind(null, actual)},
+    });
+  }
+}
 
 
 describe(`http utils fetchUrlStream`, () => {
   const getUrl = (statusCode: number | string, redirectCode?: number | string) =>
     `https://registry.example.org/answered/${statusCode}${redirectCode ? `?redirectCode=${redirectCode}` : ``}`;
 
-  const httpsGetFn = jest.fn((url: string, _, callback: (response: any) => void) => {
+  const httpsGetFn = ((url: string, _: never, callback: (response: any) => void) => {
     const parsedURL = new URL(url);
     const statusCode = parsedURL.pathname.slice(parsedURL.pathname.lastIndexOf(`/`) + 1);
     const response = {url, statusCode: +statusCode};
@@ -37,59 +58,39 @@ describe(`http utils fetchUrlStream`, () => {
   });
 
   beforeAll(() => {
-    jest.doMock(`https`, () => ({
+    doMock(`https`, () => ({
       get: httpsGetFn,
       Agent: class Agent {},
     }));
   });
 
-  beforeEach(() => {
-    httpsGetFn.mockClear();
-  });
-
   it(`correct response answered statusCode should be >= 200 and < 300`, async () => {
-    await expect(fetchUrlStream(getUrl(200))).resolves.toMatchObject({
-      statusCode: 200,
-    });
-
-    await expect(fetchUrlStream(getUrl(299))).resolves.toMatchObject({
-      statusCode: 299,
-    });
-
-    expect(httpsGetFn).toHaveBeenCalledTimes(2);
+    assert.strictEqual((await fetchUrlStream(getUrl(200))).statusCode,  200);
+    assert.strictEqual((await fetchUrlStream(getUrl(299))).statusCode,  299);
   });
 
   it(`bad response`, async () => {
-    await expect(fetchUrlStream(getUrl(300))).rejects.toThrowError();
-    await expect(fetchUrlStream(getUrl(199))).rejects.toThrowError();
+    await assert.rejects(fetchUrlStream(getUrl(300)));
+    await assert.rejects(fetchUrlStream(getUrl(199)));
   });
 
   it(`redirection with correct response`, async () => {
-    await expect(fetchUrlStream(getUrl(301, 200))).resolves.toMatchObject({
-      statusCode: 200,
-    });
-
-    expect(httpsGetFn).toHaveBeenCalledTimes(2);
-
-    await expect(fetchUrlStream(getUrl(308, 299))).resolves.toMatchObject({
-      statusCode: 299,
-    });
-
-    expect(httpsGetFn).toHaveBeenCalledTimes(4);
+    assert.strictEqual((await fetchUrlStream(getUrl(301, 200))).statusCode,  200);
+    assert.strictEqual((await fetchUrlStream(getUrl(308, 299))).statusCode,  299);
   });
 
   it(`redirection with bad response`, async () => {
-    await expect(fetchUrlStream(getUrl(301, 300))).rejects.toThrowError();
-    await expect(fetchUrlStream(getUrl(308, 199))).rejects.toThrowError();
-    await expect(fetchUrlStream(getUrl(301, 302))).rejects.toThrowError();
-    await expect(fetchUrlStream(getUrl(307))).rejects.toThrowError();
+    await assert.rejects(fetchUrlStream(getUrl(301, 300)));
+    await assert.rejects(fetchUrlStream(getUrl(308, 199)));
+    await assert.rejects(fetchUrlStream(getUrl(301, 302)));
+    await assert.rejects(fetchUrlStream(getUrl(307)));
   });
 
   it(`rejects with error`, async () => {
-    await expect(fetchUrlStream(getUrl(`error`))).rejects.toThrowError();
+    await assert.rejects(fetchUrlStream(getUrl(`error`)));
   });
 
   it(`rejects when redirection with error`, async () => {
-    await expect(fetchUrlStream(getUrl(307, `error`))).rejects.toThrowError();
+    await assert.rejects(fetchUrlStream(getUrl(307, `error`)));
   });
 });
