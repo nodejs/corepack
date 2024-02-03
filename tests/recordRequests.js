@@ -1,5 +1,7 @@
-const fs = require(`fs`);
-const path = require(`path`);
+"use strict";
+const fs = require(`node:fs`);
+const path = require(`node:path`);
+const v8 = require(`node:v8`);
 
 /**
  * @type {Map<string, {body: ArrayBuffer, status:number, headers: Record<string,string>}>}
@@ -10,7 +12,7 @@ function getNockFile() {
   return path.join(
     __dirname,
     `nock`,
-    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.json`,
+    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`,
   );
 }
 
@@ -42,21 +44,10 @@ if (process.env.NOCK_ENV === `record`) {
   };
 
   process.once(`exit`, () => {
-    if (!mocks.size) return;
-
-    fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
-    fs.writeFileSync(
-      getNockFile(),
-      JSON.stringify(
-        Array.from(mocks.entries()),
-        (key, value) => {
-          return value instanceof ArrayBuffer
-            ? Buffer.from(value).toString(`base64`)
-            : value;
-        },
-        `\t`,
-      ),
-    );
+    if (mocks.size) {
+      fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
+      fs.writeFileSync(getNockFile(), v8.serialize(mocks));
+    }
   });
 } else if (process.env.NOCK_ENV === `replay`) {
   let mocksLoaded = false;
@@ -68,14 +59,7 @@ if (process.env.NOCK_ENV === `record`) {
         );
       }
 
-      mocks = new Map(
-        JSON.parse(fs.readFileSync(getNockFile(), `utf8`), (key, value) => {
-          return typeof value === `string` && key === `body`
-            ? Buffer.from(value, `base64`)
-            : value;
-        }),
-      );
-
+      mocks = v8.deserialize(fs.readFileSync(getNockFile()));
       mocksLoaded = true;
     }
 

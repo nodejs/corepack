@@ -23,7 +23,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          # Let's use the oldest version supported to be sure the V8
+          # serialization is compatible with all supported versions.
+          node-version: 18.x
 
       - name: Get the Yarn cache directory path
         id: yarn-cache-dir-path
