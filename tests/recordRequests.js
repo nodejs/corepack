@@ -4,7 +4,7 @@ const path = require(`node:path`);
 const v8 = require(`node:v8`);
 
 /**
- * @type {Map<string, {body: ArrayBuffer, status:number, headers: Record<string,string>}>}
+ * @type {Map<string, {body: string, status:number, headers: Record<string,string>}>}
  */
 let mocks = new Map();
 
@@ -32,7 +32,7 @@ if (process.env.NOCK_ENV === `record`) {
 
     mocks ??= new Map();
     mocks.set(input.toString(), {
-      body: data.slice(0),
+      body: Buffer.from(data).toString(`latin1`),
       status: response.status,
       headers: Object.fromEntries(minimalHeaders),
     });
@@ -66,7 +66,7 @@ if (process.env.NOCK_ENV === `record`) {
     const mock = mocks.get(input.toString());
     if (!mock) throw new Error(`No mock found for ${input}`);
 
-    return new Response(mock.body.slice(0), {
+    return new Response(Buffer.from(mock.body, `latin1`), {
       status: mock.status,
       headers: mock.headers,
     });
