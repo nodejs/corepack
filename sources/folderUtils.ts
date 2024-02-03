@@ -6,7 +6,12 @@ import process           from 'process';
 
 import type {NodeError}  from './nodeUtils';
 
-export function getInstallFolder() {
+/**
+ * If the install folder structure changes then increment this number.
+ */
+const INSTALL_FOLDER_VERSION = 1;
+
+export function getCorepackHomeFolder() {
   return (
     process.env.COREPACK_HOME ??
     join(
@@ -15,6 +20,13 @@ export function getInstallFolder() {
         join(homedir(), process.platform === `win32` ? `AppData/Local` : `.cache`),
       `node/corepack`,
     )
+  );
+}
+
+export function getInstallFolder() {
+  return join(
+    getCorepackHomeFolder(),
+    `v${INSTALL_FOLDER_VERSION}`,
   );
 }
 
