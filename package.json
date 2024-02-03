@@ -52,11 +52,11 @@
     "which": "^4.0.0"
   },
   "scripts": {
-    "build": "rm -rf dist shims && run build:bundle \"$@\" && ts-node ./mkshims.ts",
+    "build": "rm -rf dist shims && run build:bundle && ts-node ./mkshims.ts",
     "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node18.17.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
     "corepack": "ts-node ./sources/_cli.ts",
     "lint": "eslint .",
-    "prepack": "yarn build --define:process.env.NOCK_ENV=\\\"none\\\"",
+    "prepack": "yarn build",
     "postpack": "rm -rf dist shims",
     "typecheck": "tsc --noEmit",
     "test": "jest"
