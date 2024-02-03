@@ -32,7 +32,7 @@ if (process.env.NOCK_ENV === `record`) {
 
     mocks ??= new Map();
     mocks.set(input.toString(), {
-      body: data,
+      body: data.slice(0),
       status: response.status,
       headers: Object.fromEntries(minimalHeaders),
     });
@@ -66,7 +66,7 @@ if (process.env.NOCK_ENV === `record`) {
     const mock = mocks.get(input.toString());
     if (!mock) throw new Error(`No mock found for ${input}`);
 
-    return new Response(mock.body, {
+    return new Response(mock.body.slice(0), {
       status: mock.status,
       headers: mock.headers,
     });
