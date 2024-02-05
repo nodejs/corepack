@@ -6,7 +6,7 @@ import * as httpUtils        from './httpUtils';
 // load abbreviated metadata as that's all we need for these calls
 // see: https://github.com/npm/registry/blob/cfe04736f34db9274a780184d1cdb2fb3e4ead2a/docs/responses/package-metadata.md
 export const DEFAULT_HEADERS: OutgoingHttpHeaders = {
-  [`Accept`]: `application/vnd.npm.install-v1+json`,
+  [`Accept`]: `application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8`,
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 

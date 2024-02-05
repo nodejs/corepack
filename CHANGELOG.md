@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.24.1](https://github.com/nodejs/corepack/compare/v0.24.0...v0.24.1) (2024-01-13)
+
+
+### Features
+
+* update package manager versions ([#348](https://github.com/nodejs/corepack/issues/348)) ([cc3ada7](https://github.com/nodejs/corepack/commit/cc3ada73bccd0a5b0ff16834e518efa521c9eea4))
+
+
+### Bug Fixes
+
+* **use:** create `package.json` when calling `corepack use` on empty dir ([#350](https://github.com/nodejs/corepack/issues/350)) ([2950a8a](https://github.com/nodejs/corepack/commit/2950a8a30b64b4598abc354e45400e83d56e541b))
+
+## [0.24.0](https://github.com/nodejs/corepack/compare/v0.23.0...v0.24.0) (2023-12-29)
+
+
+### Features
+
+* add support for HTTP redirect ([#341](https://github.com/nodejs/corepack/issues/341)) ([6df5063](https://github.com/nodejs/corepack/commit/6df5063b14868ff21499a051e5122fa7211be6ed))
+* add support for rangeless commands ([#338](https://github.com/nodejs/corepack/issues/338)) ([9bee415](https://github.com/nodejs/corepack/commit/9bee4150815113d97f0bd77d62c8d999cfd68ad3))
+* update package manager versions ([#330](https://github.com/nodejs/corepack/issues/330)) ([cfcc280](https://github.com/nodejs/corepack/commit/cfcc28047a788daeef2c0b15ee35a8b1a8149bb6))
+* **yarn:** fallback to npm when `COREPACK_NPM_REGISTRY` is set ([#339](https://github.com/nodejs/corepack/issues/339)) ([0717c6a](https://github.com/nodejs/corepack/commit/0717c6af898e075f57c5694d699a3c51e79a024c))
+
+
+### Bug Fixes
+
+* clarify `EACCES` errors ([#343](https://github.com/nodejs/corepack/issues/343)) ([518bed8](https://github.com/nodejs/corepack/commit/518bed8b7d7c313163c79d31cb9bbc023dba6560))
+
+## [0.23.0](https://github.com/nodejs/corepack/compare/v0.22.0...v0.23.0) (2023-11-05)
+
+
+### Features
+
+* update package manager versions ([#325](https://github.com/nodejs/corepack/issues/325)) ([450cd33](https://github.com/nodejs/corepack/commit/450cd332d00d3428f49ed09a4235bd12139931c9))
+
+## [0.22.0](https://github.com/nodejs/corepack/compare/v0.21.0...v0.22.0) (2023-10-21)
+
+
+### Features
+
+* allow fallback to application/json for custom registries ([#314](https://github.com/nodejs/corepack/issues/314)) ([92f8e71](https://github.com/nodejs/corepack/commit/92f8e71f8c97c44f404ce9b7df8787a4292e6830))
+* update package manager versions ([#318](https://github.com/nodejs/corepack/issues/318)) ([0bd2577](https://github.com/nodejs/corepack/commit/0bd2577bb4c6c3a5a33ecdb3b6ca2ff244c54f28))
+
+## [0.21.0](https://github.com/nodejs/corepack/compare/v0.20.0...v0.21.0) (2023-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove support for Node.js 16.x
+
+### Features
+
+* update package manager versions ([#297](https://github.com/nodejs/corepack/issues/297)) ([503e135](https://github.com/nodejs/corepack/commit/503e135878935cc881ebd94b48d5eca94ec4c27b))
+
+
+### Miscellaneous Chores
+
+* update supported Node.js versions ([#309](https://github.com/nodejs/corepack/issues/309)) ([787e24d](https://github.com/nodejs/corepack/commit/787e24df609513702eafcd8c6a5f03544d7d45cc))
+
 ## [0.20.0](https://github.com/nodejs/corepack/compare/v0.19.0...v0.20.0) (2023-08-29)
 
 

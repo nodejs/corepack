@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "9.8.1+sha1.b8f070cc770128b38017160491504184863329f0",
+      "default": "10.3.0+sha1.554e1f13e4c09d581ad27cdc4a92f085ab74ce1a",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "npm"
@@ -29,13 +29,16 @@
             "package": "npm"
           },
           "commands": {
-            "use": ["npm", "install"]
+            "use": [
+              "npm",
+              "install"
+            ]
           }
         }
       }
     },
     "pnpm": {
-      "default": "8.6.12+sha1.a2f983fbf8f2531dc85db2a5d7f398063d51a6f3",
+      "default": "8.14.1+sha1.d039b38e0b20ad012ed548e44267b8d4c88b447a",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "pnpm"
@@ -67,7 +70,10 @@
             "package": "pnpm"
           },
           "commands": {
-            "use": ["pnpm", "install"]
+            "use": [
+              "pnpm",
+              "install"
+            ]
           }
         },
         ">=6.0.0": {
@@ -81,19 +87,22 @@
             "package": "pnpm"
           },
           "commands": {
-            "use": ["pnpm", "install"]
+            "use": [
+              "pnpm",
+              "install"
+            ]
           }
         }
       }
     },
     "yarn": {
-      "default": "1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
+      "default": "1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "yarn"
       },
       "transparent": {
-        "default": "3.6.3+sha224.524038cfca4ec8b2d45164c9c13f05e57a7d762f30542a8d647f69e3",
+        "default": "4.0.2+sha224.4b7a50dfc3384e203b885efe2c3ff5e04e3a9c682c0a2f0df25c5e34",
         "commands": [
           [
             "yarn",
@@ -113,7 +122,10 @@
             "package": "yarn"
           },
           "commands": {
-            "use": ["yarn", "install"]
+            "use": [
+              "yarn",
+              "install"
+            ]
           }
         },
         ">=2.0.0": {
@@ -127,12 +139,19 @@
             "type": "url",
             "url": "https://repo.yarnpkg.com/tags",
             "fields": {
-              "tags": "latest",
+              "tags": "aliases",
               "versions": "tags"
             }
           },
+          "npmRegistry": {
+            "type": "npm",
+            "package": "@yarnpkg/cli-dist"
+          },
           "commands": {
-            "use": ["yarn", "install"]
+            "use": [
+              "yarn",
+              "install"
+            ]
           }
         }
       }

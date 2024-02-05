@@ -47,6 +47,7 @@ export interface PackageManagerSpec {
   url: string;
   bin: BinSpec | BinList;
   registry: RegistrySpec;
+  npmRegistry?: NpmRegistrySpec;
   commands?: {
     use?: Array<string>;
   };
