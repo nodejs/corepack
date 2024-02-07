@@ -22,12 +22,12 @@ if (process.env.NOCK_ENV === `record`) {
     const data = await response.arrayBuffer();
 
     const minimalHeaders = new Headers();
-    const contentType = response.headers.get(`content-type`);
-    const contentLength = response.headers.get(`content-length`);
-    if (contentType != null)
-      minimalHeaders.set(`content-type`, contentType);
-    if (contentLength != null)
-      minimalHeaders.set(`content-length`, contentLength);
+    for (const headerName of [`content-type`, `content-length`]) {
+      const headerValue = response.headers.get(headerName);
+      if (headerValue != null) {
+        minimalHeaders.set(headerName, headerValue);
+      }
+    }
 
     mocks ??= new Map();
     mocks.set(input.toString(), {
