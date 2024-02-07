@@ -31,7 +31,7 @@ if (process.env.NOCK_ENV === `record`) {
 
     mocks ??= new Map();
     mocks.set(input.toString(), {
-      body: Buffer.from(data).toString(`latin1`),
+      body: Buffer.from(data).toString(`base64`),
       status: response.status,
       headers: Object.fromEntries(minimalHeaders),
     });
@@ -65,7 +65,7 @@ if (process.env.NOCK_ENV === `record`) {
     const mock = mocks.get(input.toString());
     if (!mock) throw new Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`);
 
-    return new Response(Buffer.from(mock.body, `latin1`), {
+    return new Response(Buffer.from(mock.body, `base64`), {
       status: mock.status,
       headers: mock.headers,
     });
