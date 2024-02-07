@@ -4,9 +4,9 @@ const path = require(`node:path`);
 const v8 = require(`node:v8`);
 
 /**
- * @type {Map<string, {body: string, status:number, headers: Record<string,string>}>}
+ * @type {Map<string, {body: string, status:number, headers: Record<string,string>}> | undefined}
  */
-let mocks = new Map();
+let mocks;
 
 const getNockFile = () =>
   path.join(
@@ -43,27 +43,27 @@ if (process.env.NOCK_ENV === `record`) {
   };
 
   process.once(`exit`, () => {
-    if (mocks.size) {
+    if (mocks) {
       fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
       fs.writeFileSync(getNockFile(), v8.serialize(mocks));
     }
   });
 } else if (process.env.NOCK_ENV === `replay`) {
-  let mocksLoaded = false;
   globalThis.fetch = async (input, init) => {
-    if (!mocksLoaded) {
-      if (!fs.existsSync(getNockFile())) {
+    try {
+      mocks ??= v8.deserialize(fs.readFileSync(getNockFile()));
+    } catch (error) {
+      if (error.code === `ENOENT`) {
         throw new Error(
           `No nock file found for this test run; run the tests with NOCK_ENV=record to generate one`,
+          {cause: error},
         );
       }
-
-      mocks = v8.deserialize(fs.readFileSync(getNockFile()));
-      mocksLoaded = true;
+      throw error;
     }
 
     const mock = mocks.get(input.toString());
-    if (!mock) throw new Error(`No mock found for ${input}`);
+    if (!mock) throw new Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`);
 
     return new Response(Buffer.from(mock.body, `latin1`), {
       status: mock.status,
