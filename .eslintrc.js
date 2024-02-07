@@ -6,7 +6,7 @@ module.exports = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'no-restricted-globals': [`error`, {
       name: `fetch`,
-      message: `Use fetch from sources/fetchUtils.ts`,
+      message: `Use fetch from sources/httpUtils.ts`,
     }],
   },
 };

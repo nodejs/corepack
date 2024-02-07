@@ -8,13 +8,12 @@ const v8 = require(`node:v8`);
  */
 let mocks = new Map();
 
-function getNockFile() {
-  return path.join(
+const getNockFile = () =>
+  path.join(
     __dirname,
     `nock`,
     `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`,
   );
-}
 
 if (process.env.NOCK_ENV === `record`) {
   const realFetch = globalThis.fetch;
