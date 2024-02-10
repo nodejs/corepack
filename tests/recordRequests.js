@@ -31,6 +31,31 @@ if (process.env.NOCK_ENV === `record`) {
 
     mocks ??= new Map();
     mocks.set(input.toString(), {
+      /*
+        Due to a bug *somewhere* `v8.deserialize` fails to deserialize
+        a `v8.serialize` Buffer if body is a Buffer, Uint8Array,
+        ArrayBuffer, or latin1 string on the Windows GitHub Actions
+        runner with the following error:
+          Unable to deserialize cloned data
+
+        base64 strings works so that's what we'll use for now.
+
+        Tested with Node.js 18.19.0, 20.11.0, and 21.6.1.
+
+        Runner Information:
+          Current runner version: '2.312.0'
+          Operating System
+            Microsoft Windows Server 2022
+            10.0.20348
+            Datacenter
+          Runner Image
+            Image: windows-2022
+            Version: 20240204.1.0
+            Included Software: https://github.com/actions/runner-images/blob/win22/20240204.1/images/windows/Windows2022-Readme.md
+            Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20240204.1
+          Runner Image Provisioner
+            2.0.341.1
+      */
       body: Buffer.from(data).toString(`base64`),
       status: response.status,
       headers: Object.fromEntries(minimalHeaders),
