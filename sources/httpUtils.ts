@@ -51,8 +51,7 @@ export async function fetch(input: string | URL, init?: RequestInit) {
 
 export async function fetchAsJson(input: string | URL, init?: RequestInit) {
   const response = await fetch(input, init);
-  const json: any = await response.json();
-  return json;
+  return response.json() as Promise<any>;
 }
 
 export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
@@ -66,7 +65,8 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
 async function getProxyAgent(input: string | URL) {
   const {getProxyForUrl} = await import(`proxy-from-env`);
 
-  const proxy = getProxyForUrl(input.toString());
+  // @ts-expect-error - The internal implementation is compatible with a WHATWG URL instance
+  const proxy = getProxyForUrl(input);
 
   if (!proxy) return undefined;
 
