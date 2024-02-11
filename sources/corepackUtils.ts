@@ -139,10 +139,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
   debugUtils.log(`Installing ${locator.name}@${version} from ${url} to ${tmpFolder}`);
+  const stream = await httpUtils.fetchUrlStream(url);
 
   const parsedUrl = new URL(url);
-  const stream = await httpUtils.fetchUrlStream(parsedUrl);
-
   const ext = path.posix.extname(parsedUrl.pathname);
 
   let outputFile: string | null = null;
