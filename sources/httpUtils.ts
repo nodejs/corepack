@@ -1,6 +1,8 @@
+import assert          from 'assert';
 import {UsageError}    from 'clipanion';
 import {once}          from 'events';
 import {stderr, stdin} from 'process';
+import {Readable}      from 'stream';
 
 export async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -45,6 +47,20 @@ export async function fetch(input: string | URL, init?: RequestInit) {
   }
 
   return response;
+}
+
+export async function fetchAsJson(input: string | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  const json: any = await response.json();
+  return json;
+}
+
+export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  const webStream = response.body;
+  assert(webStream, `Expected stream to be set`);
+  const stream = Readable.fromWeb(webStream);
+  return stream;
 }
 
 async function getProxyAgent(input: string | URL) {

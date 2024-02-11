@@ -1,4 +1,3 @@
-import assert                                                  from 'assert';
 import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
@@ -7,7 +6,6 @@ import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
-import {Readable}                                              from 'stream';
 
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
@@ -30,8 +28,7 @@ export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<stri
       return await npmRegistryUtils.fetchLatestStableVersion(spec.package);
     }
     case `url`: {
-      const response = await httpUtils.fetch(spec.url);
-      const data: any = await response.json();
+      const data = await httpUtils.fetchAsJson(spec.url);
       return data[spec.fields.tags].stable;
     }
     default: {
@@ -46,8 +43,7 @@ export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<str
       return await npmRegistryUtils.fetchAvailableTags(spec.package);
     }
     case `url`: {
-      const response = await httpUtils.fetch(spec.url);
-      const data: any = await response.json();
+      const data = await httpUtils.fetchAsJson(spec.url);
       return data[spec.fields.tags];
     }
     default: {
@@ -62,8 +58,7 @@ export async function fetchAvailableVersions(spec: RegistrySpec): Promise<Array<
       return await npmRegistryUtils.fetchAvailableVersions(spec.package);
     }
     case `url`: {
-      const response = await httpUtils.fetch(spec.url);
-      const data: any = await response.json();
+      const data = await httpUtils.fetchAsJson(spec.url);
       const field = data[spec.fields.versions];
       return Array.isArray(field) ? field : Object.keys(field);
     }
@@ -144,11 +139,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
   debugUtils.log(`Installing ${locator.name}@${version} from ${url} to ${tmpFolder}`);
+
   const parsedUrl = new URL(url);
-  const response = await httpUtils.fetch(parsedUrl);
-  const webStream = response.body;
-  assert(webStream, `Expected stream to be set`);
-  const stream = Readable.fromWeb(webStream);
+  const stream = await httpUtils.fetchUrlStream(parsedUrl);
 
   const ext = path.posix.extname(parsedUrl.pathname);
 

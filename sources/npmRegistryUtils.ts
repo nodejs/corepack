@@ -25,9 +25,7 @@ export async function fetchAsJson(packageName: string) {
     headers.authorization = `Basic ${encodedCreds}`;
   }
 
-  const response = await httpUtils.fetch(`${npmRegistryUrl}/${packageName}`, {headers});
-  const data: any = await response.json();
-  return data;
+  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}`, {headers});
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
