@@ -3,15 +3,13 @@ import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import process                                     from 'node:process';
 
 import config                                      from '../config.json';
+import * as folderUtils                            from '../sources/folderUtils';
 
 import {runCli}                                    from './_runCli';
 
-let corepackHome!: PortablePath;
 
 beforeEach(async () => {
-  corepackHome = await xfs.mktempPromise();
-
-  process.env.COREPACK_HOME = npath.fromPortablePath(corepackHome);
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
@@ -101,7 +99,7 @@ for (const [name, version] of testedPackageManagers) {
 }
 
 it(`should update the Known Good Release only when the major matches`, async () => {
-  await xfs.writeJsonPromise(ppath.join(corepackHome, `lastKnownGood.json`), {
+  await xfs.writeJsonPromise(ppath.join(npath.toPortablePath(folderUtils.getCorepackHomeFolder()), `lastKnownGood.json`), {
     yarn: `1.0.0`,
   });
 
@@ -645,7 +643,7 @@ it(`should not override the package manager exit code`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    const yarnFolder = ppath.join(npath.toPortablePath(folderUtils.getInstallFolder()), `yarn/2.2.2`);
     await xfs.mkdirPromise(yarnFolder, {recursive: true});
     await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
@@ -670,7 +668,7 @@ it(`should not preserve the process.exitCode when a package manager throws`, asy
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    const yarnFolder = ppath.join(npath.toPortablePath(folderUtils.getInstallFolder()), `yarn/2.2.2`);
     await xfs.mkdirPromise(yarnFolder, {recursive: true});
     await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
@@ -693,7 +691,7 @@ it(`should not set the exit code after successfully launching the package manage
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    const yarnFolder = ppath.join(npath.toPortablePath(folderUtils.getInstallFolder()), `yarn/2.2.2`);
     await xfs.mkdirPromise(yarnFolder, {recursive: true});
     await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
@@ -719,7 +717,7 @@ it(`should support package managers in ESM format`, async () => {
       packageManager: `yarn@2.2.2`,
     });
 
-    const yarnFolder = ppath.join(corepackHome, `yarn/2.2.2`);
+    const yarnFolder = ppath.join(npath.toPortablePath(folderUtils.getInstallFolder()), `yarn/2.2.2`);
     await xfs.mkdirPromise(yarnFolder, {recursive: true});
     await xfs.writeJsonPromise(ppath.join(yarnFolder, `.corepack`), {});
 
