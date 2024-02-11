@@ -66,7 +66,7 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
 async function getProxyAgent(input: string | URL) {
   const {getProxyForUrl} = await import(`proxy-from-env`);
 
-  const proxy = getProxyForUrl(`${input}`);
+  const proxy = getProxyForUrl(input.toString());
 
   if (!proxy) return undefined;
 
