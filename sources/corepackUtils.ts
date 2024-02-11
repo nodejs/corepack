@@ -110,7 +110,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   const installFolder = path.join(installTarget, locator.name, version);
 
-  if (fs.existsSync(installFolder)) {
+  try {
     const corepackFile = path.join(installFolder, `.corepack`);
     const corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
     const corepackData = JSON.parse(corepackContent);
@@ -121,6 +121,10 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       hash: corepackData.hash as string,
       location: installFolder,
     };
+  } catch (err) {
+    if ((err as nodeUtils.NodeError).code !== `ENOENT`) {
+      throw err;
+    }
   }
 
   const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
