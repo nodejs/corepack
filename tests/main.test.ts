@@ -1,4 +1,4 @@
-import {beforeEach, it, expect, afterAll}          from '@jest/globals';
+import {beforeEach, it, expect}                    from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import process                                     from 'node:process';
 
@@ -6,6 +6,7 @@ import config                                      from '../config.json';
 import * as folderUtils                            from '../sources/folderUtils';
 
 import {runCli}                                    from './_runCli';
+
 
 beforeEach(async () => {
   // `process.env` is reset after each tests in setupTests.js.
@@ -459,10 +460,10 @@ it(`should support hydrating package managers from cached archives`, async () =>
     });
 
     // Use a new cache
-    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 
     // Disable the network to make sure we don't succeed by accident
-    process.env.COREPACK_ENABLE_NETWORK = `0`,
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,
@@ -489,13 +490,13 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
     });
 
     // Use a new cache
-    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
-
-    // Disable the network to make sure we don't succeed by accident
-    process.env.COREPACK_ENABLE_NETWORK = `0`,
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 
     // Simulate cache removal
     await xfs.removePromise(npath.toPortablePath(process.env.COREPACK_HOME));
+
+    // Disable the network to make sure we don't succeed by accident
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,

@@ -6,7 +6,7 @@ import {runCli}                           from './_runCli';
 
 beforeEach(async () => {
   // `process.env` is reset after each tests in setupTests.js.
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 

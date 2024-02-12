@@ -5,7 +5,7 @@ const process = require(`process`);
 
 jest.retryTimes(2, {logErrorsBeforeRetry: true});
 
-let OLD_ENV = process.env;
+const OLD_ENV = process.env;
 
 switch (process.env.NOCK_ENV || ``) {
   case `record`:
@@ -25,10 +25,9 @@ switch (process.env.NOCK_ENV || ``) {
       // We save the rest to put it into `testEnv`.
       ...processEnv
     } = process.env;
-    OLD_ENV = processEnv;
     beforeEach(() => {
       process.env = {
-        ...OLD_ENV,
+        ...processEnv,
         RUN_CLI_ID: `0`,
         NOCK_FILE_NAME: crypto
           .createHash(`md5`)
