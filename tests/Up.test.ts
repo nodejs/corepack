@@ -4,14 +4,9 @@ import process                            from 'node:process';
 
 import {runCli}                           from './_runCli';
 
-let env: Record<string, string>;
-
 beforeEach(async () => {
-  env = {
-    ...process.env,
-    COREPACK_HOME: npath.fromPortablePath(await xfs.mktempPromise()),
-    COREPACK_DEFAULT_TO_LATEST: `0`,
-  };
+  process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.testEnv.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 describe(`UpCommand`, () => {
@@ -21,7 +16,7 @@ describe(`UpCommand`, () => {
         packageManager: `yarn@2.1.0`,
       });
 
-      await expect(runCli(cwd, [`up`], {env})).resolves.toMatchObject({
+      await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
       });
@@ -30,7 +25,7 @@ describe(`UpCommand`, () => {
         packageManager: `yarn@2.4.3+sha256.8c1575156cfa42112242cc5cfbbd1049da9448ffcdb5c55ce996883610ea983f`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`], {env})).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stdout: `2.4.3\n`,
       });

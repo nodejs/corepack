@@ -1,21 +1,26 @@
 import {PortablePath, npath} from '@yarnpkg/fslib';
 import {spawn}               from 'child_process';
 
-export async function runCli(cwd: PortablePath, argv: Array<string>, options?: Parameters<typeof spawn>[2]): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
+declare global {
+  namespace NodeJS {
+    interface Process {
+      /** We use `testEnv` to avoid polluting the actual env. Its value is set in `setupTest.js`. */
+      testEnv: Record<string, string>;
+    }
+  }
+}
+
+export async function runCli(cwd: PortablePath, argv: Array<string>): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
   const out: Array<Buffer> = [];
   const err: Array<Buffer> = [];
 
   return new Promise((resolve, reject) => {
-    if (process.env.RUN_CLI_ID) {
-      (process.env as any).RUN_CLI_ID++;
-      if (options?.env) {
-        (options.env as any).RUN_CLI_ID = (process.env as any).RUN_CLI_ID;
-      }
-    }
+    if (process.testEnv.RUN_CLI_ID)
+      (process.testEnv.RUN_CLI_ID as any)++;
+
     const child = spawn(process.execPath, [`--no-warnings`, `-r`, require.resolve(`./recordRequests.js`), require.resolve(`../dist/corepack.js`), ...argv], {
       cwd: npath.fromPortablePath(cwd),
-      env: process.env,
-      ...options,
+      env: process.testEnv,
       stdio: `pipe`,
     });
 
