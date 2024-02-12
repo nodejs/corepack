@@ -9,6 +9,8 @@ import {runCli}                                    from './_runCli';
 
 
 beforeEach(async () => {
+  // Because we are calling the source file, it's important the we modify the actual env here:
+  process.env.COREPACK_HOME =
   process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
   process.testEnv.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
