@@ -131,9 +131,9 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
 
 for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of testedPackageManagers) {
   it(`should use the right package manager version for a given project (${name}@${version})`, async () => {
+    process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS = `1`;
     await xfs.mktempPromise(async cwd => {
-      const env = {...process.env, COREPACK_ENABLE_UNSAFE_CUSTOM_URLS: `1`};
-      await expect(runCli(cwd, [`${name}@${version}`, `--version`], {env})).resolves.toMatchObject({
+      await expect(runCli(cwd, [`${name}@${version}`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,
@@ -143,7 +143,7 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
         packageManager: `${name}@${version}`,
       });
 
-      await expect(runCli(cwd, [name, `--version`], {env})).resolves.toMatchObject({
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,
