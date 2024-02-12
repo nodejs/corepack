@@ -3,6 +3,7 @@ import {BaseContext, Builtins, Cli, Command, Option, UsageError} from 'clipanion
 import {version as corepackVersion}                              from '../package.json';
 
 import {Engine}                                                  from './Engine';
+import {CacheCommand}                                            from './commands/Cache';
 import {DisableCommand}                                          from './commands/Disable';
 import {EnableCommand}                                           from './commands/Enable';
 import {InstallGlobalCommand}                                    from './commands/InstallGlobal';
@@ -117,6 +118,7 @@ export async function runMain(argv: Array<string>) {
     cli.register(Builtins.HelpCommand);
     cli.register(Builtins.VersionCommand);
 
+    cli.register(CacheCommand);
     cli.register(DisableCommand);
     cli.register(EnableCommand);
     cli.register(InstallGlobalCommand);
