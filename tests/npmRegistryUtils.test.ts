@@ -1,4 +1,4 @@
-import {jest, describe, beforeEach, afterEach, it, expect}      from '@jest/globals';
+import {jest, describe, beforeEach, it, expect}                 from '@jest/globals';
 import {Buffer}                                                 from 'node:buffer';
 import process                                                  from 'node:process';
 
@@ -8,18 +8,12 @@ import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources
 jest.mock(`../sources/httpUtils`);
 
 describe(`npm registry utils fetchAsJson`, () => {
-  const OLD_ENV = process.env;
-
   beforeEach(() => {
-    process.env = {...OLD_ENV}; // Make a copy
     jest.resetAllMocks();
   });
 
-  afterEach(() => {
-    process.env = OLD_ENV; // Restore old environment
-  });
-
   it(`throw usage error if COREPACK_ENABLE_NETWORK env is set to 0`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(fetchAsJson(`package-name`)).rejects.toThrowError();
@@ -33,6 +27,7 @@ describe(`npm registry utils fetchAsJson`, () => {
   });
 
   it(`loads from custom COREPACK_NPM_REGISTRY if set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_REGISTRY = `https://registry.example.org`;
     await fetchAsJson(`package-name`);
 
@@ -41,6 +36,7 @@ describe(`npm registry utils fetchAsJson`, () => {
   });
 
   it(`adds authorization header with bearer token if COREPACK_NPM_TOKEN is set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
 
     await fetchAsJson(`package-name`);
@@ -53,6 +49,7 @@ describe(`npm registry utils fetchAsJson`, () => {
   });
 
   it(`only adds authorization header with bearer token if COREPACK_NPM_TOKEN and COREPACK_NPM_USERNAME are set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
     process.env.COREPACK_NPM_USERNAME = `bar`;
     process.env.COREPACK_NPM_PASSWORD = `foobar`;
@@ -68,6 +65,7 @@ describe(`npm registry utils fetchAsJson`, () => {
 
 
   it(`adds authorization header with basic auth if COREPACK_NPM_USERNAME and COREPACK_NPM_PASSWORD are set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_USERNAME = `foo`;
     process.env.COREPACK_NPM_PASSWORD = `bar`;
 
@@ -83,6 +81,7 @@ describe(`npm registry utils fetchAsJson`, () => {
   });
 
   it(`does not add authorization header if COREPACK_NPM_USERNAME is set and COREPACK_NPM_PASSWORD is not.`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_USERNAME = `foo`;
 
     await fetchAsJson(`package-name`);
