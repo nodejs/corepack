@@ -84,15 +84,15 @@ recommended as a security practice. Permitted values for the package manager are
 ## Known Good Releases
 
 When running Corepack within projects that don't list a supported package
-manager, it will default to a set of Known Good Releases. In a way, you can
-compare this to Node.js, where each version ships with a specific version of
-npm.
+manager, it will default to a set of Known Good Releases.
 
 If there is no Known Good Release for the requested package manager, Corepack
 looks up the npm registry for the latest available version and cache it for
 future use.
 
 The Known Good Releases can be updated system-wide using `corepack install -g`.
+When Corepack downloads a new version of a given package manager on the same
+major line as the Known Good Release, it auto-updates it by default.
 
 ## Offline Workflow
 
@@ -177,7 +177,7 @@ This command doesn't change the global version used when running the package
 manager from outside the project (use the \`-g,--global\` flag if you wish
 to do this).
 
-### `corepack install <-g,--global> [--all] [... name@version]`
+### `corepack install <-g,--global> [--all] [... name[@<version>]]`
 
 | Option                | Description                                |
 | --------------------- | ------------------------------------------ |
@@ -189,7 +189,7 @@ Package managers thus installed will be configured as the new default when
 calling their respective binaries outside of projects defining the
 `packageManager` field.
 
-### `corepack pack [--all] [... name@version]`
+### `corepack pack [--all] [... name[@<version>]]`
 
 | Option                | Description                                |
 | --------------------- | ------------------------------------------ |
@@ -200,7 +200,7 @@ calling their respective binaries outside of projects defining the
 Download the selected package managers and store them inside a tarball
 suitable for use with `corepack install -g`.
 
-### `corepack use <name@version>`
+### `corepack use <name[@<version>]>`
 
 When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
@@ -215,13 +215,22 @@ it.
 Unlike `corepack use` this command doesn't take a package manager name nor a
 version range, as it will always select the latest available version from the
 same major line. Should you need to upgrade to a new major, use an explicit
-`corepack use {name}@latest` call.
+`corepack use {name}@latest` call (or simply `corepack use {name}`).
 
 ## Environment Variables
 
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
   not to lookup on the remote registry for the latest version of the selected
-  package manager.
+  package manager, and to not update the Last Known Good version when it
+  downloads a new version of the same major line.
+
+- `COREPACK_ENABLE_DOWNLOAD_PROMPT` can be set to `0` to
+  prevent Corepack showing the URL when it needs to download software, or can be
+  set to `1` to have the URL shown. By default, when Corepack is called
+  explicitly (e.g. `corepack pnpm …`), it is set to `0`; when Corepack is called
+  implicitely (e.g. `pnpm …`), it is set to `1`.
+  When standard input is a TTY and no CI environment is detected, Corepack will
+  ask for user input before starting the download.
 
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing
   the network (in which case you'll be responsible for hydrating the package

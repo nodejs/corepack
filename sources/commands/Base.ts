@@ -37,7 +37,7 @@ export abstract class BaseCommand extends Command<Context> {
   async setLocalPackageManager(info: PreparedPackageManagerInfo) {
     const lookup = await specUtils.loadSpec(this.context.cwd);
 
-    const content = lookup.target !== `NoProject`
+    const content = lookup.type !== `NoProject`
       ? await fs.promises.readFile(lookup.target, `utf8`)
       : ``;
 

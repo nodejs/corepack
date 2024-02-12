@@ -3,6 +3,7 @@ import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
+import {NodeError}                                      from './nodeUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
@@ -11,16 +12,16 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)(.+)@(.+)$/);
-  if (match === null || (enforceExactVersion && !semver.valid(match[2])))
-    throw new UsageError(`Invalid package manager specification in ${source}; expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+  const match = raw.match(/^(?!_)([^@]+)(?:@(.+))?$/);
+  if (match === null || (enforceExactVersion && (!match[2] || !semver.valid(match[2]))))
+    throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
   if (!isSupportedPackageManager(match[1]))
     throw new UsageError(`Unsupported package manager specification (${match})`);
 
   return {
     name: match[1],
-    range: match[2],
+    range: match[2] ?? `*`,
   };
 }
 
@@ -57,7 +58,7 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
       case `NoProject`:
       case `NoSpec`: {
         return fallbackLocator;
-      } break;
+      }
 
       case `Found`: {
         if (result.spec.name !== locator.name) {
@@ -69,7 +70,7 @@ export async function findProjectSpec(initialCwd: string, locator: Locator, {tra
         } else {
           return result.spec;
         }
-      } break;
+      }
     }
   }
 }
@@ -96,10 +97,13 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
-    if (!fs.existsSync(manifestPath))
-      continue;
-
-    const content = await fs.promises.readFile(manifestPath, `utf8`);
+    let content: string;
+    try {
+      content = await fs.promises.readFile(manifestPath, `utf8`);
+    } catch (err) {
+      if ((err as NodeError)?.code === `ENOENT`) continue;
+      throw err;
+    }
 
     let data;
     try {
