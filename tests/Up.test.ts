@@ -5,8 +5,9 @@ import process                            from 'node:process';
 import {runCli}                           from './_runCli';
 
 beforeEach(async () => {
-  process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
-  process.testEnv.COREPACK_DEFAULT_TO_LATEST = `0`;
+  // `process.env` is reset after each tests in setupTests.js.
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 describe(`UpCommand`, () => {

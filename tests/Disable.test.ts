@@ -12,7 +12,8 @@ import {runCli}                               from './_runCli';
 const engine = new Engine();
 
 beforeEach(async () => {
-  process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  // `process.env` is reset after each tests in setupTests.js.
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 });
 
 describe(`DisableCommand`, () => {
@@ -26,7 +27,7 @@ describe(`DisableCommand`, () => {
           for (const variant of getBinaryNames(binName))
             await makeBin(cwd, variant as Filename, {ignorePlatform: true});
 
-      process.testEnv.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.testEnv.PATH}`;
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`disable`])).resolves.toMatchObject({
         exitCode: 0,
       });
@@ -79,7 +80,7 @@ describe(`DisableCommand`, () => {
       const dontRemoveBin = await makeBin(cwd, `dont-remove` as Filename);
       binNames.add(ppath.basename(dontRemoveBin));
 
-      process.testEnv.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.testEnv.PATH}`;
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`disable`, `yarn`])).resolves.toMatchObject({
         exitCode: 0,
       });

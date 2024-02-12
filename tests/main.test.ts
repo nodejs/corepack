@@ -1,4 +1,4 @@
-import {beforeEach, it, expect}                    from '@jest/globals';
+import {beforeEach, it, expect, afterAll}          from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import process                                     from 'node:process';
 
@@ -7,12 +7,10 @@ import * as folderUtils                            from '../sources/folderUtils'
 
 import {runCli}                                    from './_runCli';
 
-
 beforeEach(async () => {
-  // Because we are calling the source file, it's important the we modify the actual env here:
-  process.env.COREPACK_HOME =
-  process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
-  process.testEnv.COREPACK_DEFAULT_TO_LATEST = `0`;
+  // `process.env` is reset after each tests in setupTests.js.
+  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
 
 it(`should refuse to download a package manager if the hash doesn't match`, async () => {
@@ -105,7 +103,7 @@ it(`should update the Known Good Release only when the major matches`, async () 
     yarn: `1.0.0`,
   });
 
-  process.testEnv.COREPACK_DEFAULT_TO_LATEST = `1`;
+  process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -344,7 +342,7 @@ it(`should allow to call "corepack install" without arguments within a configure
     });
 
     // Disable the network to make sure we don't succeed by accident
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`;
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
@@ -360,7 +358,7 @@ it(`should refuse to run a different package manager within a configured project
       packageManager: `yarn@1.0.0`,
     });
 
-    process.testEnv.FORCE_COLOR = `0`;
+    process.env.FORCE_COLOR = `0`;
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
@@ -368,7 +366,7 @@ it(`should refuse to run a different package manager within a configured project
     });
 
     // Disable strict checking to workaround the UsageError.
-    process.testEnv.COREPACK_ENABLE_STRICT = `0`;
+    process.env.COREPACK_ENABLE_STRICT = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
@@ -389,7 +387,7 @@ it(`should always use fallback version when project spec env is disabled`, async
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@1.0.0`,
     });
-    process.testEnv.COREPACK_ENABLE_PROJECT_SPEC = `0`;
+    process.env.COREPACK_ENABLE_PROJECT_SPEC = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
@@ -415,7 +413,7 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
       stderr: ``,
     });
 
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`;
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
@@ -438,7 +436,7 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
 });
 
 it(`should support disabling the network accesses from the environment`, async () => {
-  process.testEnv.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -461,10 +459,10 @@ it(`should support hydrating package managers from cached archives`, async () =>
     });
 
     // Use a new cache
-    process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
 
     // Disable the network to make sure we don't succeed by accident
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`,
+    process.env.COREPACK_ENABLE_NETWORK = `0`,
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,
@@ -491,13 +489,13 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
     });
 
     // Use a new cache
-    process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
 
     // Disable the network to make sure we don't succeed by accident
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`,
+    process.env.COREPACK_ENABLE_NETWORK = `0`,
 
     // Simulate cache removal
-    await xfs.removePromise(npath.toPortablePath(process.testEnv.COREPACK_HOME));
+    await xfs.removePromise(npath.toPortablePath(process.env.COREPACK_HOME));
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,
@@ -524,10 +522,10 @@ it(`should support hydrating multiple package managers from cached archives`, as
     });
 
     // Use a new cache
-    process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+    process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 
     // Disable the network to make sure we don't succeed by accident
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`;
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,
@@ -709,7 +707,7 @@ it(`should support package managers in ESM format`, async () => {
 
 it(`should show a warning on stderr before downloading when enable`, async() => {
   await xfs.mktempPromise(async cwd => {
-    process.testEnv.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `yarn@3.0.0`,
     });

@@ -5,28 +5,30 @@ const process = require(`process`);
 
 jest.retryTimes(2, {logErrorsBeforeRetry: true});
 
+let OLD_ENV = process.env;
+
 switch (process.env.NOCK_ENV || ``) {
   case `record`:
-  case `replay`:
+  case `replay`: {
+    const {
+      // To ensure we test the default behavior, we must remove these env vars
+      // in case the local machine already set these values.
+      COREPACK_DEFAULT_TO_LATEST,
+      COREPACK_ENABLE_NETWORK,
+      COREPACK_ENABLE_PROJECT_SPEC,
+      COREPACK_ENABLE_STRICT,
+      COREPACK_HOME,
+      COREPACK_NPM_REGISTRY,
+      COREPACK_NPM_TOKEN,
+      COREPACK_NPM_USERNAME,
+      FORCE_COLOR,
+      // We save the rest to put it into `testEnv`.
+      ...processEnv
+    } = process.env;
+    OLD_ENV = processEnv;
     beforeEach(() => {
-      const {
-        // To ensure we test the default behavior, we must remove these env vars
-        // in case the local machine already set these values.
-        COREPACK_DEFAULT_TO_LATEST,
-        COREPACK_ENABLE_NETWORK,
-        COREPACK_ENABLE_PROJECT_SPEC,
-        COREPACK_ENABLE_STRICT,
-        COREPACK_HOME,
-        COREPACK_NPM_REGISTRY,
-        COREPACK_NPM_TOKEN,
-        COREPACK_NPM_USERNAME,
-        FORCE_COLOR,
-        // We save the rest to put it into `testEnv`.
-        ...processEnv
-      } = process.env;
-
-      process.testEnv = {
-        ...processEnv,
+      process.env = {
+        ...OLD_ENV,
         RUN_CLI_ID: `0`,
         NOCK_FILE_NAME: crypto
           .createHash(`md5`)
@@ -34,12 +36,10 @@ switch (process.env.NOCK_ENV || ``) {
           .digest(`base64url`),
       };
     });
-    break;
+  } break;
 
   case ``: {
-    beforeEach(() => {
-      process.testEnv = {...process.env};
-    });
+    // Nothing
   } break;
 
   default: {
@@ -48,5 +48,5 @@ switch (process.env.NOCK_ENV || ``) {
 }
 
 afterAll(() => {
-  delete process.testEnv;
+  process.env = OLD_ENV;
 });
