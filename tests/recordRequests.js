@@ -1,19 +1,41 @@
 "use strict";
-const fs = require(`node:fs`);
 const path = require(`node:path`);
-const v8 = require(`node:v8`);
+const crypto = require(`node:crypto`);
+const SQLite3 = require(`better-sqlite3`);
+
+const db = new SQLite3(path.join(__dirname, `nock/nocks.db`));
+
+db.prepare(`CREATE TABLE IF NOT EXISTS nocks (
+  hash BLOB PRIMARY KEY NOT NULL,
+  body BLOB NOT NULL,
+  headers BLOB NOT NULL,
+  status INTEGER NOT NULL
+)`).run();
 
 /**
- * @type {Map<string, {body: string, status:number, headers: Record<string,string>}> | undefined}
+ * @param {string | URL} input
+ * @param {RequestInit | undefined} init
  */
-let mocks;
+function getRequestHash(input, init) {
+  const hash = crypto.createHash(`sha256`);
+  hash.update(`${input}\0`);
 
-const getNockFile = () =>
-  path.join(
-    __dirname,
-    `nock`,
-    `${process.env.NOCK_FILE_NAME}-${process.env.RUN_CLI_ID}.dat`,
-  );
+  if (init) {
+    for (const key in init) {
+      if (init[key] === undefined) continue;
+
+      switch (key) {
+        case `headers`:
+          hash.update(`${JSON.stringify(Object.fromEntries(new Headers(init.headers || {})))}\0`);
+          break;
+        default:
+          throw new Error(`Hashing for "${key}" not implemented`);
+      }
+    }
+  }
+
+  return hash.digest();
+}
 
 if (process.env.NOCK_ENV === `record`) {
   const realFetch = globalThis.fetch;
@@ -29,70 +51,29 @@ if (process.env.NOCK_ENV === `record`) {
       }
     }
 
-    mocks ??= new Map();
-    mocks.set(input.toString(), {
-      /*
-        Due to a bug *somewhere* `v8.deserialize` fails to deserialize
-        a `v8.serialize` Buffer if body is a Buffer, Uint8Array,
-        ArrayBuffer, or latin1 string on the Windows GitHub Actions
-        runner with the following error:
-          Unable to deserialize cloned data
-
-        base64 strings works so that's what we'll use for now.
-
-        Tested with Node.js 18.19.0, 20.11.0, and 21.6.1.
-
-        Runner Information:
-          Current runner version: '2.312.0'
-          Operating System
-            Microsoft Windows Server 2022
-            10.0.20348
-            Datacenter
-          Runner Image
-            Image: windows-2022
-            Version: 20240204.1.0
-            Included Software: https://github.com/actions/runner-images/blob/win22/20240204.1/images/windows/Windows2022-Readme.md
-            Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20240204.1
-          Runner Image Provisioner
-            2.0.341.1
-      */
-      body: Buffer.from(data).toString(`base64`),
-      status: response.status,
-      headers: Object.fromEntries(minimalHeaders),
-    });
+    const requestHash = getRequestHash(input, init);
+    db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`).run(
+      requestHash,
+      Buffer.from(data),
+      JSON.stringify(Object.fromEntries(minimalHeaders)),
+      response.status,
+    );
 
     return new Response(data, {
       status: response.status,
       headers: minimalHeaders,
     });
   };
-
-  process.once(`exit`, () => {
-    if (mocks) {
-      fs.mkdirSync(path.dirname(getNockFile()), {recursive: true});
-      fs.writeFileSync(getNockFile(), v8.serialize(mocks));
-    }
-  });
 } else if (process.env.NOCK_ENV === `replay`) {
   globalThis.fetch = async (input, init) => {
-    try {
-      mocks ??= v8.deserialize(fs.readFileSync(getNockFile()));
-    } catch (error) {
-      if (error.code === `ENOENT`) {
-        throw new Error(
-          `No nock file found for this test run; run the tests with NOCK_ENV=record to generate one`,
-          {cause: error},
-        );
-      }
-      throw error;
-    }
+    const requestHash = getRequestHash(input, init);
 
-    const mock = mocks.get(input.toString());
+    const mock = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`).get(requestHash);
     if (!mock) throw new Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`);
 
-    return new Response(Buffer.from(mock.body, `base64`), {
+    return new Response(mock.body, {
       status: mock.status,
-      headers: mock.headers,
+      headers: JSON.parse(mock.headers),
     });
   };
 }
