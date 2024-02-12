@@ -22,7 +22,7 @@ switch (process.env.NOCK_ENV || ``) {
       COREPACK_NPM_TOKEN,
       COREPACK_NPM_USERNAME,
       FORCE_COLOR,
-      // We save the rest to put it into `testEnv`.
+      // We save the rest to put it into `process.env` for tests.
       ...processEnv
     } = process.env;
     beforeEach(() => {
