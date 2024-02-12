@@ -80,6 +80,9 @@ const testedPackageManagers: Array<[string, string]> = [
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
+  [`bun`, `1.0.26`],
+  [`bun`, `1.0.26+sha1.a27af658d87e0487321c3e8b8bbd69f9e408a9f1`],
+  [`bun`, `1.0.26+sha224.a27af658d87e0487321c3e8b8bbd69f9e408a9f1`],
 ];
 
 for (const [name, version] of testedPackageManagers) {
@@ -270,6 +273,12 @@ it(`should use the pinned version when local projects don't list any spec`, asyn
       stderr: ``,
       exitCode: 0,
     });
+
+    await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+      stdout: `${config.definitions.bun.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
+      exitCode: 0,
+    });
   });
 });
 
@@ -383,6 +392,11 @@ it(`should refuse to run a different package manager within a configured project
         stderr: ``,
         exitCode: 0,
       });
+      await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.bun.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
     } finally {
       delete process.env.COREPACK_ENABLE_STRICT;
       delete process.env.FORCE_COLOR;
@@ -406,6 +420,11 @@ it(`should always use fallback version when project spec env is disabled`, async
       });
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+      await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.bun.default.split(`+`, 1)[0]}\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -443,6 +462,12 @@ it(`should allow to call "corepack install -g --all" to prepare all package mana
 
       await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
         stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.bun.default.split(`+`, 1)[0]}\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -545,7 +570,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`, `bun@1.0.26`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -578,6 +603,16 @@ it(`should support hydrating multiple package managers from cached archives`, as
 
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         stdout: `5.8.0\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `bun@1.0.26`,
+      });
+
+      await expect(runCli(cwd, [`bun`, `--version`])).resolves.toMatchObject({
+        stdout: `1.0.26\n`,
         stderr: ``,
         exitCode: 0,
       });
