@@ -1,21 +1,17 @@
-import {UsageError}                          from 'clipanion';
-import {once}                                from 'events';
-import type {RequestOptions}                 from 'https';
-import type {IncomingMessage, ClientRequest} from 'http';
-import {stderr, stdin}                       from 'process';
+import assert          from 'assert';
+import {UsageError}    from 'clipanion';
+import {once}          from 'events';
+import {stderr, stdin} from 'process';
+import {Readable}      from 'stream';
 
-export async function fetchUrlStream(url: string, options: RequestOptions = {}) {
+export async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
-    throw new UsageError(`Network access disabled by the environment; can't reach ${url}`);
+    throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
-  const {default: https} = await import(`https`);
-
-  const {ProxyAgent} = await import(`proxy-agent`);
-
-  const proxyAgent = new ProxyAgent();
+  const agent = await getProxyAgent(input);
 
   if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
-    console.error(`Corepack is about to download ${url}.`);
+    console.error(`Corepack is about to download ${input}.`);
     if (stdin.isTTY && !process.env.CI) {
       stderr.write(`\nDo you want to continue? [Y/n] `);
       stdin.resume();
@@ -30,60 +26,55 @@ export async function fetchUrlStream(url: string, options: RequestOptions = {}) 
     }
   }
 
-  return new Promise<IncomingMessage>((resolve, reject) => {
-    const createRequest = (url: string) => {
-      const request: ClientRequest = https.get(url, {...options, agent: proxyAgent}, response => {
-        const statusCode = response.statusCode;
-
-        if ([301, 302, 307, 308].includes(statusCode as number) && response.headers.location)
-          return createRequest(response.headers.location as string);
-
-        if (statusCode != null && statusCode >= 200 && statusCode < 300)
-          return resolve(response);
-
-        return reject(new Error(`Server answered with HTTP ${statusCode} when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
-      });
-
-      request.on(`error`, err => {
-        reject(new Error(`Error when performing the request to ${url}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`));
-      });
-    };
-
-    createRequest(url);
-  });
-}
-
-export async function fetchAsBuffer(url: string, options?: RequestOptions) {
-  const response = await fetchUrlStream(url, options);
-
-  return new Promise<Buffer>((resolve, reject) => {
-    const chunks: Array<Buffer> = [];
-
-    response.on(`data`, chunk => {
-      chunks.push(chunk);
-    });
-
-    response.on(`error`, error => {
-      reject(error);
-    });
-
-    response.on(`end`, () => {
-      resolve(Buffer.concat(chunks));
-    });
-  });
-}
-
-export async function fetchAsJson(url: string, options?: RequestOptions) {
-  const buffer = await fetchAsBuffer(url, options);
-  const asText = buffer.toString();
-
+  let response;
   try {
-    return JSON.parse(asText);
+    response = await globalThis.fetch(input, {
+      ...init,
+      dispatcher: agent,
+    });
   } catch (error) {
-    const truncated = asText.length > 30
-      ? `${asText.slice(0, 30)}...`
-      : asText;
-
-    throw new Error(`Couldn't parse JSON data: ${JSON.stringify(truncated)}`);
+    throw new Error(
+      `Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
+      {cause: error},
+    );
   }
+
+  if (!response.ok) {
+    await response.arrayBuffer();
+    throw new Error(
+      `Server answered with HTTP ${response.status} when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
+    );
+  }
+
+  return response;
+}
+
+export async function fetchAsJson(input: string | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  return response.json() as Promise<any>;
+}
+
+export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
+  const response = await fetch(input, init);
+  const webStream = response.body;
+  assert(webStream, `Expected stream to be set`);
+  const stream = Readable.fromWeb(webStream);
+  return stream;
+}
+
+async function getProxyAgent(input: string | URL) {
+  const {getProxyForUrl} = await import(`proxy-from-env`);
+
+  // @ts-expect-error - The internal implementation is compatible with a WHATWG URL instance
+  const proxy = getProxyForUrl(input);
+
+  if (!proxy) return undefined;
+
+  // Doing a deep import here since undici isn't tree-shakeable
+  const {default: ProxyAgent} = (await import(
+    // @ts-expect-error No types for this specific file
+    `undici/lib/proxy-agent.js`
+  )) as { default: typeof import('undici').ProxyAgent };
+
+  return new ProxyAgent(proxy);
 }

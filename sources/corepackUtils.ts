@@ -131,11 +131,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const {version, build} = locatorReference;
 
   const installFolder = path.join(installTarget, locator.name, version);
-  const corepackFile = path.join(installFolder, `.corepack`);
 
   let corepackContent;
   try {
     if (locatorIsASupportedPackageManager) {
+      const corepackFile = path.join(installFolder, `.corepack`);
       corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
     }
   } catch (err) {
@@ -215,14 +215,6 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     locator,
     hash: serializedHash,
   }));
-
-  // The target folder may exist if a previous version of Corepack installed
-  // it but didn't create the `.corepack` file. In this case we need to
-  // remove it first.
-  await fs.promises.rm(installFolder, {
-    recursive: true,
-    force: true,
-  });
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {

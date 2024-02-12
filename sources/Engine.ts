@@ -19,7 +19,7 @@ import {isSupportedPackageManager}                            from './types';
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
 export function getLastKnownGoodFile(flag = `r`) {
-  return fs.promises.open(path.join(folderUtils.getInstallFolder(), `lastKnownGood.json`), flag);
+  return fs.promises.open(path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`), flag);
 }
 
 export async function getJSONFileContent(fh: FileHandle) {
