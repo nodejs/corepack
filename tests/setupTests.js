@@ -38,7 +38,9 @@ switch (process.env.NOCK_ENV || ``) {
   } break;
 
   case ``: {
-    // Nothing
+    beforeEach(() => {
+      process.env = {...OLD_ENV};
+    });
   } break;
 
   default: {
