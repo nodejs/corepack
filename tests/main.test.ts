@@ -524,10 +524,10 @@ it(`should support hydrating multiple package managers from cached archives`, as
     });
 
     // Use a new cache
-    process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise()),
+    process.testEnv.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
 
     // Disable the network to make sure we don't succeed by accident
-    process.testEnv.COREPACK_ENABLE_NETWORK = `0`,
+    process.testEnv.COREPACK_ENABLE_NETWORK = `0`;
 
     await expect(runCli(cwd, [`install`, `-g`, `corepack.tgz`])).resolves.toMatchObject({
       stderr: ``,
