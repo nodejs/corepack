@@ -3,8 +3,6 @@ import fs                                               from 'fs';
 import path                                             from 'path';
 import semver                                           from 'semver';
 
-import * as debugUtils                                  from './debugUtils';
-import {getInstallFolder}                               from './folderUtils';
 import {NodeError}                                      from './nodeUtils';
 import {Descriptor, Locator, isSupportedPackageManager} from './types';
 
