@@ -12,6 +12,9 @@ db.prepare(`CREATE TABLE IF NOT EXISTS nocks (
   status INTEGER NOT NULL
 )`).run();
 
+const insertNockStatement = db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`);
+const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
+
 /**
  * @param {string | URL} input
  * @param {RequestInit | undefined} init
@@ -52,7 +55,7 @@ if (process.env.NOCK_ENV === `record`) {
     }
 
     const requestHash = getRequestHash(input, init);
-    db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`).run(
+    insertNockStatement.run(
       requestHash,
       Buffer.from(data),
       JSON.stringify(Object.fromEntries(minimalHeaders)),
@@ -68,7 +71,7 @@ if (process.env.NOCK_ENV === `record`) {
   globalThis.fetch = async (input, init) => {
     const requestHash = getRequestHash(input, init);
 
-    const mock = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`).get(requestHash);
+    const mock = getNockStatement.get(requestHash);
     if (!mock) throw new Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`);
 
     return new Response(mock.body, {
