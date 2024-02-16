@@ -1,6 +1,7 @@
 import {Command, UsageError}           from 'clipanion';
 import semver                          from 'semver';
-import type {SupportedPackageManagers} from 'sources/types';
+
+import type {SupportedPackageManagers} from '../types';
 
 import {BaseCommand}                   from './Base';
 

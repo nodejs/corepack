@@ -130,18 +130,10 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   const installFolder = path.join(installTarget, locator.name, version);
 
-  let corepackContent;
   try {
     const corepackFile = path.join(installFolder, `.corepack`);
-    corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
-  } catch (err) {
-    if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
-      throw err;
-    }
-  }
-  // Older versions of Corepack didn't generate the `.corepack` file; in
-  // that case we just download the package manager anew.
-  if (corepackContent) {
+    const corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
+
     const corepackData = JSON.parse(corepackContent);
 
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
@@ -151,6 +143,10 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       location: installFolder,
       bin: corepackData.bin,
     };
+  } catch (err) {
+    if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
+      throw err;
+    }
   }
 
   let url: string;
