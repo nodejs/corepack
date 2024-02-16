@@ -46,8 +46,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   return {
     name,
     range,
-    isURL,
-  } as Descriptor;
+  };
 }
 
 /**
