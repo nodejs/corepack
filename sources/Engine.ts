@@ -85,7 +85,7 @@ export class Engine {
       const url = `${locator.reference}`;
       return {
         url,
-        bin: {},
+        bin: undefined as any, // bin will be set later
         registry: {
           type: `url`,
           url,
@@ -194,6 +194,7 @@ export class Engine {
     const packageManagerInfo = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec,
     });
+    spec.bin ??= packageManagerInfo.bin;
 
     return {
       ...packageManagerInfo,
@@ -207,7 +208,7 @@ export class Engine {
   }
 
   async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {
-    if (!corepackUtils.isNotURLDescriptor(descriptor)) {
+    if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
       if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
         throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
 

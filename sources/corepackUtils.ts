@@ -106,7 +106,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   return bestMatch;
 }
 
-export function isNotURLDescriptor(descriptor: Descriptor): descriptor is SupportedPackageManagerDescriptor {
+export function isSupportedPackageManagerDescriptor(descriptor: Descriptor): descriptor is SupportedPackageManagerDescriptor {
   return !URL.canParse(descriptor.range);
 }
 
@@ -134,10 +134,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   let corepackContent;
   try {
-    if (locatorIsASupportedPackageManager) {
-      const corepackFile = path.join(installFolder, `.corepack`);
-      corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
-    }
+    const corepackFile = path.join(installFolder, `.corepack`);
+    corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
   } catch (err) {
     if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
       throw err;
@@ -153,6 +151,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     return {
       hash: corepackData.hash as string,
       location: installFolder,
+      bin: corepackData.bin,
     };
   }
 
@@ -197,11 +196,12 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
+  let bin;
   if (!locatorIsASupportedPackageManager) {
     if (ext === `.tgz`) {
-      spec.bin = require(path.join(tmpFolder, `package.json`)).bin;
+      bin = require(path.join(tmpFolder, `package.json`)).bin;
     } else if (ext === `.js`) {
-      spec.bin = [locator.name];
+      bin = [locator.name];
     }
   }
 
@@ -213,6 +213,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.writeFile(path.join(tmpFolder, `.corepack`), JSON.stringify({
     locator,
+    bin,
     hash: serializedHash,
   }));
 
@@ -260,6 +261,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   return {
     location: installFolder,
+    bin,
     hash: serializedHash,
   };
 }
