@@ -15,8 +15,6 @@ import * as httpUtils                                          from './httpUtils
 import * as nodeUtils                                          from './nodeUtils';
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-import {SupportedPackageManagerDescriptor}                     from './types';
-import {SupportedPackageManagerLocator, URLLocator}            from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
@@ -106,15 +104,15 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   return bestMatch;
 }
 
-export function isSupportedPackageManagerDescriptor(descriptor: Descriptor): descriptor is SupportedPackageManagerDescriptor {
+export function isSupportedPackageManagerDescriptor(descriptor: Descriptor) {
   return !URL.canParse(descriptor.range);
 }
 
-export function isSupportedPackageManagerLocator(locator: Locator): locator is SupportedPackageManagerLocator {
-  return !locator.isURL;
+export function isSupportedPackageManagerLocator(locator: Locator) {
+  return !URL.canParse(locator.reference);
 }
 
-function parseURLReference(locator: URLLocator) {
+function parseURLReference(locator: Locator) {
   const {hash, href} = new URL(locator.reference);
   if (hash) {
     return {
@@ -294,7 +292,7 @@ export async function runVersion(locator: Locator, installSpec: { location: stri
   // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
   // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
   // [SIGSEGV]
-  if (locator.name !== `npm` || semver.lt((locator as SupportedPackageManagerLocator).reference, `9.7.0`))
+  if (locator.name !== `npm` || semver.lt(locator.reference, `9.7.0`))
     // @ts-expect-error - No types
     await import(`v8-compile-cache`);
 

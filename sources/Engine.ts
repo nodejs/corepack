@@ -97,7 +97,7 @@ export class Engine {
       };
     }
 
-    const definition = this.config.definitions[locator.name];
+    const definition = this.config.definitions[locator.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${locator.name}) isn't supported by this corepack build`);
 
@@ -129,7 +129,7 @@ export class Engine {
     const locators: Array<Descriptor> = [];
 
     for (const name of SupportedPackageManagerSet as Set<SupportedPackageManagers>)
-      locators.push({name, range: await this.getDefaultVersion(name), isURL: false});
+      locators.push({name, range: await this.getDefaultVersion(name)});
 
     return locators;
   }
@@ -162,7 +162,6 @@ export class Engine {
       await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
         name: packageManager,
         reference,
-        isURL: false,
       });
 
       return reference;
@@ -215,11 +214,10 @@ export class Engine {
       return {
         name: descriptor.name,
         reference: descriptor.range,
-        isURL: true,
       };
     }
 
-    const definition = this.config.definitions[descriptor.name];
+    const definition = this.config.definitions[descriptor.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
@@ -242,7 +240,6 @@ export class Engine {
       finalDescriptor = {
         name: descriptor.name,
         range: tags[descriptor.range],
-        isURL: false,
       };
     }
 
@@ -250,12 +247,12 @@ export class Engine {
     // from the remote listings
     const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
-      return {name: finalDescriptor.name, reference: cachedVersion, isURL: false};
+      return {name: finalDescriptor.name, reference: cachedVersion};
 
     // If the user asked for a specific version, no need to request the list of
     // available versions from the registry.
     if (semver.valid(finalDescriptor.range))
-      return {name: finalDescriptor.name, reference: finalDescriptor.range, isURL: false};
+      return {name: finalDescriptor.name, reference: finalDescriptor.range};
 
     const versions = await Promise.all(Object.keys(definition.ranges).map(async range => {
       const packageManagerSpec = definition.ranges[range];
@@ -269,6 +266,6 @@ export class Engine {
     if (highestVersion.length === 0)
       return null;
 
-    return {name: finalDescriptor.name, reference: highestVersion[0], isURL: false};
+    return {name: finalDescriptor.name, reference: highestVersion[0]};
   }
 }

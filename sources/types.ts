@@ -96,21 +96,7 @@ export interface Config {
  * A structure containing the information needed to locate the package
  * manager to use for the active project.
  */
-export type Descriptor = SupportedPackageManagerDescriptor | URLDescriptor;
-export interface SupportedPackageManagerDescriptor {
-  /**
-     * The name of the package manager required.
-     */
-  name: SupportedPackageManagers;
-
-  /**
-     * The range of versions allowed.
-     */
-  range: string;
-
-  isURL: false;
-}
-interface URLDescriptor {
+export interface Descriptor {
   /**
      * The name of the package manager required.
      */
@@ -120,30 +106,19 @@ interface URLDescriptor {
      * The range of versions allowed.
      */
   range: string;
-
-  isURL: true;
 }
 
 /**
  *
  */
-export type Locator = SupportedPackageManagerLocator | URLLocator;
-
-export interface SupportedPackageManagerLocator {
+export interface Locator {
   /**
      * The name of the package manager required.
      */
-  name: SupportedPackageManagers;
+  name: string;
 
   /**
      * The exact version required.
      */
   reference: string;
-
-  isURL: false;
-}
-export interface URLLocator {
-  name: string;
-  reference: string;
-  isURL: true;
 }
