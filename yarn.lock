@@ -2172,7 +2172,7 @@ __metadata:
     tar: "npm:^6.0.1"
     ts-node: "npm:^10.0.0"
     typescript: "npm:^5.0.4"
-    undici: "npm:^6.4.0"
+    undici: "npm:^6.6.1"
     v8-compile-cache: "npm:^2.3.0"
     which: "npm:^4.0.0"
   languageName: unknown
@@ -5699,12 +5699,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^6.4.0":
-  version: 6.4.0
-  resolution: "undici@npm:6.4.0"
+"undici@npm:^6.6.1":
+  version: 6.6.2
+  resolution: "undici@npm:6.6.2"
   dependencies:
     "@fastify/busboy": "npm:^2.0.0"
-  checksum: d6b19daaa05ffa1ef9af0cd6c22867386f9caab16a807898ca8a321916ddab0c1a027c1346638b1a917abff1f7624967eb7e93111c45a8feafa0df36d9ca5b2b
+  checksum: c8c8a436059b13603f67ed4d917b4ba6d9ef282ac55c932c4790ee1a1c8cad1369da3c11b6e0b9df5a95ed1849cb98fa2f2310f6d0f9331dd359286c912497d2
   languageName: node
   linkType: hard
 
