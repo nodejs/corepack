@@ -135,6 +135,14 @@ Note that those commands still check whether the local project is configured for
 the given package manager (ie you won't be able to run `corepack yarn install`
 on a project where the `packageManager` field references `pnpm`).
 
+### `corepack cache clean`
+
+Clears the local `COREPACK_HOME` cache directory.
+
+### `corepack cache clear`
+
+Clears the local `COREPACK_HOME` cache directory.
+
 ### `corepack enable [... name]`
 
 | Option                | Description                             |
