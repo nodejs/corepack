@@ -24,7 +24,6 @@ export class UseCommand extends BaseCommand {
 
   async execute() {
     const [descriptor] = await this.resolvePatternsToDescriptors({
-      all: false,
       patterns: [this.pattern],
     });
 

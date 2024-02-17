@@ -22,14 +22,7 @@ export class PackCommand extends BaseCommand {
     ], [
       `Pack the latest version of Yarn 1.x inside a file named corepack.tgz`,
       `corepack pack yarn@^1`,
-    ], [
-      `Pack the latest versions of all supported package managers inside a file named everything.tgz`,
-      `corepack pack --all -o everything.tgz`,
     ]],
-  });
-
-  all = Option.Boolean(`--all`, false, {
-    description: `If true, all available default package managers will be installed`,
   });
 
   json = Option.Boolean(`--json`, false, {
@@ -44,7 +37,6 @@ export class PackCommand extends BaseCommand {
 
   async execute() {
     const descriptors = await this.resolvePatternsToDescriptors({
-      all: this.all,
       patterns: this.patterns,
     });
 

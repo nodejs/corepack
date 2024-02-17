@@ -102,9 +102,6 @@ The utility commands detailed in the next section.
   case you'll simply run `corepack pack` to make sure that your image
   includes the Last Known Good release for the specified package manager.
 
-  - If you want to have _all_ Last Known Good releases for all package managers,
-    just use the `--all` flag which will do just that.
-
 - Or you're publishing your project to a system where the network is
   unavailable, in which case you'll preemptively generate a package manager
   archive from your local computer (using `corepack pack -o`) before storing
@@ -185,11 +182,7 @@ This command doesn't change the global version used when running the package
 manager from outside the project (use the \`-g,--global\` flag if you wish
 to do this).
 
-### `corepack install <-g,--global> [--all] [... name[@<version>]]`
-
-| Option                | Description                                |
-| --------------------- | ------------------------------------------ |
-| `--all`               | Install all Last Known Good releases       |
+### `corepack install <-g,--global> [... name[@<version>]]`
 
 Install the selected package managers and install them on the system.
 
@@ -197,11 +190,10 @@ Package managers thus installed will be configured as the new default when
 calling their respective binaries outside of projects defining the
 `packageManager` field.
 
-### `corepack pack [--all] [... name[@<version>]]`
+### `corepack pack [... name[@<version>]]`
 
 | Option                | Description                                |
 | --------------------- | ------------------------------------------ |
-| `--all`               | Pack all Last Known Good releases          |
 | `--json `             | Print the output folder rather than logs   |
 | `-o,--output `        | Path where to generate the archive         |
 
