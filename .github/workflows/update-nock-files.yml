@@ -41,7 +41,7 @@ jobs:
       - run: corepack yarn build # We need the stubs to run the tests
 
       - name: Remove old Nock files to avoid conflicts
-        run: rm -r tests/nock
+        run: rm tests/nocks.db
 
       - run: corepack yarn test
         env:
@@ -49,13 +49,13 @@ jobs:
 
       - name: Check if anything has changed
         id: contains-changes
-        run: echo "result=$(git --no-pager diff --quiet -- tests/nock || echo "yes")" >> $GITHUB_OUTPUT
+        run: echo "result=$(git --no-pager diff --quiet -- tests/nocks.db || echo "yes")" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Commit changes
         if: ${{ steps.contains-changes.outputs.result == 'yes' }}
         run: |
-          git add tests/nock/
+          git add tests/nocks.db
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git commit -m "update Nock files"
@@ -70,10 +70,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload `tests/nock` in case of failure
+      - name: Upload `tests/nocks.db` in case of failure
         uses: actions/upload-artifact@v4
         if: ${{ failure() && steps.contains-changes.outputs.result == 'yes' }}
         with:
           name: nock
           path: |
-            tests/nock
+            tests/nocks.db

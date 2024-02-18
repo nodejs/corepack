@@ -3,7 +3,7 @@ const path = require(`node:path`);
 const crypto = require(`node:crypto`);
 const SQLite3 = require(`better-sqlite3`);
 
-const db = new SQLite3(path.join(__dirname, `nock/nocks.db`));
+const db = new SQLite3(path.join(__dirname, `nocks.db`));
 
 db.exec(`CREATE TABLE IF NOT EXISTS nocks (
   hash BLOB PRIMARY KEY NOT NULL,
