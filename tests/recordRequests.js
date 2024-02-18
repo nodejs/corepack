@@ -4,6 +4,9 @@ const crypto = require(`node:crypto`);
 const SQLite3 = require(`better-sqlite3`);
 
 const db = new SQLite3(path.join(__dirname, `nocks.db`));
+process.once(`exit`, () => {
+  db.close();
+});
 
 db.exec(`CREATE TABLE IF NOT EXISTS nocks (
   hash BLOB PRIMARY KEY NOT NULL,
