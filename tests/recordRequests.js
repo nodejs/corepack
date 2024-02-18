@@ -12,8 +12,6 @@ db.exec(`CREATE TABLE IF NOT EXISTS nocks (
   status INTEGER NOT NULL
 )`);
 
-const insertNockStatement = db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`);
-const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
 
 /**
  * @param {string | URL} input
@@ -41,6 +39,7 @@ function getRequestHash(input, init) {
 }
 
 if (process.env.NOCK_ENV === `record`) {
+  const insertNockStatement = db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`);
   const realFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const response = await realFetch(input, init);
@@ -68,6 +67,8 @@ if (process.env.NOCK_ENV === `record`) {
     });
   };
 } else if (process.env.NOCK_ENV === `replay`) {
+  const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
+
   globalThis.fetch = async (input, init) => {
     const requestHash = getRequestHash(input, init);
 
