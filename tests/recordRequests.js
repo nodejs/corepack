@@ -5,12 +5,12 @@ const SQLite3 = require(`better-sqlite3`);
 
 const db = new SQLite3(path.join(__dirname, `nock/nocks.db`));
 
-db.prepare(`CREATE TABLE IF NOT EXISTS nocks (
+db.exec(`CREATE TABLE IF NOT EXISTS nocks (
   hash BLOB PRIMARY KEY NOT NULL,
   body BLOB NOT NULL,
   headers BLOB NOT NULL,
   status INTEGER NOT NULL
-)`).run();
+)`);
 
 const insertNockStatement = db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`);
 const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
