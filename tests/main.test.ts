@@ -739,3 +739,22 @@ it(`should show a warning on stderr before downloading when enable`, async() => 
     });
   });
 });
+
+it(`should be able to show the latest version`, async () => {
+  process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stderr: ``,
+    });
+
+    // Should keep working if the home folder is removed
+    await xfs.rmdirPromise(process.env.COREPACK_HOME as any, {recursive: true});
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stderr: ``,
+    });
+  });
+});
