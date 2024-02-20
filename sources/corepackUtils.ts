@@ -104,8 +104,28 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   return bestMatch;
 }
 
+export function isSupportedPackageManagerDescriptor(descriptor: Descriptor) {
+  return !URL.canParse(descriptor.range);
+}
+
+export function isSupportedPackageManagerLocator(locator: Locator) {
+  return !URL.canParse(locator.reference);
+}
+
+function parseURLReference(locator: Locator) {
+  const {hash, href} = new URL(locator.reference);
+  if (hash) {
+    return {
+      version: encodeURIComponent(href.slice(0, -hash.length)),
+      build: hash.slice(1).split(`.`),
+    };
+  }
+  return {version: encodeURIComponent(href), build: []};
+}
+
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
-  const locatorReference = semver.parse(locator.reference)!;
+  const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
+  const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
   const {version, build} = locatorReference;
 
   const installFolder = path.join(installTarget, locator.name, version);
@@ -113,6 +133,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   try {
     const corepackFile = path.join(installFolder, `.corepack`);
     const corepackContent = await fs.promises.readFile(corepackFile, `utf8`);
+
     const corepackData = JSON.parse(corepackContent);
 
     debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
@@ -120,20 +141,26 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     return {
       hash: corepackData.hash as string,
       location: installFolder,
+      bin: corepackData.bin,
     };
   } catch (err) {
-    if ((err as nodeUtils.NodeError).code !== `ENOENT`) {
+    if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
       throw err;
     }
   }
 
-  const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
-  const url = process.env.COREPACK_NPM_REGISTRY ?
-    defaultNpmRegistryURL.replace(
-      npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-      () => process.env.COREPACK_NPM_REGISTRY!,
-    ) :
-    defaultNpmRegistryURL;
+  let url: string;
+  if (locatorIsASupportedPackageManager) {
+    const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
+    url = process.env.COREPACK_NPM_REGISTRY ?
+      defaultNpmRegistryURL.replace(
+        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+        () => process.env.COREPACK_NPM_REGISTRY!,
+      ) :
+      defaultNpmRegistryURL;
+  } else {
+    url = decodeURIComponent(version);
+  }
 
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
@@ -163,6 +190,15 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
+  let bin;
+  if (!locatorIsASupportedPackageManager) {
+    if (ext === `.tgz`) {
+      bin = require(path.join(tmpFolder, `package.json`)).bin;
+    } else if (ext === `.js`) {
+      bin = [locator.name];
+    }
+  }
+
   const actualHash = hash.digest(`hex`);
   if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
@@ -171,6 +207,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.writeFile(path.join(tmpFolder, `.corepack`), JSON.stringify({
     locator,
+    bin,
     hash: serializedHash,
   }));
 
@@ -190,7 +227,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  if (process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
+  if (locatorIsASupportedPackageManager && process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
     let lastKnownGoodFile: FileHandle;
     try {
       lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
@@ -198,7 +235,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
       if (defaultVersion) {
         const currentDefault = semver.parse(defaultVersion)!;
-        if (currentDefault.major === locatorReference.major && semver.lt(currentDefault, locatorReference)) {
+        const downloadedVersion = locatorReference as semver.SemVer;
+        if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
           await engine.activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, locator);
         }
       }
@@ -217,6 +255,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   return {
     location: installFolder,
+    bin,
     hash: serializedHash,
   };
 }

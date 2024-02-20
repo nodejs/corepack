@@ -12,8 +12,9 @@ import * as debugUtils                                        from './debugUtils
 import * as folderUtils                                       from './folderUtils';
 import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
-import {Config, Descriptor, Locator}                          from './types';
+import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import {isSupportedPackageManager}                            from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -79,8 +80,24 @@ export class Engine {
     return null;
   }
 
-  getPackageManagerSpecFor(locator: Locator) {
-    const definition = this.config.definitions[locator.name];
+  getPackageManagerSpecFor(locator: Locator): PackageManagerSpec {
+    if (!corepackUtils.isSupportedPackageManagerLocator(locator)) {
+      const url = `${locator.reference}`;
+      return {
+        url,
+        bin: undefined as any, // bin will be set later
+        registry: {
+          type: `url`,
+          url,
+          fields: {
+            tags: ``,
+            versions: ``,
+          },
+        },
+      };
+    }
+
+    const definition = this.config.definitions[locator.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${locator.name}) isn't supported by this corepack build`);
 
@@ -176,6 +193,7 @@ export class Engine {
     const packageManagerInfo = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec,
     });
+    spec.bin ??= packageManagerInfo.bin;
 
     return {
       ...packageManagerInfo,
@@ -188,8 +206,18 @@ export class Engine {
 
   }
 
-  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
-    const definition = this.config.definitions[descriptor.name];
+  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {
+    if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
+      if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
+        throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
+
+      return {
+        name: descriptor.name,
+        reference: descriptor.range,
+      };
+    }
+
+    const definition = this.config.definitions[descriptor.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 

@@ -100,7 +100,7 @@ export interface Descriptor {
   /**
      * The name of the package manager required.
      */
-  name: SupportedPackageManagers;
+  name: string;
 
   /**
      * The range of versions allowed.
@@ -115,7 +115,7 @@ export interface Locator {
   /**
      * The name of the package manager required.
      */
-  name: SupportedPackageManagers;
+  name: string;
 
   /**
      * The exact version required.
