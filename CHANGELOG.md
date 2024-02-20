@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.1](https://github.com/nodejs/corepack/compare/v0.25.0...v0.25.1) (2024-02-20)
+
+
+### Bug Fixes
+
+* use valid semver range for `engines.node` ([#378](https://github.com/nodejs/corepack/issues/378)) ([f2185fe](https://github.com/nodejs/corepack/commit/f2185fefa145cc75fca082acc169f8aaef637ca2))
+
 ## [0.25.0](https://github.com/nodejs/corepack/compare/v0.24.1...v0.25.0) (2024-02-20)
 
 
