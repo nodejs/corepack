@@ -40,7 +40,7 @@ export async function fetchAsJson(input: string | URL, init?: RequestInit) {
 
 export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
-    console.error(`Corepack is about to download ${input}.`);
+    console.error(`Corepack is about to download ${input}`);
     if (stdin.isTTY && !process.env.CI) {
       stderr.write(`Do you want to continue? [Y/n] `);
       stdin.resume();
