@@ -21,6 +21,10 @@ export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackag
 export function getLastKnownGoodFile(flag = `r`) {
   return fs.promises.open(path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`), flag);
 }
+async function createLastKnownGoodFile() {
+  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), {recursive: true});
+  return getLastKnownGoodFile(`w`);
+}
 
 export async function getJSONFileContent(fh: FileHandle) {
   let lastKnownGood: unknown;
@@ -139,17 +143,13 @@ export class Engine {
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
-    let emptyFile = false;
-    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
-      if ((err as NodeError)?.code === `ENOENT`) {
-        emptyFile = true;
-        return getLastKnownGoodFile(`w`);
+    let lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
+      if ((err as NodeError)?.code !== `ENOENT`) {
+        throw err;
       }
-
-      throw err;
     });
     try {
-      const lastKnownGood = emptyFile || await getJSONFileContent(lastKnownGoodFile);
+      const lastKnownGood = lastKnownGoodFile == null || await getJSONFileContent(lastKnownGoodFile!);
       const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
       if (lastKnownGoodForThisPackageManager)
         return lastKnownGoodForThisPackageManager;
@@ -159,14 +159,20 @@ export class Engine {
 
       const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
 
-      await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
-        name: packageManager,
-        reference,
-      });
+      try {
+        lastKnownGoodFile ??= await createLastKnownGoodFile();
+        await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
+          name: packageManager,
+          reference,
+        });
+      } catch {
+        // If for some reason, we cannot update the last known good file, we
+        // ignore the error.
+      }
 
       return reference;
     } finally {
-      await lastKnownGoodFile.close();
+      await lastKnownGoodFile?.close();
     }
   }
 
