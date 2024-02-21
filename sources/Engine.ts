@@ -1,4 +1,5 @@
 import {UsageError}                                           from 'clipanion';
+import type {FileHandle}                                      from 'fs/promises';
 import fs                                                     from 'fs';
 import path                                                   from 'path';
 import process                                                from 'process';
@@ -7,12 +8,61 @@ import semver                                                 from 'semver';
 import defaultConfig                                          from '../config.json';
 
 import * as corepackUtils                                     from './corepackUtils';
+import * as debugUtils                                        from './debugUtils';
 import * as folderUtils                                       from './folderUtils';
+import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
-import {Config, Descriptor, Locator}                          from './types';
+import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
+import {isSupportedPackageManager}                            from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
+
+export function getLastKnownGoodFile(flag = `r`) {
+  return fs.promises.open(path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`), flag);
+}
+async function createLastKnownGoodFile() {
+  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), {recursive: true});
+  return getLastKnownGoodFile(`w`);
+}
+
+export async function getJSONFileContent(fh: FileHandle) {
+  let lastKnownGood: unknown;
+  try {
+    lastKnownGood = JSON.parse(await fh.readFile(`utf8`));
+  } catch {
+    // Ignore errors; too bad
+    return undefined;
+  }
+
+  return lastKnownGood;
+}
+
+async function overwriteJSONFileContent(fh: FileHandle, content: unknown) {
+  await fh.truncate(0);
+  await fh.write(`${JSON.stringify(content, null, 2)}\n`, 0);
+}
+
+export function getLastKnownGoodFromFileContent(lastKnownGood: unknown, packageManager: string) {
+  if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
+    Object.hasOwn(lastKnownGood, packageManager)) {
+    const override = (lastKnownGood as any)[packageManager];
+    if (typeof override === `string`) {
+      return override;
+    }
+  }
+  return undefined;
+}
+
+export async function activatePackageManagerFromFileHandle(lastKnownGoodFile: FileHandle, lastKnownGood: unknown, locator: Locator) {
+  if (typeof lastKnownGood !== `object` || lastKnownGood === null)
+    lastKnownGood = {};
+
+  (lastKnownGood as Record<string, string>)[locator.name] = locator.reference;
+
+  debugUtils.log(`Setting ${locator.name}@${locator.reference} as Last Known Good version`);
+  await overwriteJSONFileContent(lastKnownGoodFile, lastKnownGood);
+}
 
 export class Engine {
   constructor(public config: Config = defaultConfig as Config) {
@@ -34,8 +84,24 @@ export class Engine {
     return null;
   }
 
-  getPackageManagerSpecFor(locator: Locator) {
-    const definition = this.config.definitions[locator.name];
+  getPackageManagerSpecFor(locator: Locator): PackageManagerSpec {
+    if (!corepackUtils.isSupportedPackageManagerLocator(locator)) {
+      const url = `${locator.reference}`;
+      return {
+        url,
+        bin: undefined as any, // bin will be set later
+        registry: {
+          type: `url`,
+          url,
+          fields: {
+            tags: ``,
+            versions: ``,
+          },
+        },
+      };
+    }
+
+    const definition = this.config.definitions[locator.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${locator.name}) isn't supported by this corepack build`);
 
@@ -77,51 +143,54 @@ export class Engine {
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
-    let lastKnownGood: unknown;
-    try {
-      lastKnownGood = JSON.parse(await fs.promises.readFile(this.getLastKnownGoodFile(), `utf8`));
-    } catch {
-      // Ignore errors; too bad
-    }
-
-    if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
-        Object.hasOwn(lastKnownGood, packageManager)) {
-      const override = (lastKnownGood as any)[packageManager];
-      if (typeof override === `string`) {
-        return override;
+    let lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
+      if ((err as NodeError)?.code !== `ENOENT`) {
+        throw err;
       }
-    }
-
-    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
-      return definition.default;
-
-    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
-
-    await this.activatePackageManager({
-      name: packageManager,
-      reference,
     });
+    try {
+      const lastKnownGood = lastKnownGoodFile == null || await getJSONFileContent(lastKnownGoodFile!);
+      const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
+      if (lastKnownGoodForThisPackageManager)
+        return lastKnownGoodForThisPackageManager;
 
-    return reference;
+      if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
+        return definition.default;
+
+      const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
+
+      try {
+        lastKnownGoodFile ??= await createLastKnownGoodFile();
+        await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
+          name: packageManager,
+          reference,
+        });
+      } catch {
+        // If for some reason, we cannot update the last known good file, we
+        // ignore the error.
+      }
+
+      return reference;
+    } finally {
+      await lastKnownGoodFile?.close();
+    }
   }
 
   async activatePackageManager(locator: Locator) {
-    const lastKnownGoodFile = this.getLastKnownGoodFile();
+    let emptyFile = false;
+    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
+      if ((err as NodeError)?.code === `ENOENT`) {
+        emptyFile = true;
+        return getLastKnownGoodFile(`w`);
+      }
 
-    let lastKnownGood;
+      throw err;
+    });
     try {
-      lastKnownGood = JSON.parse(await fs.promises.readFile(lastKnownGoodFile, `utf8`));
-    } catch {
-      // Ignore errors; too bad
+      await activatePackageManagerFromFileHandle(lastKnownGoodFile, emptyFile || await getJSONFileContent(lastKnownGoodFile), locator);
+    } finally {
+      await lastKnownGoodFile.close();
     }
-
-    if (typeof lastKnownGood !== `object` || lastKnownGood === null)
-      lastKnownGood = {};
-
-    lastKnownGood[locator.name] = locator.reference;
-
-    await fs.promises.mkdir(path.dirname(lastKnownGoodFile), {recursive: true});
-    await fs.promises.writeFile(lastKnownGoodFile, `${JSON.stringify(lastKnownGood, null, 2)}\n`);
   }
 
   async ensurePackageManager(locator: Locator) {
@@ -130,6 +199,7 @@ export class Engine {
     const packageManagerInfo = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec,
     });
+    spec.bin ??= packageManagerInfo.bin;
 
     return {
       ...packageManagerInfo,
@@ -142,8 +212,18 @@ export class Engine {
 
   }
 
-  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}) {
-    const definition = this.config.definitions[descriptor.name];
+  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {
+    if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
+      if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
+        throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
+
+      return {
+        name: descriptor.name,
+        reference: descriptor.range,
+      };
+    }
+
+    const definition = this.config.definitions[descriptor.name as SupportedPackageManagers];
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
@@ -193,9 +273,5 @@ export class Engine {
       return null;
 
     return {name: finalDescriptor.name, reference: highestVersion[0]};
-  }
-
-  private getLastKnownGoodFile() {
-    return path.join(folderUtils.getInstallFolder(), `lastKnownGood.json`);
   }
 }

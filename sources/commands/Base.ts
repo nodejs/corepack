@@ -8,13 +8,8 @@ import * as nodeUtils               from '../nodeUtils';
 import * as specUtils               from '../specUtils';
 
 export abstract class BaseCommand extends Command<Context> {
-  async resolvePatternsToDescriptors({all, patterns}: {all: boolean, patterns: Array<string>}) {
-    if (all && patterns.length > 0)
-      throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
-
-    const resolvedSpecs = all
-      ? await this.context.engine.getDefaultDescriptors()
-      : patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
+  async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
+    const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
     if (resolvedSpecs.length === 0) {
       const lookup = await specUtils.loadSpec(this.context.cwd);

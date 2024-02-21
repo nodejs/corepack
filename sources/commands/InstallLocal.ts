@@ -20,7 +20,6 @@ export class InstallLocalCommand extends BaseCommand {
 
   async execute() {
     const [descriptor] = await this.resolvePatternsToDescriptors({
-      all: false,
       patterns: [],
     });
 

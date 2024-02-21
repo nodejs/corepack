@@ -45,7 +45,6 @@ export class UseCommand extends BaseCommand {
       const location = `https://registry.npmjs.com/${this.pattern}/-/${this.pattern}-${version}.tgz`;
       packageManagerInfo = {
         locator: {
-          // @ts-expect-error Needs type update from the other PR
           name: this.pattern,
           // @ts-expect-error Needs type update from the other PR
           reference: new URL(location),
@@ -60,7 +59,6 @@ export class UseCommand extends BaseCommand {
       };
     } else {
       const [descriptor] = await this.resolvePatternsToDescriptors({
-        all: false,
         patterns: [this.pattern],
       });
 

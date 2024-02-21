@@ -1,7 +1,9 @@
-import {Command, UsageError} from 'clipanion';
-import semver                from 'semver';
+import {Command, UsageError}           from 'clipanion';
+import semver                          from 'semver';
 
-import {BaseCommand}         from './Base';
+import type {SupportedPackageManagers} from '../types';
+
+import {BaseCommand}                   from './Base';
 
 export class UpCommand extends BaseCommand {
   static paths = [
@@ -28,7 +30,6 @@ export class UpCommand extends BaseCommand {
 
   async execute() {
     const [descriptor] = await this.resolvePatternsToDescriptors({
-      all: false,
       patterns: [],
     });
 
@@ -39,8 +40,8 @@ export class UpCommand extends BaseCommand {
     if (!resolved)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-    const majorVersion = semver.major(resolved?.reference);
-    const majorDescriptor = {name: descriptor.name, range: `^${majorVersion}.0.0`};
+    const majorVersion = semver.major(resolved.reference);
+    const majorDescriptor = {name: descriptor.name as SupportedPackageManagers, range: `^${majorVersion}.0.0`};
 
     const highestVersion = await this.context.engine.resolveDescriptor(majorDescriptor, {useCache: false});
     if (!highestVersion)

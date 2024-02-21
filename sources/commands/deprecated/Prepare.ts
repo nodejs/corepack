@@ -16,10 +16,6 @@ export class PrepareCommand extends Command<Context> {
     description: `If true, this release will become the default one for this package manager`,
   });
 
-  all = Option.Boolean(`--all`, false, {
-    description: `If true, all available default package managers will be installed`,
-  });
-
   json = Option.Boolean(`--json`, false, {
     description: `If true, the output will be the path of the generated tarball`,
   });
@@ -32,12 +28,7 @@ export class PrepareCommand extends Command<Context> {
   specs = Option.Rest();
 
   async execute() {
-    if (this.all && this.specs.length > 0)
-      throw new UsageError(`The --all option cannot be used along with an explicit package manager specification`);
-
-    const specs: Array<string | Descriptor> = this.all
-      ? await this.context.engine.getDefaultDescriptors()
-      : this.specs;
+    const specs: Array<string | Descriptor> = this.specs;
 
     const installLocations: Array<string> = [];
 

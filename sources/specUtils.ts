@@ -12,16 +12,40 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   if (typeof raw !== `string`)
     throw new UsageError(`Invalid package manager specification in ${source}; expected a string`);
 
-  const match = raw.match(/^(?!_)([^@]+)(?:@(.+))?$/);
-  if (match === null || (enforceExactVersion && (!match[2] || !semver.valid(match[2]))))
-    throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+  const atIndex = raw.indexOf(`@`);
 
-  if (!isSupportedPackageManager(match[1]))
-    throw new UsageError(`Unsupported package manager specification (${match}) ${enforceExactVersion ? `` : `. Consider using the \`--from-npm\` flag if you meant to use the npm package \`${match[1]}\` as your package manager`}`);
+  if (atIndex === -1 || atIndex === raw.length - 1) {
+    if (enforceExactVersion)
+      throw new UsageError(`No version specified for ${raw} in "packageManager" of ${source}`);
+
+    const name = atIndex === -1 ? raw : raw.slice(0, -1);
+    if (!isSupportedPackageManager(name))
+      throw new UsageError(`Unsupported package manager specification (${name}). Consider using the \`--from-npm\` flag if you meant to use the npm package \`${name}\` as your package manager`);
+
+    return {
+      name, range: `*`,
+    };
+  }
+
+  const name = raw.slice(0, atIndex);
+  const range = raw.slice(atIndex + 1);
+
+  const isURL = URL.canParse(range);
+  if (!isURL) {
+    if (enforceExactVersion && !semver.valid(range))
+      throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version`);
+
+    if (!isSupportedPackageManager(name)) {
+      throw new UsageError(`Unsupported package manager specification (${raw})`);
+    }
+  } else if (isSupportedPackageManager(name) && process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1`) {
+    throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${raw})`);
+  }
+
 
   return {
-    name: match[1],
-    range: match[2] ?? `*`,
+    name,
+    range,
   };
 }
 
@@ -43,7 +67,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
  */
 export async function findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
   // A locator is a valid descriptor (but not the other way around)
-  const fallbackLocator = {name: locator.name, range: locator.reference};
+  const fallbackLocator = {name: locator.name, range: `${locator.reference}`};
 
   if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
     return fallbackLocator;
