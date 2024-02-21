@@ -46,12 +46,11 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
       stdin.resume();
       const chars = await once(stdin, `data`);
       stdin.pause();
-      if (
-        chars[0][0] === 0x6e || // n
-        chars[0][0] === 0x4e // N
-      ) {
+
+      // n / N
+      if (chars[0][0] === 0x6e || chars[0][0] === 0x4e)
         throw new UsageError(`Aborted by the user`);
-      }
+
       // Add a newline to separate Corepack output from the package manager
       console.error(``);
     }
