@@ -46,8 +46,7 @@ export class UseCommand extends BaseCommand {
       packageManagerInfo = {
         locator: {
           name: this.pattern,
-          // @ts-expect-error Needs type update from the other PR
-          reference: new URL(location),
+          reference: location,
         },
         spec: {
           bin: {},
@@ -56,6 +55,7 @@ export class UseCommand extends BaseCommand {
         },
         hash,
         location,
+        bin: undefined,
       };
     } else {
       const [descriptor] = await this.resolvePatternsToDescriptors({

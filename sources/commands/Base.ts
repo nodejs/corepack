@@ -39,7 +39,7 @@ export abstract class BaseCommand extends Command<Context> {
     const {data, indent} = nodeUtils.readPackageJson(content);
 
     const previousPackageManager = data.packageManager ?? `unknown`;
-    data.packageManager = `${info.locator.name}@${info.locator.reference}${typeof info.locator.reference === `string` ? `+` : `#`}${info.hash}`;
+    data.packageManager = `${info.locator.name}@${info.locator.reference}${URL.canParse(info.locator.reference) ? `#` : `+`}${info.hash}`;
 
     const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
     await fs.promises.writeFile(lookup.target, newContent, `utf8`);
