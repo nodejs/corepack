@@ -9,9 +9,8 @@ const OLD_ENV = process.env;
 // To ensure we test the default behavior, we must remove these env vars
 // in case the local machine already set these values.
 const processEnv = Object.fromEntries(
-  Object.keys(process.env)
-    .filter(key => key !== `FORCE_COLOR` && !key.startsWith(`COREPACK_`))
-    .map(key => [key, process.env[key]]),
+  Object.entries(process.env)
+    .filter(([key]) => key !== `FORCE_COLOR` && !key.startsWith(`COREPACK_`))
 );
 
 switch (process.env.NOCK_ENV || ``) {
