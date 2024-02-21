@@ -3,6 +3,7 @@ import {BaseContext, Builtins, Cli, Command, Option, UsageError} from 'clipanion
 import {version as corepackVersion}                              from '../package.json';
 
 import {Engine}                                                  from './Engine';
+import {CacheCommand}                                            from './commands/Cache';
 import {DisableCommand}                                          from './commands/Disable';
 import {EnableCommand}                                           from './commands/Enable';
 import {InstallGlobalCommand}                                    from './commands/InstallGlobal';
@@ -35,9 +36,9 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
     return null;
 
   const [, binaryName, binaryVersion] = match;
-  const packageManager = context.engine.getPackageManagerFor(binaryName);
-  if (!packageManager)
-    return null;
+  const packageManager = context.engine.getPackageManagerFor(binaryName)!;
+
+  if (packageManager == null && binaryVersion == null) return null;
 
   return {
     packageManager,
@@ -47,28 +48,34 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
 }
 
 async function executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, args: Array<string>, context: Context) {
-  const defaultVersion = await context.engine.getDefaultVersion(packageManager);
-  const definition = context.engine.config.definitions[packageManager]!;
-
-  // If all leading segments match one of the patterns defined in the `transparent`
-  // key, we tolerate calling this binary even if the local project isn't explicitly
-  // configured for it, and we use the special default version if requested.
-  let isTransparentCommand = false;
-  for (const transparentPath of definition.transparent.commands) {
-    if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === args[index])) {
-      isTransparentCommand = true;
-      break;
-    }
-  }
-
-  const fallbackReference = isTransparentCommand
-    ? definition.transparent.default ?? defaultVersion
-    : defaultVersion;
-
-  const fallbackLocator: Locator = {
-    name: packageManager,
-    reference: fallbackReference,
+  let fallbackLocator: Locator = {
+    name: binaryName as SupportedPackageManagers,
+    reference: undefined as any,
   };
+  let isTransparentCommand = false;
+  if (packageManager != null) {
+    const defaultVersion = await context.engine.getDefaultVersion(packageManager);
+    const definition = context.engine.config.definitions[packageManager]!;
+
+    // If all leading segments match one of the patterns defined in the `transparent`
+    // key, we tolerate calling this binary even if the local project isn't explicitly
+    // configured for it, and we use the special default version if requested.
+    for (const transparentPath of definition.transparent.commands) {
+      if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === args[index])) {
+        isTransparentCommand = true;
+        break;
+      }
+    }
+
+    const fallbackReference = isTransparentCommand
+      ? definition.transparent.default ?? defaultVersion
+      : defaultVersion;
+
+    fallbackLocator = {
+      name: packageManager,
+      reference: fallbackReference,
+    };
+  }
 
   let descriptor: Descriptor;
   try {
@@ -117,6 +124,7 @@ export async function runMain(argv: Array<string>) {
     cli.register(Builtins.HelpCommand);
     cli.register(Builtins.VersionCommand);
 
+    cli.register(CacheCommand);
     cli.register(DisableCommand);
     cli.register(EnableCommand);
     cli.register(InstallGlobalCommand);

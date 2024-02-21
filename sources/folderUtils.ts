@@ -1,33 +1,17 @@
-import {UsageError}                        from 'clipanion';
-import {existsSync, mkdirSync, renameSync} from 'fs';
-import {homedir, tmpdir}                   from 'os';
-import {join}                              from 'path';
-import process                             from 'process';
+import {UsageError}      from 'clipanion';
+import {mkdirSync}       from 'fs';
+import {homedir, tmpdir} from 'os';
+import {join}            from 'path';
+import process           from 'process';
 
-import type {NodeError}                    from './nodeUtils';
+import type {NodeError}  from './nodeUtils';
 
-export function getInstallFolder() {
-  if (process.env.COREPACK_HOME == null) {
-    // TODO: remove this block on the next major.
-    const oldCorepackDefaultHome = join(homedir(), `.node`, `corepack`);
-    const newCorepackDefaultHome = join(
-      process.env.XDG_CACHE_HOME ??
-        process.env.LOCALAPPDATA ??
-        join(
-          homedir(),
-          process.platform === `win32` ? `AppData/Local` : `.cache`,
-        ),
-      `node/corepack`,
-    );
-    if (
-      existsSync(oldCorepackDefaultHome) &&
-      !existsSync(newCorepackDefaultHome)
-    ) {
-      mkdirSync(newCorepackDefaultHome, {recursive: true});
-      renameSync(oldCorepackDefaultHome, newCorepackDefaultHome);
-    }
-    return newCorepackDefaultHome;
-  }
+/**
+ * If the install folder structure changes then increment this number.
+ */
+const INSTALL_FOLDER_VERSION = 1;
+
+export function getCorepackHomeFolder() {
   return (
     process.env.COREPACK_HOME ??
     join(
@@ -36,6 +20,13 @@ export function getInstallFolder() {
         join(homedir(), process.platform === `win32` ? `AppData/Local` : `.cache`),
       `node/corepack`,
     )
+  );
+}
+
+export function getInstallFolder() {
+  return join(
+    getCorepackHomeFolder(),
+    `v${INSTALL_FOLDER_VERSION}`,
   );
 }
 
