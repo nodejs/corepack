@@ -42,7 +42,7 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
     console.error(`Corepack is about to download ${input}.`);
     if (stdin.isTTY && !process.env.CI) {
-      stderr.write(`\nDo you want to continue? [Y/n] `);
+      stderr.write(`Do you want to continue? [Y/n] `);
       stdin.resume();
       const chars = await once(stdin, `data`);
       stdin.pause();
@@ -52,6 +52,8 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
       ) {
         throw new UsageError(`Aborted by the user`);
       }
+      // Add a newline to separate Corepack output from the package manager
+      console.error(``);
     }
   }
 
