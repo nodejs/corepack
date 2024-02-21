@@ -52,7 +52,7 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
         throw new UsageError(`Aborted by the user`);
 
       // Add a newline to separate Corepack output from the package manager
-      console.error(``);
+      console.error();
     }
   }
 
