@@ -53,6 +53,12 @@ export interface PackageManagerSpec {
   };
 }
 
+export interface InstallSpec {
+  location: string;
+  bin?: BinList | BinSpec;
+  hash: string;
+}
+
 /**
  * The data structure found in config.json
  */
