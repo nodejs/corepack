@@ -1,6 +1,5 @@
-/* global jest, expect, beforeEach, afterAll */
+/* global jest, beforeEach, afterAll */
 
-const crypto = require(`crypto`);
 const process = require(`process`);
 
 jest.retryTimes(2, {logErrorsBeforeRetry: true});
@@ -14,31 +13,9 @@ const processEnv = Object.fromEntries(
   ),
 );
 
-switch (process.env.NOCK_ENV || ``) {
-  case `record`:
-  case `replay`:
-    beforeEach(() => {
-      process.env = {
-        ...processEnv,
-        RUN_CLI_ID: `0`,
-        NOCK_FILE_NAME: crypto
-          .createHash(`md5`)
-          .update(expect.getState().currentTestName)
-          .digest(`base64url`),
-      };
-    });
-    break;
-
-  case ``: {
-    beforeEach(() => {
-      process.env = {...processEnv};
-    });
-  } break;
-
-  default: {
-    throw new Error(`Invalid NOCK_ENV variable`);
-  }
-}
+beforeEach(() => {
+  process.env = {...processEnv};
+});
 
 afterAll(() => {
   process.env = OLD_ENV;
