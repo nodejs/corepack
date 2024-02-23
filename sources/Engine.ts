@@ -199,7 +199,6 @@ export class Engine {
     const packageManagerInfo = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec,
     });
-    spec.bin ??= packageManagerInfo.bin;
 
     return {
       ...packageManagerInfo,
