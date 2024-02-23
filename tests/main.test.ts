@@ -758,3 +758,46 @@ it(`should be able to show the latest version`, async () => {
     });
   });
 });
+
+it(`should download yarn classic from custom registry`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.COREPACK_NPM_REGISTRY = `https://registry.npmmirror.com`;
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stderr: /^Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/,
+    });
+
+    // Should keep working with cache
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should download yarn berry from custom registry`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.COREPACK_NPM_REGISTRY = `https://registry.npmmirror.com`;
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@3.0.0`,
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `3.0.0\n`,
+      stderr: `Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0.tgz\n`,
+    });
+
+    // Should keep working with cache
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `3.0.0\n`,
+      stderr: ``,
+    });
+  });
+});
