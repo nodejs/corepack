@@ -1,20 +1,21 @@
-import {createHash}                                                                           from 'crypto';
-import {once}                                                                                 from 'events';
-import {FileHandle}                                                                           from 'fs/promises';
-import fs                                                                                     from 'fs';
-import type {Dir}                                                                             from 'fs';
-import Module                                                                                 from 'module';
-import path                                                                                   from 'path';
-import semver                                                                                 from 'semver';
+import {createHash}                                            from 'crypto';
+import {once}                                                  from 'events';
+import {FileHandle}                                            from 'fs/promises';
+import fs                                                      from 'fs';
+import type {Dir}                                              from 'fs';
+import Module                                                  from 'module';
+import path                                                    from 'path';
+import semver                                                  from 'semver';
 
-import * as engine                                                                            from './Engine';
-import * as debugUtils                                                                        from './debugUtils';
-import * as folderUtils                                                                       from './folderUtils';
-import * as fsUtils                                                                           from './fsUtils';
-import * as httpUtils                                                                         from './httpUtils';
-import * as nodeUtils                                                                         from './nodeUtils';
-import * as npmRegistryUtils                                                                  from './npmRegistryUtils';
-import {RegistrySpec, Descriptor, Locator, PackageManagerSpec, BinList, BinSpec, InstallSpec} from './types';
+import * as engine                                             from './Engine';
+import * as debugUtils                                         from './debugUtils';
+import * as folderUtils                                        from './folderUtils';
+import * as fsUtils                                            from './fsUtils';
+import * as httpUtils                                          from './httpUtils';
+import * as nodeUtils                                          from './nodeUtils';
+import * as npmRegistryUtils                                   from './npmRegistryUtils';
+import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import {BinList, BinSpec, InstallSpec}                         from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
