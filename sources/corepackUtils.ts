@@ -151,13 +151,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   let url: string;
   if (locatorIsASupportedPackageManager) {
-    const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
-    url = process.env.COREPACK_NPM_REGISTRY ?
-      defaultNpmRegistryURL.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      ) :
-      defaultNpmRegistryURL;
+    url = spec.url.replace(`{}`, version);
+    if (process.env.COREPACK_NPM_REGISTRY) {
+      const registry = getRegistryFromPackageManagerSpec(spec);
+      if (registry.type === `npm`) {
+        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+      } else {
+        url = url.replace(
+          npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+          () => process.env.COREPACK_NPM_REGISTRY!,
+        );
+      }
+    }
   } else {
     url = decodeURIComponent(version);
   }
