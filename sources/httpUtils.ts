@@ -33,6 +33,19 @@ export async function fetch(input: string | URL, init?: RequestInit) {
       dispatcher: agent,
     });
   } catch (error) {
+    if (error?.message?.includes?.(`Request cannot be constructed from a URL that includes credentials`)) {
+      const url = new URL(input as string);
+      const authorization = `Bearer ${Buffer.from(`${url.username}:${url.password}`).toString(`base64`)}`;
+      url.username = ``;
+      url.password = ``;
+      return fetch(url, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          authorization,
+        },
+      });
+    }
     throw new Error(
       `Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
       {cause: error},

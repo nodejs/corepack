@@ -758,3 +758,37 @@ it(`should be able to show the latest version`, async () => {
     });
   });
 });
+
+it(`should download yarn classic from custom registry with auth`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `yarn: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should download yarn berry from custom registry with auth`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@3.0.0`,
+    });
+
+    await expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `yarn: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should download pnpm from custom registry with auth`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
