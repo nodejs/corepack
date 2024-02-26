@@ -266,7 +266,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 }
 
 async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
-  // Windows malicious file analysis blocks files after download so we need to wait for file release
+  // Windows malicious file analysis blocks files currently under analysis, so we need to wait for file release
   const retries = 5;
   for (let i = 0; i < retries; i++) {
     try {
