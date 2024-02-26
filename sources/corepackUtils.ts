@@ -6,6 +6,7 @@ import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
+import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
@@ -279,7 +280,7 @@ async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
         ) &&
         i < (retries - 1)
       ) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await setTimeoutPromise(100);
         continue;
       } else {
         throw err;
