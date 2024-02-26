@@ -213,7 +213,26 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    await fs.promises.rename(tmpFolder, installFolder);
+    if (process.platform === "win32") {
+      // Windows malicious file analysis blocks files after download so we need to wait for file release
+      const retries = 5;
+      for (let i = 0; i < retries; i++) {
+        try {
+          await fs.promises.rename(tmpFolder, installFolder);
+          break;
+        } catch (err) {
+          if ((err as nodeUtils.NodeError).code === `ENOENT` && i < (retries - 1)) {
+            lastErr = err as nodeUtils.NodeError;
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
+          } else {
+            throw err;
+          }
+        }
+      }
+    } else {
+      await fs.promises.rename(tmpFolder, installFolder);
+    }
   } catch (err) {
     if (
       (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
