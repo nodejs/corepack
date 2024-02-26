@@ -224,7 +224,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
           if (
             (
               (err as nodeUtils.NodeError).code === `ENOENT` ||
-              (err as nodeUtils.NodeError).code === "EPERM"
+              (err as nodeUtils.NodeError).code === `EPERM`
             ) &&
             i < (retries - 1)
           ) {
