@@ -221,8 +221,13 @@ export async function installVersion(installTarget: string, locator: Locator, {s
           await fs.promises.rename(tmpFolder, installFolder);
           break;
         } catch (err) {
-          if ((err as nodeUtils.NodeError).code === `ENOENT` && i < (retries - 1)) {
-            lastErr = err as nodeUtils.NodeError;
+          if (
+            (
+              (err as nodeUtils.NodeError).code === `ENOENT` ||
+              (err as nodeUtils.NodeError).code === "EPERM"
+            ) &&
+            i < (retries - 1)
+          ) {
             await new Promise(resolve => setTimeout(resolve, 100));
             continue;
           } else {
