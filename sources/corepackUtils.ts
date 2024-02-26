@@ -213,28 +213,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    if (process.platform === "win32") {
-      // Windows malicious file analysis blocks files after download so we need to wait for file release
-      const retries = 5;
-      for (let i = 0; i < retries; i++) {
-        try {
-          await fs.promises.rename(tmpFolder, installFolder);
-          break;
-        } catch (err) {
-          if (
-            (
-              (err as nodeUtils.NodeError).code === `ENOENT` ||
-              (err as nodeUtils.NodeError).code === `EPERM`
-            ) &&
-            i < (retries - 1)
-          ) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            continue;
-          } else {
-            throw err;
-          }
-        }
-      }
+    if (process.platform === `win32`) {
+      await renameUnderWindows(tmpFolder, installFolder);
     } else {
       await fs.promises.rename(tmpFolder, installFolder);
     }
@@ -282,6 +262,30 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     bin,
     hash: serializedHash,
   };
+}
+
+async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
+  // Windows malicious file analysis blocks files after download so we need to wait for file release
+  const retries = 5;
+  for (let i = 0; i < retries; i++) {
+    try {
+      await fs.promises.rename(oldPath, newPath);
+      break;
+    } catch (err) {
+      if (
+        (
+          (err as nodeUtils.NodeError).code === `ENOENT` ||
+          (err as nodeUtils.NodeError).code === `EPERM`
+        ) &&
+        i < (retries - 1)
+      ) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        continue;
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 /**
