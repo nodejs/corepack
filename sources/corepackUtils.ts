@@ -165,7 +165,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
-    console.error(`Corepack is about to download ${input}`);
+    console.error(`Corepack is about to download ${url}`);
 
     if (locator.name === `npm`)
       console.error(`Corepack support for npm is provided on a best-effort basis and is not officially supported by the npm team`);
