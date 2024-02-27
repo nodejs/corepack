@@ -303,10 +303,6 @@ There are a wide variety of networking issues that can occur while running `core
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
-## Design
-
-See [`DESIGN.md`](/DESIGN.md).
-
 ## License (MIT)
 
 See [`LICENSE.md`](./LICENSE.md).
