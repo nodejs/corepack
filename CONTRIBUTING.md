@@ -13,7 +13,17 @@ You can also run the tests with `yarn test`.
 
 # Adding a new package manager
 
-New package managers can be added by editing the [config.json](/config.json) file.
+New package managers can be added by editing the following files:
+
+- [`config.json`](./config.json),
+- [`.github/workflows/sync.yml`](./.github/workflows/sync.yml) that keeps pinned
+  versions up-to-date,
+- [`package.json`](./package.json) to add to add the added shims to the list of
+  `"publishConfig/bin"` and `"executableFiles"`,
+- [`sources/types.ts`](./sources/types.ts) to add the package manager to the
+  `SupportedPackageManagers` enum,
+- [`tests/main.test.ts`](./tests/main.test.ts) tests to ensure the added package
+  manager works as expected.
 
 Once added, the shims pertaining to new package managers won't be automatically
 enabled by `corepack enable` when called without arguments - it'll require users
