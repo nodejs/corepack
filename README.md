@@ -3,7 +3,7 @@
 Corepack is a zero-runtime-dependency Node.js script that acts as a bridge
 between Node.js projects and the package managers they are intended to be used
 with during development. In practical terms, **Corepack lets you use Yarn, npm,
-and pnpm without having to install them**.
+and other supported package managers without having to install them**.
 
 ## How to Install
 
@@ -50,8 +50,8 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 ### When Building Packages
 
 Just use your package managers as you usually would. Run `yarn install` in Yarn
-projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack
-will catch these calls, and depending on the situation:
+projects, `pnpm install` in pnpm projects, etc. Corepack will catch these
+calls, and depending on the situation:
 
 - **If the local project is configured for the package manager you're using**,
   Corepack will silently download and cache the latest compatible version.
@@ -79,7 +79,7 @@ Here, `yarn` is the name of the package manager, specified at version `3.2.3`,
 along with the SHA-224 hash of this version for validation.
 `packageManager@x.y.z` is required. The hash is optional but strongly
 recommended as a security practice. Permitted values for the package manager are
-`yarn`, `npm`, and `pnpm`.
+`yarn` and `pnpm`.
 
 You can also provide a URL to a `.js` file (which will be interpreted as a
 CommonJS module) or a `.tgz` file (which will be interpreted as a package, and
@@ -161,7 +161,6 @@ alias yarn="corepack yarn"
 alias yarnpkg="corepack yarnpkg"
 alias pnpm="corepack pnpm"
 alias pnpx="corepack pnpx"
-alias npm="corepack npm"
 alias npx="corepack npx"
 ```
 
@@ -173,8 +172,6 @@ echo "function yarn { corepack yarn `$args }" >> $PROFILE
 echo "function yarnpkg { corepack yarnpkg `$args }" >> $PROFILE
 echo "function pnpm { corepack pnpm `$args }" >> $PROFILE
 echo "function pnpx { corepack pnpx `$args }" >> $PROFILE
-echo "function npm { corepack npm `$args }" >> $PROFILE
-echo "function npx { corepack npx `$args }" >> $PROFILE
 ```
 
 ### `corepack disable [... name]`
