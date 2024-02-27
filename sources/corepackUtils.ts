@@ -1,3 +1,4 @@
+import {UsageError}                                            from 'clipanion';
 import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
@@ -5,6 +6,7 @@ import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
+import {stderr, stdin}                                         from 'process';
 import semver                                                  from 'semver';
 
 import * as engine                                             from './Engine';

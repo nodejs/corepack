@@ -1,7 +1,6 @@
 import assert          from 'assert';
 import {UsageError}    from 'clipanion';
 import {once}          from 'events';
-import {stderr, stdin} from 'process';
 import {Readable}      from 'stream';
 
 async function fetch(input: string | URL, init?: RequestInit) {
