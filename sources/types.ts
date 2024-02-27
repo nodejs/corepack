@@ -2,6 +2,7 @@ export type BinSpec = {[key: string]: string};
 export type BinList = Array<string>;
 
 export enum SupportedPackageManagers {
+  Npm = `npm`,
   Pnpm = `pnpm`,
   Yarn = `yarn`,
 }

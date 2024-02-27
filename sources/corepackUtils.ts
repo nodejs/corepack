@@ -162,6 +162,27 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     url = decodeURIComponent(version);
   }
 
+  if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
+    console.error(`Corepack is about to download ${input}`);
+
+    if (locator.name === `npm`)
+      console.error(`Corepack support for npm is provided on a best-effort basis and is not officially supported by the npm team`);
+
+    if (stdin.isTTY && !process.env.CI) {
+      stderr.write(`Do you want to continue? [Y/n] `);
+      stdin.resume();
+      const chars = await once(stdin, `data`);
+      stdin.pause();
+
+      // n / N
+      if (chars[0][0] === 0x6e || chars[0][0] === 0x4e)
+        throw new UsageError(`Aborted by the user`);
+
+      // Add a newline to separate Corepack output from the package manager
+      console.error();
+    }
+  }
+
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done

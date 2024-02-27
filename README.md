@@ -161,7 +161,6 @@ alias yarn="corepack yarn"
 alias yarnpkg="corepack yarnpkg"
 alias pnpm="corepack pnpm"
 alias pnpx="corepack pnpx"
-alias npx="corepack npx"
 ```
 
 On Windows PowerShell, you can add functions using the `$PROFILE` automatic
@@ -295,6 +294,12 @@ There are a wide variety of networking issues that can occur while running `core
 - Make sure the host for your request can be resolved by your DNS; try using
   `curl [URL]` (ipv4) and `curl -6 [URL]` (ipv6) from your shell.
 - Check your proxy settings (see [Environment Variables](#environment-variables)).
+
+## Non-goals
+
+### Official npm integration
+
+Official npm integration is a non-goal at this time. The npm team made it clear they don't wish npm to be distributed through Corepack (some of their concerns are listed [here](https://github.com/nodejs/node/issues/50963#issuecomment-1862957925)). Corepack focuses on the use case from officially supported package managers.
 
 ## Contributing
 
