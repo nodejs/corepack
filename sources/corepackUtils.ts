@@ -16,6 +16,7 @@ import * as httpUtils                                          from './httpUtils
 import * as nodeUtils                                          from './nodeUtils';
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import {BinList, BinSpec, InstallSpec}                         from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
@@ -124,7 +125,15 @@ function parseURLReference(locator: Locator) {
   return {version: encodeURIComponent(href), build: []};
 }
 
-export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
+function isValidBinList(x: unknown): x is BinList {
+  return Array.isArray(x) && x.length > 0;
+}
+
+function isValidBinSpec(x: unknown): x is BinSpec {
+  return typeof x === `object` && x !== null && !Array.isArray(x) && Object.keys(x).length > 0;
+}
+
+export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}): Promise<InstallSpec> {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
   const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
   const {version, build} = locatorReference;
@@ -152,13 +161,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   let url: string;
   if (locatorIsASupportedPackageManager) {
-    const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
-    url = process.env.COREPACK_NPM_REGISTRY ?
-      defaultNpmRegistryURL.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      ) :
-      defaultNpmRegistryURL;
+    url = spec.url.replace(`{}`, version);
+    if (process.env.COREPACK_NPM_REGISTRY) {
+      const registry = getRegistryFromPackageManagerSpec(spec);
+      if (registry.type === `npm`) {
+        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+      } else {
+        url = url.replace(
+          npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+          () => process.env.COREPACK_NPM_REGISTRY!,
+        );
+      }
+    }
   } else {
     url = decodeURIComponent(version);
   }
@@ -191,12 +205,33 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
-  let bin;
-  if (!locatorIsASupportedPackageManager) {
-    if (ext === `.tgz`) {
-      bin = require(path.join(tmpFolder, `package.json`)).bin;
-    } else if (ext === `.js`) {
+  let bin: BinSpec | BinList;
+  const isSingleFile = outputFile !== null;
+
+  // In config, yarn berry is expected to be downloaded as a single file,
+  // and therefore `spec.bin` is an array. However, when dowloaded from
+  // custom npm registry as tarball, `bin` should be a map.
+  // In this case, we ignore the configured `spec.bin`.
+
+  if (isSingleFile) {
+    if (locatorIsASupportedPackageManager && isValidBinList(spec.bin)) {
+      bin = spec.bin;
+    } else {
       bin = [locator.name];
+    }
+  } else {
+    if (locatorIsASupportedPackageManager && isValidBinSpec(spec.bin)) {
+      bin = spec.bin;
+    } else {
+      const {name: packageName, bin: packageBin} = require(path.join(tmpFolder, `package.json`));
+      if (typeof packageBin === `string`) {
+        // When `bin` is a string, the name of the executable is the name of the package.
+        bin = {[packageName]: packageBin};
+      } else if (isValidBinSpec(packageBin)) {
+        bin = packageBin;
+      } else {
+        throw new Error(`Unable to locate bin in package.json`);
+      }
     }
   }
 
@@ -292,10 +327,11 @@ async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
 /**
  * Loads the binary, taking control of the current process.
  */
-export async function runVersion(locator: Locator, installSpec: { location: string, spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
+export async function runVersion(locator: Locator, installSpec: InstallSpec & {spec: PackageManagerSpec}, binName: string, args: Array<string>): Promise<void> {
   let binPath: string | null = null;
-  if (Array.isArray(installSpec.spec.bin)) {
-    if (installSpec.spec.bin.some(bin => bin === binName)) {
+  const bin = installSpec.bin ?? installSpec.spec.bin;
+  if (Array.isArray(bin)) {
+    if (bin.some(name => name === binName)) {
       const parsedUrl = new URL(installSpec.spec.url);
       const ext = path.posix.extname(parsedUrl.pathname);
       if (ext === `.js`) {
@@ -303,7 +339,7 @@ export async function runVersion(locator: Locator, installSpec: { location: stri
       }
     }
   } else {
-    for (const [name, dest] of Object.entries(installSpec.spec.bin)) {
+    for (const [name, dest] of Object.entries(bin)) {
       if (name === binName) {
         binPath = path.join(installSpec.location, dest);
         break;

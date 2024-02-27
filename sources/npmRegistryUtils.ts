@@ -48,3 +48,16 @@ export async function fetchAvailableVersions(packageName: string) {
   const metadata = await fetchAsJson(packageName);
   return Object.keys(metadata.versions);
 }
+
+export async function fetchTarballUrl(packageName: string, version: string) {
+  const metadata = await fetchAsJson(packageName);
+  const versionMetadata = metadata.versions?.[version];
+  if (versionMetadata === undefined)
+    throw new Error(`${packageName}@${version} does not exist.`);
+
+  const {tarball} = versionMetadata.dist;
+  if (tarball === undefined || !tarball.startsWith(`http`))
+    throw new Error(`${packageName}@${version} does not have a valid tarball.`);
+
+  return tarball;
+}
