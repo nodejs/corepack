@@ -1,7 +1,6 @@
-import assert          from 'assert';
-import {UsageError}    from 'clipanion';
-import {once}          from 'events';
-import {Readable}      from 'stream';
+import assert       from 'assert';
+import {UsageError} from 'clipanion';
+import {Readable}   from 'stream';
 
 async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
