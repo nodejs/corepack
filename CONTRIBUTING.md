@@ -11,6 +11,14 @@ The `dist/` directory now contains the corepack build and the shims.
 Call `node ./dist/corepack --help` and behold.
 You can also run the tests with `yarn test`.
 
+# Adding a new package manager
+
+New package managers can be added by editing the [config.json](/config.json) file.
+
+Once added, the shims pertaining to new package managers won't be automatically enabled by `corepack enable` when called without arguments - it'll require users to explicitly install the relevant shims (e.g. `corepack enable mypm`). A separate PR adding the package manager to the default list can be opened a couple of months after the new package manager was introduced.
+
+Finally, for the package manager to be distributed by default with Node.js, a separate PR will have to be made against the [nodejs/node](https://github.com/nodejs/node) repository asking for standard inclusion, following the process outlined in [GOVERNANCE.md](https://github.com/nodejs/node/blob/main/GOVERNANCE.md).
+
 ## Developer's Certificate of Origin 1.1
 
 By making a contribution to this project, I certify that:
