@@ -6,6 +6,7 @@ import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
+import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
@@ -213,7 +214,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    await fs.promises.rename(tmpFolder, installFolder);
+    if (process.platform === `win32`) {
+      await renameUnderWindows(tmpFolder, installFolder);
+    } else {
+      await fs.promises.rename(tmpFolder, installFolder);
+    }
   } catch (err) {
     if (
       (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
@@ -258,6 +263,30 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     bin,
     hash: serializedHash,
   };
+}
+
+async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
+  // Windows malicious file analysis blocks files currently under analysis, so we need to wait for file release
+  const retries = 5;
+  for (let i = 0; i < retries; i++) {
+    try {
+      await fs.promises.rename(oldPath, newPath);
+      break;
+    } catch (err) {
+      if (
+        (
+          (err as nodeUtils.NodeError).code === `ENOENT` ||
+          (err as nodeUtils.NodeError).code === `EPERM`
+        ) &&
+        i < (retries - 1)
+      ) {
+        await setTimeoutPromise(100 * 2 ** i);
+        continue;
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 /**
