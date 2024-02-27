@@ -280,7 +280,7 @@ async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
         ) &&
         i < (retries - 1)
       ) {
-        await setTimeoutPromise(100);
+        await setTimeoutPromise(100 * 2 ** i);
         continue;
       } else {
         throw err;
