@@ -2227,7 +2227,7 @@ __metadata:
     supports-color: "npm:^9.0.0"
     tar: "npm:^6.0.1"
     ts-node: "npm:^10.0.0"
-    typescript: "npm:^5.0.4"
+    typescript: "npm:^5.3.3"
     undici: "npm:^6.6.1"
     v8-compile-cache: "npm:^2.3.0"
     which: "npm:^4.0.0"
@@ -5959,7 +5959,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.4":
+"typescript@npm:^5.3.3":
   version: 5.3.3
   resolution: "typescript@npm:5.3.3"
   bin:
@@ -5969,7 +5969,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.0.4#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.3.3#optional!builtin<compat/typescript>":
   version: 5.3.3
   resolution: "typescript@patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"
   bin:
