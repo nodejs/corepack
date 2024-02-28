@@ -20,7 +20,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 
     const name = atIndex === -1 ? raw : raw.slice(0, -1);
     if (!isSupportedPackageManager(name))
-      throw new UsageError(`Unsupported package manager specification (${name})`);
+      throw new UsageError(`Unsupported package manager specification (${name}). Consider using the \`--from-npm\` flag if you meant to use the npm package \`${name}\` as your package manager`);
 
     return {
       name, range: `*`,
@@ -33,7 +33,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   const isURL = URL.canParse(range);
   if (!isURL) {
     if (enforceExactVersion && !semver.valid(range))
-      throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
+      throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version`);
 
     if (!isSupportedPackageManager(name)) {
       throw new UsageError(`Unsupported package manager specification (${raw})`);

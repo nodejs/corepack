@@ -39,14 +39,21 @@ export abstract class BaseCommand extends Command<Context> {
     const {data, indent} = nodeUtils.readPackageJson(content);
 
     const previousPackageManager = data.packageManager ?? `unknown`;
-    data.packageManager = `${info.locator.name}@${info.locator.reference}+${info.hash}`;
+    data.packageManager = `${info.locator.name}@${info.locator.reference}${URL.canParse(info.locator.reference) ? `#` : `+`}${info.hash}`;
 
     const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
     await fs.promises.writeFile(lookup.target, newContent, `utf8`);
 
-    const command = this.context.engine.getPackageManagerSpecFor(info.locator).commands?.use ?? null;
-    if (command === null)
+    let command: Array<string>;
+    try {
+      const _command = this.context.engine.getPackageManagerSpecFor(info.locator).commands?.use;
+      if (_command == null)
+        return 0;
+
+      command = _command;
+    } catch {
       return 0;
+    }
 
     // Adding it into the environment avoids breaking package managers that
     // don't expect those options.
