@@ -4,6 +4,7 @@ import process                                     from 'node:process';
 
 import config                                      from '../config.json';
 import * as folderUtils                            from '../sources/folderUtils';
+import {SupportedPackageManagerSet}                from '../sources/types';
 
 import {runCli}                                    from './_runCli';
 
@@ -297,32 +298,38 @@ it(`should transparently use the preconfigured version when there is no local pr
   });
 });
 
-it(`should use the pinned version when local projects don't list any spec`, async () => {
-  // Note that we don't prevent using any package manager. This ensures that
-  // projects will receive as little disruption as possible (for example, we
-  // don't prompt to set the packageManager field).
+// Note that we don't prevent using any package manager. This ensures that
+// projects will receive as little disruption as possible (for example, we
+// don't prompt to set the packageManager field).
 
+for (const name of SupportedPackageManagerSet) {
+  it(`should use the pinned version when local projects don't list any spec (${name})`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions[name].default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    });
+  });
+}
+
+it(`should configure the project when calling a package manager on it for the first time`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
-    });
+    await runCli(cwd, [`yarn`]);
 
-    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
-    });
+    const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
+    expect(data).toMatchObject({
+      packageManager: `yarn@${config.definitions.yarn.default}`,
     });
   });
 });

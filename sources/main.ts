@@ -1,31 +1,21 @@
-import {BaseContext, Builtins, Cli, Command, Option, UsageError} from 'clipanion';
+import {BaseContext, Builtins, Cli, Command, Option} from 'clipanion';
 
-import {version as corepackVersion}                              from '../package.json';
+import {version as corepackVersion}                  from '../package.json';
 
-import {Engine}                                                  from './Engine';
-import {CacheCommand}                                            from './commands/Cache';
-import {DisableCommand}                                          from './commands/Disable';
-import {EnableCommand}                                           from './commands/Enable';
-import {InstallGlobalCommand}                                    from './commands/InstallGlobal';
-import {InstallLocalCommand}                                     from './commands/InstallLocal';
-import {PackCommand}                                             from './commands/Pack';
-import {UpCommand}                                               from './commands/Up';
-import {UseCommand}                                              from './commands/Use';
-import {HydrateCommand}                                          from './commands/deprecated/Hydrate';
-import {PrepareCommand}                                          from './commands/deprecated/Prepare';
-import * as corepackUtils                                        from './corepackUtils';
-import * as miscUtils                                            from './miscUtils';
-import * as specUtils                                            from './specUtils';
-import {Locator, SupportedPackageManagers, Descriptor}           from './types';
+import {Engine, PackageManagerRequest}               from './Engine';
+import {CacheCommand}                                from './commands/Cache';
+import {DisableCommand}                              from './commands/Disable';
+import {EnableCommand}                               from './commands/Enable';
+import {InstallGlobalCommand}                        from './commands/InstallGlobal';
+import {InstallLocalCommand}                         from './commands/InstallLocal';
+import {PackCommand}                                 from './commands/Pack';
+import {UpCommand}                                   from './commands/Up';
+import {UseCommand}                                  from './commands/Use';
+import {HydrateCommand}                              from './commands/deprecated/Hydrate';
+import {PrepareCommand}                              from './commands/deprecated/Prepare';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
-
-type PackageManagerRequest = {
-  packageManager: SupportedPackageManagers;
-  binaryName: string;
-  binaryVersion: string | null;
-};
 
 function getPackageManagerRequestFromCli(parameter: string | undefined, context: CustomContext & Partial<Context>): PackageManagerRequest | null {
   if (!parameter)
@@ -45,59 +35,6 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
     binaryName,
     binaryVersion: binaryVersion || null,
   };
-}
-
-async function executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, args: Array<string>, context: Context) {
-  let fallbackLocator: Locator = {
-    name: binaryName as SupportedPackageManagers,
-    reference: undefined as any,
-  };
-  let isTransparentCommand = false;
-  if (packageManager != null) {
-    const defaultVersion = await context.engine.getDefaultVersion(packageManager);
-    const definition = context.engine.config.definitions[packageManager]!;
-
-    // If all leading segments match one of the patterns defined in the `transparent`
-    // key, we tolerate calling this binary even if the local project isn't explicitly
-    // configured for it, and we use the special default version if requested.
-    for (const transparentPath of definition.transparent.commands) {
-      if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === args[index])) {
-        isTransparentCommand = true;
-        break;
-      }
-    }
-
-    const fallbackReference = isTransparentCommand
-      ? definition.transparent.default ?? defaultVersion
-      : defaultVersion;
-
-    fallbackLocator = {
-      name: packageManager,
-      reference: fallbackReference,
-    };
-  }
-
-  let descriptor: Descriptor;
-  try {
-    descriptor = await specUtils.findProjectSpec(context.cwd, fallbackLocator, {transparent: isTransparentCommand});
-  } catch (err) {
-    if (err instanceof miscUtils.Cancellation) {
-      return 1;
-    } else {
-      throw err;
-    }
-  }
-
-  if (binaryVersion)
-    descriptor.range = binaryVersion;
-
-  const resolved = await context.engine.resolveDescriptor(descriptor, {allowTags: true});
-  if (resolved === null)
-    throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
-
-  const installSpec = await context.engine.ensurePackageManager(resolved);
-
-  return await corepackUtils.runVersion(resolved, installSpec, binaryName, args);
 }
 
 export async function runMain(argv: Array<string>) {
@@ -149,7 +86,10 @@ export async function runMain(argv: Array<string>) {
     cli.register(class BinaryCommand extends Command<Context> {
       proxy = Option.Proxy();
       async execute() {
-        return executePackageManagerRequest(request, this.proxy, this.context);
+        return this.context.engine.executePackageManagerRequest(request, {
+          cwd: this.context.cwd,
+          args: this.proxy,
+        });
       }
     });
 
