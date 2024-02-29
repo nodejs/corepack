@@ -257,12 +257,19 @@ export class Engine {
           return fallbackDescriptor;
 
         case `NoSpec`: {
-          const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
-          if (resolved === null)
-            throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
+          if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
+            const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
+            if (resolved === null)
+              throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
 
-          const installSpec = await this.ensurePackageManager(resolved);
-          await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+            const installSpec = await this.ensurePackageManager(resolved);
+
+            console.error(`! The local project doesn't feature a 'packageManager' field - a new one will be created referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
+            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/corepack.html`);
+            console.error();
+
+            await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+          }
 
           return fallbackDescriptor;
         }
