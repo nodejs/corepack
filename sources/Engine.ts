@@ -264,8 +264,8 @@ export class Engine {
 
             const installSpec = await this.ensurePackageManager(resolved);
 
-            console.error(`! The local project doesn't feature a 'packageManager' field - a new one will be created referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
-            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/corepack.html`);
+            console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
+            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
             console.error();
 
             await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
