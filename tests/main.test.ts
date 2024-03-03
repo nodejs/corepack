@@ -4,6 +4,7 @@ import process                                     from 'node:process';
 
 import config                                      from '../config.json';
 import * as folderUtils                            from '../sources/folderUtils';
+import {SupportedPackageManagerSet}                from '../sources/types';
 
 import {runCli}                                    from './_runCli';
 
@@ -297,32 +298,37 @@ it(`should transparently use the preconfigured version when there is no local pr
   });
 });
 
-it(`should use the pinned version when local projects don't list any spec`, async () => {
-  // Note that we don't prevent using any package manager. This ensures that
-  // projects will receive as little disruption as possible (for example, we
-  // don't prompt to set the packageManager field).
+// Note that we don't prevent using any package manager. This ensures that
+// projects will receive as little disruption as possible (for example, we
+// don't prompt to set the packageManager field).
 
+for (const name of SupportedPackageManagerSet) {
+  it(`should use the pinned version when local projects don't list any spec (${name})`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions[name].default.split(`+`, 1)[0]}\n`,
+        exitCode: 0,
+      });
+    });
+  });
+}
+
+it(`should configure the project when calling a package manager on it for the first time`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
-    });
+    await runCli(cwd, [`yarn`]);
 
-    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.pnpm.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
-    });
+    const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
-      stderr: ``,
-      exitCode: 0,
+    expect(data).toMatchObject({
+      packageManager: `yarn@${config.definitions.yarn.default}`,
     });
   });
 });
@@ -340,7 +346,6 @@ it(`should allow updating the pinned version using the "corepack install -g" com
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
-      stderr: ``,
       exitCode: 0,
     });
   });
@@ -359,7 +364,6 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
 
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       stdout: expect.stringMatching(/^7\./),
-      stderr: ``,
       exitCode: 0,
     });
   });
@@ -378,7 +382,6 @@ it(`should allow to call "corepack install -g" without any range`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: expect.not.stringMatching(/^[123]\./),
-      stderr: ``,
       exitCode: 0,
     });
   });
@@ -735,7 +738,7 @@ it(`should show a warning on stderr before downloading when enable`, async() => 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: `3.0.0\n`,
-      stderr: `Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+      stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
     });
   });
 });
@@ -766,7 +769,7 @@ it(`should download yarn classic from custom registry`, async () => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: /^1\.\d+\.\d+\r?\n$/,
-      stderr: /^Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/,
+      stderr: /^! Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/,
     });
 
     // Should keep working with cache
@@ -790,7 +793,7 @@ it(`should download yarn berry from custom registry`, async () => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: `3.0.0\n`,
-      stderr: `Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0.tgz\n`,
+      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0.tgz\n`,
     });
 
     // Should keep working with cache

@@ -34,6 +34,6 @@ export class UseCommand extends BaseCommand {
     this.context.stdout.write(`Installing ${resolved.name}@${resolved.reference} in the project...\n`);
 
     const packageManagerInfo = await this.context.engine.ensurePackageManager(resolved);
-    await this.setLocalPackageManager(packageManagerInfo);
+    await this.setAndInstallLocalPackageManager(packageManagerInfo);
   }
 }
