@@ -8,7 +8,6 @@ import {SupportedPackageManagerSet}                from '../sources/types';
 
 import {runCli}                                    from './_runCli';
 
-
 beforeEach(async () => {
   // `process.env` is reset after each tests in setupTests.js.
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
@@ -125,9 +124,6 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
   [`pnpm`, `6.6.2`],
   [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
   [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
-  [`npm`, `6.14.2`],
-  [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
-  [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
 ];
 
 for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of testedPackageManagers) {
@@ -208,14 +204,6 @@ it(`should ignore the packageManager field when found within a node_modules vend
       packageManager: `yarn@1.22.4`,
     });
 
-    await xfs.writeJsonPromise(ppath.join(cwd, `node_modules/foo/package.json` as PortablePath), {
-      packageManager: `npm@6.14.2`,
-    });
-
-    await xfs.writeJsonPromise(ppath.join(cwd, `node_modules/@foo/bar/package.json` as PortablePath), {
-      packageManager: `npm@6.14.2`,
-    });
-
     await expect(runCli(ppath.join(cwd, `node_modules/foo` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
@@ -239,61 +227,13 @@ it(`should use the closest matching packageManager field`, async () => {
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `foo/package.json` as PortablePath), {
-      packageManager: `npm@6.14.2`,
+      packageManager: `yarn@2.4.3`,
     });
 
-    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
-      stdout: `6.14.2\n`,
-    });
-  });
-});
-
-it(`should expose its root to spawned processes`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `npm@6.14.2`,
-    });
-
-    await expect(runCli(cwd, [`npm`, `run`, `env`])).resolves.toMatchObject({
-      exitCode: 0,
-      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}`),
-    });
-  });
-});
-
-it(`shouldn't allow using regular Yarn commands on npm-configured projects`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `npm@6.14.2`,
-    });
-
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: ``,
-    });
-  });
-});
-
-it(`should allow using transparent commands on npm-configured projects`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `npm@6.14.2`,
-    });
-
-    await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
-    });
-  });
-});
-
-it(`should transparently use the preconfigured version when there is no local project`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
+      stdout: `2.4.3\n`,
     });
   });
 });
@@ -353,7 +293,7 @@ it(`should allow updating the pinned version using the "corepack install -g" com
 
 it(`should allow to call "corepack install -g" with a tag`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`install`, `-g`, `npm@latest-7`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `pnpm@latest-7`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -362,7 +302,7 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: expect.stringMatching(/^7\./),
       exitCode: 0,
     });

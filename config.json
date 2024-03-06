@@ -1,42 +1,5 @@
 {
   "definitions": {
-    "npm": {
-      "default": "10.4.0+sha1.904025b4d932cfaed8799e644a1c5ae7f02729fc",
-      "fetchLatestFrom": {
-        "type": "npm",
-        "package": "npm"
-      },
-      "transparent": {
-        "commands": [
-          [
-            "npm",
-            "init"
-          ],
-          [
-            "npx"
-          ]
-        ]
-      },
-      "ranges": {
-        "*": {
-          "url": "https://registry.npmjs.org/npm/-/npm-{}.tgz",
-          "bin": {
-            "npm": "./bin/npm-cli.js",
-            "npx": "./bin/npx-cli.js"
-          },
-          "registry": {
-            "type": "npm",
-            "package": "npm"
-          },
-          "commands": {
-            "use": [
-              "npm",
-              "install"
-            ]
-          }
-        }
-      }
-    },
     "pnpm": {
       "default": "8.15.3+sha1.64838798f519c18029c1e8a1310e16101fc2eda0",
       "fetchLatestFrom": {

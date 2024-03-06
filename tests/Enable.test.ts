@@ -1,13 +1,13 @@
-import {describe, beforeEach, it, expect}                               from '@jest/globals';
-import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
-import {delimiter}                                                      from 'node:path';
-import process                                                          from 'node:process';
+import {describe, beforeEach, it, expect}                     from '@jest/globals';
+import {Filename, ppath, xfs, npath}                          from '@yarnpkg/fslib';
+import {delimiter}                                            from 'node:path';
+import process                                                from 'node:process';
 
-import {Engine}                                                         from '../sources/Engine';
-import {SupportedPackageManagers, SupportedPackageManagerSetWithoutNpm} from '../sources/types';
+import {Engine}                                               from '../sources/Engine';
+import {SupportedPackageManagers, SupportedPackageManagerSet} from '../sources/types';
 
-import {makeBin, getBinaryNames}                                        from './_binHelpers';
-import {runCli}                                                         from './_runCli';
+import {makeBin, getBinaryNames}                              from './_binHelpers';
+import {runCli}                                               from './_runCli';
 
 const engine = new Engine();
 
@@ -34,7 +34,7 @@ describe(`EnableCommand`, () => {
       });
 
       const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
-      for (const packageManager of SupportedPackageManagerSetWithoutNpm)
+      for (const packageManager of SupportedPackageManagerSet)
         for (const binName of engine.getBinariesFor(packageManager))
           expectedEntries.push(...getBinaryNames(binName));
 
@@ -57,7 +57,7 @@ describe(`EnableCommand`, () => {
       });
 
       const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
-      for (const packageManager of SupportedPackageManagerSetWithoutNpm)
+      for (const packageManager of SupportedPackageManagerSet)
         for (const binName of engine.getBinariesFor(packageManager))
           expectedEntries.push(...getBinaryNames(binName));
 

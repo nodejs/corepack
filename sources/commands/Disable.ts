@@ -1,11 +1,11 @@
-import {Command, Option, UsageError}                                     from 'clipanion';
-import fs                                                                from 'fs';
-import path                                                              from 'path';
-import which                                                             from 'which';
+import {Command, Option, UsageError}                           from 'clipanion';
+import fs                                                      from 'fs';
+import path                                                    from 'path';
+import which                                                   from 'which';
 
-import {Context}                                                         from '../main';
-import type {NodeError}                                                  from '../nodeUtils';
-import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
+import {Context}                                               from '../main';
+import type {NodeError}                                        from '../nodeUtils';
+import {SupportedPackageManagerSet, isSupportedPackageManager} from '../types';
 
 export class DisableCommand extends Command<Context> {
   static paths = [
@@ -47,7 +47,7 @@ export class DisableCommand extends Command<Context> {
       installDirectory = path.dirname(await which(`corepack`));
 
     const names = this.names.length === 0
-      ? SupportedPackageManagerSetWithoutNpm
+      ? SupportedPackageManagerSet
       : this.names;
 
     for (const name of new Set(names)) {
