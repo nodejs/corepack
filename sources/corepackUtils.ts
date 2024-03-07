@@ -350,6 +350,9 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
+  // @ts-expect-error - No types
+  await import(`v8-compile-cache`);
+
   // We load the binary into the current process,
   // while making it think it was spawned.
 
