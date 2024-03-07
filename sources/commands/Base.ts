@@ -1,10 +1,8 @@
 import {Command, UsageError}        from 'clipanion';
-import fs                           from 'fs';
 
 import {PreparedPackageManagerInfo} from '../Engine';
 import * as corepackUtils           from '../corepackUtils';
 import {Context}                    from '../main';
-import * as nodeUtils               from '../nodeUtils';
 import * as specUtils               from '../specUtils';
 
 export abstract class BaseCommand extends Command<Context> {
