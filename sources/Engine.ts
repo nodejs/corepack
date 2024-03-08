@@ -152,7 +152,7 @@ export class Engine {
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
     let lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
-      if ((err as NodeError)?.code !== `ENOENT`) {
+      if ((err as NodeError)?.code !== `ENOENT` && (err as NodeError)?.code !== `EROFS`) {
         throw err;
       }
     });
