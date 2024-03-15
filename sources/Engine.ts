@@ -10,7 +10,6 @@ import defaultConfig                                          from '../config.js
 import * as corepackUtils                                     from './corepackUtils';
 import * as debugUtils                                        from './debugUtils';
 import * as folderUtils                                       from './folderUtils';
-import * as miscUtils                                         from './miscUtils';
 import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
 import * as specUtils                                         from './specUtils';
@@ -289,7 +288,7 @@ export class Engine {
     }
   }
 
-  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<number | void> {
+  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
     let fallbackLocator: Locator = {
       name: binaryName as SupportedPackageManagers,
       reference: undefined as any,
@@ -320,16 +319,7 @@ export class Engine {
       };
     }
 
-    let descriptor: Descriptor;
-    try {
-      descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
-    } catch (err) {
-      if (err instanceof miscUtils.Cancellation) {
-        return 1;
-      } else {
-        throw err;
-      }
-    }
+    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
 
     if (binaryVersion)
       descriptor.range = binaryVersion;
