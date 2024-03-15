@@ -11,7 +11,6 @@ import {setTimeout as setTimeoutPromise}                       from 'timers/prom
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
 import * as folderUtils                                        from './folderUtils';
-import * as fsUtils                                            from './fsUtils';
 import * as httpUtils                                          from './httpUtils';
 import * as nodeUtils                                          from './nodeUtils';
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
@@ -261,7 +260,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
-      await fsUtils.rimraf(tmpFolder);
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     } else {
       throw err;
     }
