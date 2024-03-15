@@ -23,8 +23,8 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /Mismatch hashes/,
+      stderr: /Mismatch hashes/,
+      stdout: ``,
     });
   });
 });
@@ -34,8 +34,8 @@ it(`should refuse to download a known package manager from a URL`, async () => {
     // Package managers known by Corepack cannot be loaded from a URL.
     await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /Illegal use of URL for known package manager/,
+      stderr: /Illegal use of URL for known package manager/,
+      stdout: ``,
     });
 
     // Unknown package managers can be loaded from a URL.
@@ -56,8 +56,8 @@ it.failing(`should refuse to download a known package manager from a URL in pack
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /Illegal use of URL for known package manager/,
+      stderr: /Illegal use of URL for known package manager/,
+      stdout: ``,
     });
 
     // Unknown package managers can be loaded from a URL.
@@ -81,8 +81,8 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      stderr: /expected a semver version/,
+      stdout: ``,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -91,8 +91,8 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      stderr: /expected a semver version/,
+      stdout: ``,
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -101,8 +101,8 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
-      stdout: /expected a semver version/,
+      stderr: /expected a semver version/,
+      stdout: ``,
     });
   });
 });
@@ -271,7 +271,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: ``,
+      stderr: expect.stringContaining(`This project is configured to use npm`),
     });
   });
 });
@@ -418,7 +418,8 @@ it(`should refuse to run a different package manager within a configured project
     process.env.FORCE_COLOR = `0`;
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
+      stdout: ``,
+      stderr: expect.stringContaining(`This project is configured to use yarn`),
       exitCode: 1,
     });
 
@@ -468,8 +469,8 @@ it(`should support disabling the network accesses from the environment`, async (
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      stdout: expect.stringContaining(`Network access disabled by the environment`),
-      stderr: ``,
+      stdout: ``,
+      stderr: expect.stringContaining(`Network access disabled by the environment`),
       exitCode: 1,
     });
   });
