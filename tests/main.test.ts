@@ -272,7 +272,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: expect.stringContaining(`This project is configured to use npm`),
+      stderr: /This project is configured to use npm/,
     });
   });
 });
@@ -473,7 +473,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: ``,
-      stderr: expect.stringContaining(`Network access disabled by the environment`),
+      stderr: /Network access disabled by the environment/,
       exitCode: 1,
     });
   });
