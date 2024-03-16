@@ -1,23 +1,23 @@
-import {BaseContext, Builtins, Cli, Command, Option} from 'clipanion';
+import {BaseContext, Builtins, Cli}    from 'clipanion';
 
-import {version as corepackVersion}                  from '../package.json';
+import {version as corepackVersion}    from '../package.json';
 
-import {Engine, PackageManagerRequest}               from './Engine';
-import {CacheCommand}                                from './commands/Cache';
-import {DisableCommand}                              from './commands/Disable';
-import {EnableCommand}                               from './commands/Enable';
-import {InstallGlobalCommand}                        from './commands/InstallGlobal';
-import {InstallLocalCommand}                         from './commands/InstallLocal';
-import {PackCommand}                                 from './commands/Pack';
-import {UpCommand}                                   from './commands/Up';
-import {UseCommand}                                  from './commands/Use';
-import {HydrateCommand}                              from './commands/deprecated/Hydrate';
-import {PrepareCommand}                              from './commands/deprecated/Prepare';
+import {Engine, PackageManagerRequest} from './Engine';
+import {CacheCommand}                  from './commands/Cache';
+import {DisableCommand}                from './commands/Disable';
+import {EnableCommand}                 from './commands/Enable';
+import {InstallGlobalCommand}          from './commands/InstallGlobal';
+import {InstallLocalCommand}           from './commands/InstallLocal';
+import {PackCommand}                   from './commands/Pack';
+import {UpCommand}                     from './commands/Up';
+import {UseCommand}                    from './commands/Use';
+import {HydrateCommand}                from './commands/deprecated/Hydrate';
+import {PrepareCommand}                from './commands/deprecated/Prepare';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
 
-function getPackageManagerRequestFromCli(parameter: string | undefined, context: CustomContext & Partial<Context>): PackageManagerRequest | null {
+function getPackageManagerRequestFromCli(parameter: string | undefined, engine: Engine): PackageManagerRequest | null {
   if (!parameter)
     return null;
 
@@ -26,7 +26,7 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
     return null;
 
   const [, binaryName, binaryVersion] = match;
-  const packageManager = context.engine.getPackageManagerFor(binaryName)!;
+  const packageManager = engine.getPackageManagerFor(binaryName)!;
 
   if (packageManager == null && binaryVersion == null) return null;
 
@@ -38,17 +38,10 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, context:
 }
 
 export async function runMain(argv: Array<string>) {
-  // Because we load the binaries in the same process, we don't support custom contexts.
-  const context = {
-    ...Cli.defaultContext,
-    cwd: process.cwd(),
-    engine: new Engine(),
-  };
+  const engine = new Engine();
 
   const [firstArg, ...restArgs] = argv;
-  const request = getPackageManagerRequestFromCli(firstArg, context);
-
-  let code: number;
+  const request = getPackageManagerRequestFromCli(firstArg, engine);
 
   if (!request) {
     // If the first argument doesn't match any supported package manager, we fallback to the standard Corepack CLI
@@ -74,29 +67,21 @@ export async function runMain(argv: Array<string>) {
     cli.register(HydrateCommand);
     cli.register(PrepareCommand);
 
-    code = await cli.run(argv, context);
+    const context = {
+      ...Cli.defaultContext,
+      cwd: process.cwd(),
+      engine,
+    };
+
+    const code = await cli.run(argv, context);
+
+    if (code !== 0) {
+      process.exitCode ??= code;
+    }
   } else {
-    // Otherwise, we create a single-command CLI to run the specified package manager (we still use Clipanion in order to pretty-print usage errors).
-    const cli = new Cli({
-      binaryLabel: `'${request.binaryName}', via Corepack`,
-      binaryName: request.binaryName,
-      binaryVersion: `corepack/${corepackVersion}`,
+    await engine.executePackageManagerRequest(request, {
+      cwd: process.cwd(),
+      args: restArgs,
     });
-
-    cli.register(class BinaryCommand extends Command<Context> {
-      proxy = Option.Proxy();
-      async execute() {
-        return this.context.engine.executePackageManagerRequest(request, {
-          cwd: this.context.cwd,
-          args: this.proxy,
-        });
-      }
-    });
-
-    code = await cli.run(restArgs, context);
-  }
-
-  if (code !== 0) {
-    process.exitCode ??= code;
   }
 }
