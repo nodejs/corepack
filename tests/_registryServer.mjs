@@ -29,9 +29,10 @@ function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
 }
 
 const mockPackageTarGz = gzipSync(Buffer.concat([
+  createSimpleTarArchive(`package/bin/customPkgManager.js`, `#!/usr/bin/env node\nconsole.log("customPkgManager: Hello from custom registry");\n`, 0o755),
   createSimpleTarArchive(`package/bin/pnpm.js`, `#!/usr/bin/env node\nconsole.log("pnpm: Hello from custom registry");\n`, 0o755),
   createSimpleTarArchive(`package/bin/yarn.js`, `#!/usr/bin/env node\nconsole.log("yarn: Hello from custom registry");\n`, 0o755),
-  createSimpleTarArchive(`package/package.json`, JSON.stringify({bin: {yarn: `bin/yarn.js`, pnpm: `bin/pnpm.js`}})),
+  createSimpleTarArchive(`package/package.json`, JSON.stringify({bin: {yarn: `bin/yarn.js`, pnpm: `bin/pnpm.js`, customPkgManager: `bin/customPkgManager.js`}})),
   Buffer.alloc(1024),
 ]));
 const shasum = createHash(`sha1`).update(mockPackageTarGz).digest(`hex`);
@@ -91,8 +92,26 @@ const server = createServer((req, res) => {
       break;
     }
 
+    case `/customPkgManager`: {
+      res.end(JSON.stringify({"dist-tags": {
+        latest: `1.0.0`,
+      }, versions: {'1.0.0': {
+        bin: {
+          customPkgManager: `./bin/customPkgManager.js`,
+        },
+        dist: {
+          shasum,
+          size: mockPackageTarGz.length,
+          noattachment: false,
+          tarball: `${process.env.COREPACK_NPM_REGISTRY}/customPkgManager/-/customPkgManager-1.0.0.tgz`,
+        },
+      }}}));
+      break;
+    }
+
     case `/pnpm/-/pnpm-1.9998.9999.tgz`:
     case `/yarn.tgz`:
+    case `/customPkgManager/-/customPkgManager-1.0.0.tgz`:
       res.end(mockPackageTarGz);
       break;
 

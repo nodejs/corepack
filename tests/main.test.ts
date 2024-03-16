@@ -792,3 +792,13 @@ it(`should download pnpm from custom registry with auth`, async () => {
     });
   });
 });
+
+it(`should download custom package manager from custom registry with auth`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`customPkgManager@https://registry.npmjs.org/customPkgManager/-/customPkgManager-1.0.0.tgz`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `customPkgManager: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
