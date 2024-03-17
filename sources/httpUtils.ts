@@ -1,8 +1,10 @@
-import assert          from 'assert';
-import {UsageError}    from 'clipanion';
-import {once}          from 'events';
-import {stderr, stdin} from 'process';
-import {Readable}      from 'stream';
+import assert                     from 'assert';
+import {UsageError}               from 'clipanion';
+import {once}                     from 'events';
+import {stderr, stdin}            from 'process';
+import {Readable}                 from 'stream';
+
+import {DEFAULT_NPM_REGISTRY_URL} from './npmRegistryUtils';
 
 async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -10,26 +12,40 @@ async function fetch(input: string | URL, init?: RequestInit) {
 
   const agent = await getProxyAgent(input);
 
+  if (typeof input === `string`)
+    input = new URL(input);
+
+  let headers = init?.headers;
+  const {username, password} = input;
+  if (username || password) {
+    headers =  {
+      ...headers,
+      authorization: `Bearer ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+    };
+    input.username = input.password = ``;
+  } else if (input.origin === process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) {
+    if (process.env.COREPACK_NPM_TOKEN) {
+      headers =  {
+        ...headers,
+        authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+      };
+    } else if (`COREPACK_NPM_PASSWORD` in process.env) {
+      headers =  {
+        ...headers,
+        authorization: `Bearer ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
+      };
+    }
+  }
+
+
   let response;
   try {
     response = await globalThis.fetch(input, {
       ...init,
       dispatcher: agent,
+      headers,
     });
   } catch (error) {
-    if (error?.message?.includes?.(`Request cannot be constructed from a URL that includes credentials`)) {
-      const url = new URL(input as string);
-      const authorization = `Bearer ${Buffer.from(`${url.username}:${url.password}`).toString(`base64`)}`;
-      url.username = ``;
-      url.password = ``;
-      return fetch(url, {
-        ...init,
-        headers: {
-          ...init?.headers,
-          authorization,
-        },
-      });
-    }
     throw new Error(
       `Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
       {cause: error},
