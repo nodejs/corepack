@@ -1,4 +1,4 @@
-import {createHash}                                            from 'crypto';
+import {createHash, createVerify, webcrypto}                   from 'crypto';
 import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
@@ -22,6 +22,8 @@ export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
     ? spec.npmRegistry ?? spec.registry
     : spec.registry;
 }
+
+type NpmSignatureKey = {"expires": null, "keyid": string, "keytype": string, "scheme": string, "key": string};
 
 export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<string> {
   switch (spec.type) {
@@ -159,12 +161,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   let url: string;
+  let signatures: Array<{keyid: string, sig: string}>;
+  let integrity: string;
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
       const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
-        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+        ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
       } else {
         url = url.replace(
           npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
@@ -200,7 +204,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   stream.pipe(sendTo);
 
-  const algo = build[0] ?? `sha256`;
+  const algo = build[0] ?? `sha512`;
   const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
@@ -234,7 +238,36 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  const actualHash = hash.digest(`hex`);
+  const actualHash: string = hash.digest(`hex`);
+  if (!build[1]) {
+    const registry = getRegistryFromPackageManagerSpec(spec);
+    if (registry.type === `npm` && !process.env.COREPACK_NPM_REGISTRY) {
+      if (signatures! == null || integrity! == null)
+        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+      const {keys} = await httpUtils.fetchAsJson(new URL(`/-/npm/v1/keys`, process.env.COREPACK_NPM_REGISTRY || npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL));
+      const key: NpmSignatureKey | undefined = keys.find(({keyid}: NpmSignatureKey) => signatures.some(s => s.keyid === keyid));
+      const signature = signatures.find(({keyid}) => keyid === key?.keyid);
+      switch (key?.keytype) {
+        case `ecdsa-sha2-nistp256`: {
+          const message = `${registry.package}@${version}:${integrity}`;
+          const verifier = createVerify(`SHA256`);
+          verifier.write(message);
+          verifier.end();
+          const valid = verifier.verify(
+            `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+            signature!.sig,
+            `base64`,
+          );
+          if (!valid)
+            throw new Error(`Signature does not match`);
+          break;
+        }
+
+        default: throw new Error(`Unsupported signature key`, {cause: key});
+      }
+      build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
+    }
+  }
   if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
