@@ -123,6 +123,23 @@ const server = createServer((req, res) => {
 await once(server, `listening`);
 
 const {address, port} = server.address();
-process.env.COREPACK_NPM_REGISTRY = `http://user:pass@${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+switch (process.env.AUTH_TYPE) {
+  case `COREPACK_NPM_REGISTRY`:
+    process.env.COREPACK_NPM_REGISTRY = `http://user:pass@${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    break;
+
+  case `COREPACK_NPM_TOKEN`:
+    process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    process.env.COREPACK_NPM_TOKEN = Buffer.from(`user:pass`).toString(`base64`);
+    break;
+
+  case `COREPACK_NPM_PASSWORD`:
+    process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    process.env.COREPACK_NPM_USER = `user`;
+    process.env.COREPACK_NPM_PASSWORD = `pass`;
+    break;
+
+  default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
+}
 
 server.unref();
