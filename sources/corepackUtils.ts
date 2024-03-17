@@ -6,15 +6,16 @@ import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
+import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
 import * as folderUtils                                        from './folderUtils';
-import * as fsUtils                                            from './fsUtils';
 import * as httpUtils                                          from './httpUtils';
 import * as nodeUtils                                          from './nodeUtils';
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import {BinList, BinSpec, InstallSpec}                         from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
@@ -123,7 +124,15 @@ function parseURLReference(locator: Locator) {
   return {version: encodeURIComponent(href), build: []};
 }
 
-export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}) {
+function isValidBinList(x: unknown): x is BinList {
+  return Array.isArray(x) && x.length > 0;
+}
+
+function isValidBinSpec(x: unknown): x is BinSpec {
+  return typeof x === `object` && x !== null && !Array.isArray(x) && Object.keys(x).length > 0;
+}
+
+export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}): Promise<InstallSpec> {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
   const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
   const {version, build} = locatorReference;
@@ -151,13 +160,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   let url: string;
   if (locatorIsASupportedPackageManager) {
-    const defaultNpmRegistryURL = spec.url.replace(`{}`, version);
-    url = process.env.COREPACK_NPM_REGISTRY ?
-      defaultNpmRegistryURL.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      ) :
-      defaultNpmRegistryURL;
+    url = spec.url.replace(`{}`, version);
+    if (process.env.COREPACK_NPM_REGISTRY) {
+      const registry = getRegistryFromPackageManagerSpec(spec);
+      if (registry.type === `npm`) {
+        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+      } else {
+        url = url.replace(
+          npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+          () => process.env.COREPACK_NPM_REGISTRY!,
+        );
+      }
+    }
   } else {
     url = decodeURIComponent(version);
     if (process.env.COREPACK_NPM_REGISTRY && url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
@@ -196,12 +210,33 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const hash = stream.pipe(createHash(algo));
   await once(sendTo, `finish`);
 
-  let bin;
-  if (!locatorIsASupportedPackageManager) {
-    if (ext === `.tgz`) {
-      bin = require(path.join(tmpFolder, `package.json`)).bin;
-    } else if (ext === `.js`) {
+  let bin: BinSpec | BinList;
+  const isSingleFile = outputFile !== null;
+
+  // In config, yarn berry is expected to be downloaded as a single file,
+  // and therefore `spec.bin` is an array. However, when dowloaded from
+  // custom npm registry as tarball, `bin` should be a map.
+  // In this case, we ignore the configured `spec.bin`.
+
+  if (isSingleFile) {
+    if (locatorIsASupportedPackageManager && isValidBinList(spec.bin)) {
+      bin = spec.bin;
+    } else {
       bin = [locator.name];
+    }
+  } else {
+    if (locatorIsASupportedPackageManager && isValidBinSpec(spec.bin)) {
+      bin = spec.bin;
+    } else {
+      const {name: packageName, bin: packageBin} = require(path.join(tmpFolder, `package.json`));
+      if (typeof packageBin === `string`) {
+        // When `bin` is a string, the name of the executable is the name of the package.
+        bin = {[packageName]: packageBin};
+      } else if (isValidBinSpec(packageBin)) {
+        bin = packageBin;
+      } else {
+        throw new Error(`Unable to locate bin in package.json`);
+      }
     }
   }
 
@@ -219,7 +254,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    await fs.promises.rename(tmpFolder, installFolder);
+    if (process.platform === `win32`) {
+      await renameUnderWindows(tmpFolder, installFolder);
+    } else {
+      await fs.promises.rename(tmpFolder, installFolder);
+    }
   } catch (err) {
     if (
       (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
@@ -227,7 +266,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
-      await fsUtils.rimraf(tmpFolder);
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     } else {
       throw err;
     }
@@ -266,13 +305,38 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   };
 }
 
+async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
+  // Windows malicious file analysis blocks files currently under analysis, so we need to wait for file release
+  const retries = 5;
+  for (let i = 0; i < retries; i++) {
+    try {
+      await fs.promises.rename(oldPath, newPath);
+      break;
+    } catch (err) {
+      if (
+        (
+          (err as nodeUtils.NodeError).code === `ENOENT` ||
+          (err as nodeUtils.NodeError).code === `EPERM`
+        ) &&
+        i < (retries - 1)
+      ) {
+        await setTimeoutPromise(100 * 2 ** i);
+        continue;
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 /**
  * Loads the binary, taking control of the current process.
  */
-export async function runVersion(locator: Locator, installSpec: { location: string, spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
+export async function runVersion(locator: Locator, installSpec: InstallSpec & {spec: PackageManagerSpec}, binName: string, args: Array<string>): Promise<void> {
   let binPath: string | null = null;
-  if (Array.isArray(installSpec.spec.bin)) {
-    if (installSpec.spec.bin.some(bin => bin === binName)) {
+  const bin = installSpec.bin ?? installSpec.spec.bin;
+  if (Array.isArray(bin)) {
+    if (bin.some(name => name === binName)) {
       const parsedUrl = new URL(installSpec.spec.url);
       const ext = path.posix.extname(parsedUrl.pathname);
       if (ext === `.js`) {
@@ -280,7 +344,7 @@ export async function runVersion(locator: Locator, installSpec: { location: stri
       }
     }
   } else {
-    for (const [name, dest] of Object.entries(installSpec.spec.bin)) {
+    for (const [name, dest] of Object.entries(bin)) {
       if (name === binName) {
         binPath = path.join(installSpec.location, dest);
         break;

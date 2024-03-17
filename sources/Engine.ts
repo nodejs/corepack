@@ -12,11 +12,18 @@ import * as debugUtils                                        from './debugUtils
 import * as folderUtils                                       from './folderUtils';
 import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
+import * as specUtils                                         from './specUtils';
 import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
 import {isSupportedPackageManager}                            from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
+
+export type PackageManagerRequest = {
+  packageManager: SupportedPackageManagers;
+  binaryName: string;
+  binaryVersion: string | null;
+};
 
 export function getLastKnownGoodFile(flag = `r`) {
   return fs.promises.open(path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`), flag);
@@ -144,7 +151,7 @@ export class Engine {
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
     let lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
-      if ((err as NodeError)?.code !== `ENOENT`) {
+      if ((err as NodeError)?.code !== `ENOENT` && (err as NodeError)?.code !== `EROFS`) {
         throw err;
       }
     });
@@ -199,17 +206,131 @@ export class Engine {
     const packageManagerInfo = await corepackUtils.installVersion(folderUtils.getInstallFolder(), locator, {
       spec,
     });
-    spec.bin ??= packageManagerInfo.bin;
+
+    const noHashReference = locator.reference.replace(/\+.*/, ``);
+    const fixedHashReference = `${noHashReference}+${packageManagerInfo.hash}`;
+
+    const fixedHashLocator = {
+      name: locator.name,
+      reference: fixedHashReference,
+    };
 
     return {
       ...packageManagerInfo,
-      locator,
+      locator: fixedHashLocator,
       spec,
     };
   }
 
-  async fetchAvailableVersions() {
+  /**
+   * Locates the active project's package manager specification.
+   *
+   * If the specification exists but doesn't match the active package manager,
+   * an error is thrown to prevent users from using the wrong package manager,
+   * which would lead to inconsistent project layouts.
+   *
+   * If the project doesn't include a specification file, we just assume that
+   * whatever the user uses is exactly what they want to use. Since the version
+   * isn't explicited, we fallback on known good versions.
+   *
+   * Finally, if the project doesn't exist at all, we ask the user whether they
+   * want to create one in the current project. If they do, we initialize a new
+   * project using the default package managers, and configure it so that we
+   * don't need to ask again in the future.
+   */
+  async findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+    // A locator is a valid descriptor (but not the other way around)
+    const fallbackDescriptor = {name: locator.name, range: `${locator.reference}`};
 
+    if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
+      return fallbackDescriptor;
+
+    if (process.env.COREPACK_ENABLE_STRICT === `0`)
+      transparent = true;
+
+    while (true) {
+      const result = await specUtils.loadSpec(initialCwd);
+
+      switch (result.type) {
+        case `NoProject`:
+          return fallbackDescriptor;
+
+        case `NoSpec`: {
+          if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
+            const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
+            if (resolved === null)
+              throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
+
+            const installSpec = await this.ensurePackageManager(resolved);
+
+            console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
+            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
+            console.error();
+
+            await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+          }
+
+          return fallbackDescriptor;
+        }
+
+        case `Found`: {
+          if (result.spec.name !== locator.name) {
+            if (transparent) {
+              return fallbackDescriptor;
+            } else {
+              throw new UsageError(`This project is configured to use ${result.spec.name}`);
+            }
+          } else {
+            return result.spec;
+          }
+        }
+      }
+    }
+  }
+
+  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
+    let fallbackLocator: Locator = {
+      name: binaryName as SupportedPackageManagers,
+      reference: undefined as any,
+    };
+
+    let isTransparentCommand = false;
+    if (packageManager != null) {
+      const defaultVersion = await this.getDefaultVersion(packageManager);
+      const definition = this.config.definitions[packageManager]!;
+
+      // If all leading segments match one of the patterns defined in the `transparent`
+      // key, we tolerate calling this binary even if the local project isn't explicitly
+      // configured for it, and we use the special default version if requested.
+      for (const transparentPath of definition.transparent.commands) {
+        if (transparentPath[0] === binaryName && transparentPath.slice(1).every((segment, index) => segment === args[index])) {
+          isTransparentCommand = true;
+          break;
+        }
+      }
+
+      const fallbackReference = isTransparentCommand
+        ? definition.transparent.default ?? defaultVersion
+        : defaultVersion;
+
+      fallbackLocator = {
+        name: packageManager,
+        reference: fallbackReference,
+      };
+    }
+
+    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
+
+    if (binaryVersion)
+      descriptor.range = binaryVersion;
+
+    const resolved = await this.resolveDescriptor(descriptor, {allowTags: true});
+    if (resolved === null)
+      throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
+
+    const installSpec = await this.ensurePackageManager(resolved);
+
+    return await corepackUtils.runVersion(resolved, installSpec, binaryName, args);
   }
 
   async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {

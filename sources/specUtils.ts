@@ -1,10 +1,12 @@
-import {UsageError}                                     from 'clipanion';
-import fs                                               from 'fs';
-import path                                             from 'path';
-import semver                                           from 'semver';
+import {UsageError}                            from 'clipanion';
+import fs                                      from 'fs';
+import path                                    from 'path';
+import semver                                  from 'semver';
 
-import {NodeError}                                      from './nodeUtils';
-import {Descriptor, Locator, isSupportedPackageManager} from './types';
+import {PreparedPackageManagerInfo}            from './Engine';
+import {NodeError}                             from './nodeUtils';
+import * as nodeUtils                          from './nodeUtils';
+import {Descriptor, isSupportedPackageManager} from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
@@ -49,54 +51,24 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   };
 }
 
-/**
- * Locates the active project's package manager specification.
- *
- * If the specification exists but doesn't match the active package manager,
- * an error is thrown to prevent users from using the wrong package manager,
- * which would lead to inconsistent project layouts.
- *
- * If the project doesn't include a specification file, we just assume that
- * whatever the user uses is exactly what they want to use. Since the version
- * isn't explicited, we fallback on known good versions.
- *
- * Finally, if the project doesn't exist at all, we ask the user whether they
- * want to create one in the current project. If they do, we initialize a new
- * project using the default package managers, and configure it so that we
- * don't need to ask again in the future.
- */
-export async function findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
-  // A locator is a valid descriptor (but not the other way around)
-  const fallbackLocator = {name: locator.name, range: `${locator.reference}`};
+export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
+  const lookup = await loadSpec(cwd);
 
-  if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
-    return fallbackLocator;
+  const content = lookup.type !== `NoProject`
+    ? await fs.promises.readFile(lookup.target, `utf8`)
+    : ``;
 
-  if (process.env.COREPACK_ENABLE_STRICT === `0`)
-    transparent = true;
+  const {data, indent} = nodeUtils.readPackageJson(content);
 
-  while (true) {
-    const result = await loadSpec(initialCwd);
+  const previousPackageManager = data.packageManager ?? `unknown`;
+  data.packageManager = `${info.locator.name}@${info.locator.reference}`;
 
-    switch (result.type) {
-      case `NoProject`:
-      case `NoSpec`: {
-        return fallbackLocator;
-      }
+  const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
+  await fs.promises.writeFile(lookup.target, newContent, `utf8`);
 
-      case `Found`: {
-        if (result.spec.name !== locator.name) {
-          if (transparent) {
-            return fallbackLocator;
-          } else {
-            throw new UsageError(`This project is configured to use ${result.spec.name}`);
-          }
-        } else {
-          return result.spec;
-        }
-      }
-    }
-  }
+  return {
+    previousPackageManager,
+  };
 }
 
 export type LoadSpecResult =

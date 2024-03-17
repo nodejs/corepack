@@ -50,6 +50,6 @@ export class UpCommand extends BaseCommand {
     this.context.stdout.write(`Installing ${highestVersion.name}@${highestVersion.reference} in the project...\n`);
 
     const packageManagerInfo = await this.context.engine.ensurePackageManager(highestVersion);
-    await this.setLocalPackageManager(packageManagerInfo);
+    await this.setAndInstallLocalPackageManager(packageManagerInfo);
   }
 }

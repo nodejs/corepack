@@ -1,10 +1,8 @@
 import {Command, UsageError}        from 'clipanion';
-import fs                           from 'fs';
 
 import {PreparedPackageManagerInfo} from '../Engine';
 import * as corepackUtils           from '../corepackUtils';
 import {Context}                    from '../main';
-import * as nodeUtils               from '../nodeUtils';
 import * as specUtils               from '../specUtils';
 
 export abstract class BaseCommand extends Command<Context> {
@@ -29,20 +27,10 @@ export abstract class BaseCommand extends Command<Context> {
     return resolvedSpecs;
   }
 
-  async setLocalPackageManager(info: PreparedPackageManagerInfo) {
-    const lookup = await specUtils.loadSpec(this.context.cwd);
-
-    const content = lookup.type !== `NoProject`
-      ? await fs.promises.readFile(lookup.target, `utf8`)
-      : ``;
-
-    const {data, indent} = nodeUtils.readPackageJson(content);
-
-    const previousPackageManager = data.packageManager ?? `unknown`;
-    data.packageManager = `${info.locator.name}@${info.locator.reference}+${info.hash}`;
-
-    const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
-    await fs.promises.writeFile(lookup.target, newContent, `utf8`);
+  async setAndInstallLocalPackageManager(info: PreparedPackageManagerInfo) {
+    const {
+      previousPackageManager,
+    } = await specUtils.setLocalPackageManager(this.context.cwd, info);
 
     const command = this.context.engine.getPackageManagerSpecFor(info.locator).commands?.use ?? null;
     if (command === null)

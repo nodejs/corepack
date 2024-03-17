@@ -4,27 +4,11 @@ import {once}          from 'events';
 import {stderr, stdin} from 'process';
 import {Readable}      from 'stream';
 
-export async function fetch(input: string | URL, init?: RequestInit) {
+async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
   const agent = await getProxyAgent(input);
-
-  if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
-    console.error(`Corepack is about to download ${input}.`);
-    if (stdin.isTTY && !process.env.CI) {
-      stderr.write(`\nDo you want to continue? [Y/n] `);
-      stdin.resume();
-      const chars = await once(stdin, `data`);
-      stdin.pause();
-      if (
-        chars[0][0] === 0x6e || // n
-        chars[0][0] === 0x4e // N
-      ) {
-        throw new UsageError(`Aborted by the user`);
-      }
-    }
-  }
 
   let response;
   try {
@@ -68,6 +52,23 @@ export async function fetchAsJson(input: string | URL, init?: RequestInit) {
 }
 
 export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
+  if (process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT === `1`) {
+    console.error(`! Corepack is about to download ${input}`);
+    if (stdin.isTTY && !process.env.CI) {
+      stderr.write(`? Do you want to continue? [Y/n] `);
+      stdin.resume();
+      const chars = await once(stdin, `data`);
+      stdin.pause();
+
+      // n / N
+      if (chars[0][0] === 0x6e || chars[0][0] === 0x4e)
+        throw new UsageError(`Aborted by the user`);
+
+      // Add a newline to separate Corepack output from the package manager
+      console.error();
+    }
+  }
+
   const response = await fetch(input, init);
   const webStream = response.body;
   assert(webStream, `Expected stream to be set`);

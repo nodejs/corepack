@@ -11,6 +11,32 @@ The `dist/` directory now contains the corepack build and the shims.
 Call `node ./dist/corepack --help` and behold.
 You can also run the tests with `yarn test`.
 
+# Adding a new package manager
+
+New package managers can be added by editing the following files:
+
+- [`config.json`](./config.json),
+- [`.github/workflows/sync.yml`](./.github/workflows/sync.yml) that keeps pinned
+  versions up-to-date,
+- [`package.json`](./package.json) to add to add the added shims to the list of
+  `"publishConfig/bin"` and `"executableFiles"`,
+- [`sources/types.ts`](./sources/types.ts) to add the package manager to the
+  `SupportedPackageManagers` enum,
+- [`tests/main.test.ts`](./tests/main.test.ts) tests to ensure the added package
+  manager works as expected.
+
+Once added, the shims pertaining to new package managers won't be automatically
+enabled by `corepack enable` when called without arguments - it'll require users
+to explicitly install the relevant shims (e.g. `corepack enable mypm`). A
+separate PR adding the package manager to the default list can be opened a
+couple of months after the new package manager was introduced.
+
+Finally, this repository does not manage which package managers are distributed
+with default install of Node.js. This is managed in the
+[nodejs/node](https://github.com/nodejs/node) repository, refer to the
+[CONTRIBUTING.md](https://github.com/nodejs/node/blob/main/CONTRIBUTING.md) over
+there for more information.
+
 ## Developer's Certificate of Origin 1.1
 
 By making a contribution to this project, I certify that:
