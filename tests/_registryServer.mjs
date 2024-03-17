@@ -142,4 +142,14 @@ switch (process.env.AUTH_TYPE) {
   default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
 }
 
+if (process.env.NOCK_ENV === `replay`) {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = function fetch(i) {
+    if (!`${i}`.startsWith(`http://${address.includes(`:`) ? `[${address}]` : address}:${port}`))
+      throw new Error;
+
+    return Reflect.apply(originalFetch, this, arguments);
+  };
+}
+
 server.unref();
