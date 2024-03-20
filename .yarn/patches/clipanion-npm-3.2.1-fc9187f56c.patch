@@ -1,0 +1,10 @@
+diff --git a/lib/platform/package.json b/lib/platform/package.json
+index 5ea9d43740d1bdb509612376c0e9ce91d20f8b20..08d4f7327dee5e605107a343d73b2254ed08ddb9 100644
+--- a/lib/platform/package.json
++++ b/lib/platform/package.json
+@@ -1,4 +1,4 @@
+ {
+-    "main": "./node",
++    "main": "./node.js",
+     "browser": "./browser"
+ }
