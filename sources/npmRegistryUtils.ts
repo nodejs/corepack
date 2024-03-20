@@ -25,7 +25,10 @@ export async function fetchAsJson(packageName: string) {
     headers.authorization = `Basic ${encodedCreds}`;
   }
 
-  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}`, {headers});
+  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}`, {
+    headers,
+    redirect: 'follow',
+  });
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
