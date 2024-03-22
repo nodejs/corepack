@@ -1,4 +1,4 @@
-import {createHash, createVerify, webcrypto}                   from 'crypto';
+import {createHash, createVerify}                              from 'crypto';
 import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
@@ -7,6 +7,8 @@ import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
 import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
+
+import defaultConfig                                           from '../config.json';
 
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
@@ -22,8 +24,6 @@ export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
     ? spec.npmRegistry ?? spec.registry
     : spec.registry;
 }
-
-type NpmSignatureKey = {"expires": null, "keyid": string, "keytype": string, "scheme": string, "key": string};
 
 export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<string> {
   switch (spec.type) {
@@ -244,8 +244,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     if (registry.type === `npm` && !process.env.COREPACK_NPM_REGISTRY) {
       if (signatures! == null || integrity! == null)
         ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
-      const {keys} = await httpUtils.fetchAsJson(new URL(`/-/npm/v1/keys`, process.env.COREPACK_NPM_REGISTRY || npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL));
-      const key: NpmSignatureKey | undefined = keys.find(({keyid}: NpmSignatureKey) => signatures.some(s => s.keyid === keyid));
+      const {npm: keys} = defaultConfig.keys;
+      const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
       const signature = signatures.find(({keyid}) => keyid === key?.keyid);
       switch (key?.keytype) {
         case `ecdsa-sha2-nistp256`: {
@@ -265,6 +265,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
         default: throw new Error(`Unsupported signature key`, {cause: key});
       }
+      // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }
   }
