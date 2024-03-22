@@ -49,15 +49,15 @@ export async function fetchAvailableVersions(packageName: string) {
   return Object.keys(metadata.versions);
 }
 
-export async function fetchTarballUrl(packageName: string, version: string) {
+export async function fetchTarballURLAndSignature(packageName: string, version: string) {
   const metadata = await fetchAsJson(packageName);
   const versionMetadata = metadata.versions?.[version];
   if (versionMetadata === undefined)
     throw new Error(`${packageName}@${version} does not exist.`);
 
-  const {tarball} = versionMetadata.dist;
+  const {tarball, signatures, integrity} = versionMetadata.dist;
   if (tarball === undefined || !tarball.startsWith(`http`))
     throw new Error(`${packageName}@${version} does not have a valid tarball.`);
 
-  return tarball;
+  return {tarball, signatures, integrity};
 }

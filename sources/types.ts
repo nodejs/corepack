@@ -96,6 +96,10 @@ export interface Config {
       };
     };
   };
+
+  keys: {
+    [registry: string]: Array<{"expires": null, "keyid": string, "keytype": string, "scheme": string, "key": string}>;
+  };
 }
 
 /**

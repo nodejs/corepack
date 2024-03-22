@@ -22,7 +22,7 @@ describe(`UseCommand`, () => {
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
-        packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
+        packageManager: `yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
       });
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -40,7 +40,7 @@ describe(`UseCommand`, () => {
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
-        packageManager: `yarn@1.22.4+sha256.bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58`,
+        packageManager: `yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
       });
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
