@@ -137,8 +137,8 @@ async function download(installTarget: string, url: string, algo: string, binPat
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done
 
-  const downloadFolder = folderUtils.getTemporaryFolder(installTarget);
-  debugUtils.log(`Downloading to ${downloadFolder}`);
+  const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
+  debugUtils.log(`Downloading to ${tmpFolder}`);
 
   const stream = await httpUtils.fetchUrlStream(url);
 
@@ -150,9 +150,19 @@ async function download(installTarget: string, url: string, algo: string, binPat
 
   if (ext === `.tgz`) {
     const {default: tar} = await import(`tar`);
-    sendTo = tar.x({strip: 1, cwd: downloadFolder});
+    sendTo = tar.x({
+      strip: 1,
+      cwd: tmpFolder,
+      filter: binPath ? path => {
+        const pos = path.indexOf(`/`);
+        if (pos === -1 || path.slice(pos + 1) !== binPath)
+          return false;
+
+        return true;
+      } : undefined,
+    });
   } else if (ext === `.js`) {
-    outputFile = path.join(downloadFolder, path.posix.basename(parsedUrl.pathname));
+    outputFile = path.join(tmpFolder, path.posix.basename(parsedUrl.pathname));
     sendTo = fs.createWriteStream(outputFile);
   }
   stream.pipe(sendTo);
@@ -161,19 +171,12 @@ async function download(installTarget: string, url: string, algo: string, binPat
   await once(sendTo, `finish`);
 
   if (binPath) {
-    const downloadedBin = path.join(downloadFolder, binPath);
+    const downloadedBin = path.join(tmpFolder, binPath);
     if (!fs.existsSync(downloadedBin))
       throw new Error(`Cannot locate '${binPath}' in downloaded tarball`);
 
-    // Create a new folder which only contains the bin file
-    const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
-    debugUtils.log(`Copying ${binPath} to ${tmpFolder}`);
-
     outputFile = path.join(tmpFolder, path.basename(downloadedBin));
     await rename(downloadedBin, outputFile);
-
-    // Remove downloadFolder
-    await fs.promises.rm(downloadFolder, {recursive: true, force: true});
 
     // Calculate the hash of the bin file
     const fileStream = fs.createReadStream(outputFile);
@@ -188,7 +191,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
   }
 
   return {
-    tmpFolder: downloadFolder,
+    tmpFolder,
     outputFile,
     hash: streamHash.digest(`hex`),
   };
