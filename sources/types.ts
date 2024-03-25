@@ -25,6 +25,7 @@ export function isSupportedPackageManager(value: string): value is SupportedPack
 export interface NpmRegistrySpec {
   type: `npm`;
   package: string;
+  bin?: string;
 }
 
 export interface UrlRegistrySpec {
@@ -56,6 +57,12 @@ export interface PackageManagerSpec {
 export interface InstallSpec {
   location: string;
   bin?: BinList | BinSpec;
+  hash: string;
+}
+
+export interface DownloadSpec {
+  tmpFolder: string;
+  outputFile: string | null;
   hash: string;
 }
 
