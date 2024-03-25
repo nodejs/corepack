@@ -161,12 +161,9 @@ async function download(installTarget: string, url: string, algo: string, binPat
   await once(sendTo, `finish`);
 
   if (binPath) {
-    await once(sendTo, `finish`);
-
     const downloadedBin = path.join(downloadFolder, binPath);
     if (!fs.existsSync(downloadedBin))
       throw new Error(`Cannot locate '${binPath}' in downloaded tarball`);
-
 
     // Create a new folder which only contains the bin file
     const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
@@ -181,7 +178,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
     // Calculate the hash of the bin file
     const fileStream = fs.createReadStream(outputFile);
     const fileHash = fileStream.pipe(createHash(algo));
-    await once(fileStream, `finish`);
+    await once(fileStream, `close`);
 
     return {
       tmpFolder,
