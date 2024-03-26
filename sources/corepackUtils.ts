@@ -174,7 +174,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
     const downloadedBin = path.join(tmpFolder, binPath);
     outputFile = path.join(tmpFolder, path.basename(downloadedBin));
     try {
-      await rename(downloadedBin, outputFile);
+      await renameSafe(downloadedBin, outputFile);
     } catch (err) {
       if ((err as nodeUtils.NodeError)?.code === `ENOENT`) {
         throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, { cause: err });
@@ -347,7 +347,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   };
 }
 
-async function rename(oldPath: fs.PathLike, newPath: fs.PathLike) {
+async function renameSafe(oldPath: fs.PathLike, newPath: fs.PathLike) {
   if (process.platform === `win32`) {
     await renameUnderWindows(oldPath, newPath);
   } else {
