@@ -167,7 +167,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
   }
   stream.pipe(sendTo);
 
-  const streamHash = stream.pipe(createHash(algo));
+  const streamHash = !binPath ? stream.pipe(createHash(algo)) : null;
   await once(sendTo, `finish`);
 
   let hash: string;
