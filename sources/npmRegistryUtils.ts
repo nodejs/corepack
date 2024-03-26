@@ -9,7 +9,7 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
-export async function fetchAsJson(packageName: string) {
+export async function fetchAsJson(packageName: string, version?: string) {
   const npmRegistryUrl = process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL;
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -25,18 +25,14 @@ export async function fetchAsJson(packageName: string) {
     headers.authorization = `Basic ${encodedCreds}`;
   }
 
-  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}`, {headers});
+  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
-  const metadata = await fetchAsJson(packageName);
+  const metadata = await fetchAsJson(packageName, `latest`);
 
-  const {latest} = metadata[`dist-tags`];
-  if (latest === undefined)
-    throw new Error(`${packageName} does not have a "latest" tag.`);
-
-  const {shasum} = metadata.versions[latest].dist;
-  return `${latest}+sha1.${shasum}`;
+  const {shasum} = metadata.dist;
+  return `${metadata.version}+sha1.${shasum}`;
 }
 
 export async function fetchAvailableTags(packageName: string) {
@@ -50,11 +46,7 @@ export async function fetchAvailableVersions(packageName: string) {
 }
 
 export async function fetchTarballUrl(packageName: string, version: string) {
-  const metadata = await fetchAsJson(packageName);
-  const versionMetadata = metadata.versions?.[version];
-  if (versionMetadata === undefined)
-    throw new Error(`${packageName}@${version} does not exist.`);
-
+  const versionMetadata = await fetchAsJson(packageName, version);
   const {tarball} = versionMetadata.dist;
   if (tarball === undefined || !tarball.startsWith(`http`))
     throw new Error(`${packageName}@${version} does not have a valid tarball.`);
