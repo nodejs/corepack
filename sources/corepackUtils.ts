@@ -1,11 +1,11 @@
 import {createHash}                                            from 'crypto';
-import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
 import semver                                                  from 'semver';
+import {pipeline}                                              from 'stream/promises';
 import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
 import * as engine                                             from './Engine';
@@ -201,8 +201,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   stream.pipe(sendTo);
 
   const algo = build[0] ?? `sha256`;
-  const hash = stream.pipe(createHash(algo));
-  await once(sendTo, `finish`);
+  const hash = createHash(algo);
+  await pipeline(sendTo, hash);
 
   let bin: BinSpec | BinList;
   const isSingleFile = outputFile !== null;
