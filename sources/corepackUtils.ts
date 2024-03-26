@@ -167,10 +167,9 @@ async function download(installTarget: string, url: string, algo: string, binPat
   }
   stream.pipe(sendTo);
 
-  const streamHash = !binPath ? stream.pipe(createHash(algo)) : null;
+  let hash = !binPath ? stream.pipe(createHash(algo)) : null;
   await once(sendTo, `finish`);
 
-  let hash: string;
   if (binPath) {
     const downloadedBin = path.join(tmpFolder, binPath);
     outputFile = path.join(tmpFolder, path.basename(downloadedBin));
@@ -185,18 +184,14 @@ async function download(installTarget: string, url: string, algo: string, binPat
 
     // Calculate the hash of the bin file
     const fileStream = fs.createReadStream(outputFile);
-    const fileHash = fileStream.pipe(createHash(algo));
+    hash = fileStream.pipe(createHash(algo));
     await once(fileStream, `close`);
-
-    hash = fileHash.digest(`hex`);
-  } else {
-    hash = streamHash.digest(`hex`);
   }
 
   return {
     tmpFolder,
     outputFile,
-    hash,
+    hash: hash.digest(`hex`),
   };
 }
 
