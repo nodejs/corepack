@@ -1,21 +1,21 @@
-import {createHash}                                                          from 'crypto';
-import {once}                                                                from 'events';
-import {FileHandle}                                                          from 'fs/promises';
-import fs                                                                    from 'fs';
-import type {Dir}                                                            from 'fs';
-import Module                                                                from 'module';
-import path                                                                  from 'path';
-import semver                                                                from 'semver';
-import {setTimeout as setTimeoutPromise}                                     from 'timers/promises';
+import {createHash}                                            from 'crypto';
+import {once}                                                  from 'events';
+import {FileHandle}                                            from 'fs/promises';
+import fs                                                      from 'fs';
+import type {Dir}                                              from 'fs';
+import Module                                                  from 'module';
+import path                                                    from 'path';
+import semver                                                  from 'semver';
+import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
-import * as engine                                                           from './Engine';
-import * as debugUtils                                                       from './debugUtils';
-import * as folderUtils                                                      from './folderUtils';
-import * as httpUtils                                                        from './httpUtils';
-import * as nodeUtils                                                        from './nodeUtils';
-import * as npmRegistryUtils                                                 from './npmRegistryUtils';
+import * as engine                                             from './Engine';
+import * as debugUtils                                         from './debugUtils';
+import * as folderUtils                                        from './folderUtils';
+import * as httpUtils                                          from './httpUtils';
+import * as nodeUtils                                          from './nodeUtils';
+import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-import {BinList, BinSpec, InstallSpec, DownloadSpec}                                       from './types';
+import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
@@ -176,9 +176,9 @@ async function download(installTarget: string, url: string, algo: string, binPat
     try {
       await renameSafe(downloadedBin, outputFile);
     } catch (err) {
-      if ((err as nodeUtils.NodeError)?.code === `ENOENT`) {
-        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, { cause: err });
-      }
+      if ((err as nodeUtils.NodeError)?.code === `ENOENT`)
+        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, {cause: err});
+
       throw err;
     }
 
