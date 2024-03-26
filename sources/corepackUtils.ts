@@ -191,7 +191,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
   return {
     tmpFolder,
     outputFile,
-    hash: hash.digest(`hex`),
+    hash: hash!.digest(`hex`),
   };
 }
 
