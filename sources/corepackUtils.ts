@@ -172,11 +172,15 @@ async function download(installTarget: string, url: string, algo: string, binPat
 
   if (binPath) {
     const downloadedBin = path.join(tmpFolder, binPath);
-    if (!fs.existsSync(downloadedBin))
-      throw new Error(`Cannot locate '${binPath}' in downloaded tarball`);
-
     outputFile = path.join(tmpFolder, path.basename(downloadedBin));
-    await rename(downloadedBin, outputFile);
+    try {
+      await rename(downloadedBin, outputFile);
+    } catch (err) {
+      if ((err as nodeUtils.NodeError)?.code === `ENOENT`) {
+        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, { cause: err });
+      }
+      throw err;
+    }
 
     // Calculate the hash of the bin file
     const fileStream = fs.createReadStream(outputFile);
