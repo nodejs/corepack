@@ -14,8 +14,8 @@ import * as folderUtils                                                      fro
 import * as httpUtils                                                        from './httpUtils';
 import * as nodeUtils                                                        from './nodeUtils';
 import * as npmRegistryUtils                                                 from './npmRegistryUtils';
-import {RegistrySpec, Descriptor, Locator, PackageManagerSpec, DownloadSpec} from './types';
-import {BinList, BinSpec, InstallSpec}                                       from './types';
+import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import {BinList, BinSpec, InstallSpec, DownloadSpec}                                       from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
