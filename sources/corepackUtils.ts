@@ -155,10 +155,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
       cwd: tmpFolder,
       filter: binPath ? path => {
         const pos = path.indexOf(`/`);
-        if (pos === -1 || path.slice(pos + 1) !== binPath)
-          return false;
-
-        return true;
+        return pos !== -1 && path.slice(pos + 1) === binPath;
       } : undefined,
     });
   } else if (ext === `.js`) {
