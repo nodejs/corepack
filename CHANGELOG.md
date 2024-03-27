@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.26.1](https://github.com/nodejs/corepack/compare/v0.26.0...v0.26.1) (2024-03-27)
+
+
+### Bug Fixes
+
+* download fewer metadata from npm registry ([#436](https://github.com/nodejs/corepack/issues/436)) ([082fabf](https://github.com/nodejs/corepack/commit/082fabf8b15658e69e4fb62bb854fe9aace78b70))
+* re-add support for custom registries with auth ([#397](https://github.com/nodejs/corepack/issues/397)) ([d267753](https://github.com/nodejs/corepack/commit/d2677538cdb613fcab6d2a45bb07f349bdc65c2b))
+
 ## [0.26.0](https://github.com/nodejs/corepack/compare/v0.25.2...v0.26.0) (2024-03-08)
 
 
