@@ -792,14 +792,14 @@ it(`should download yarn berry from custom registry`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `4.1.1\n`,
-      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-4.1.1.tgz\n`,
+      stdout: `3.0.0-rc.2\n`,
+      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0-rc.2.tgz\n`,
     });
 
     // Should keep working with cache
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `4.1.1\n`,
+      stdout: `3.0.0-rc.2\n`,
       stderr: ``,
     });
   });
