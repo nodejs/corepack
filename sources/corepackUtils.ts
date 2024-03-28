@@ -178,6 +178,12 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   } else {
     url = decodeURIComponent(version);
+    if (process.env.COREPACK_NPM_REGISTRY && url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
+      url = url.replace(
+        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+        () => process.env.COREPACK_NPM_REGISTRY!,
+      );
+    }
   }
 
   // Creating a temporary folder inside the install folder means that we
