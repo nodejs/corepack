@@ -149,7 +149,8 @@
           },
           "npmRegistry": {
             "type": "npm",
-            "package": "@yarnpkg/cli-dist"
+            "package": "@yarnpkg/cli-dist",
+            "bin": "bin/yarn.js"
           },
           "commands": {
             "use": [
