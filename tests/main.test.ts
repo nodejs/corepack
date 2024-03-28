@@ -1,4 +1,4 @@
-import {beforeEach, it, expect}                    from '@jest/globals';
+import {beforeEach, describe, expect, it}          from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import process                                     from 'node:process';
 
@@ -804,3 +804,55 @@ it(`should download yarn berry from custom registry`, async () => {
     });
   });
 });
+
+for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`]) {
+  describe(`custom registry with auth ${authType}`, () => {
+    beforeEach(() => {
+      process.env.AUTH_TYPE = authType; // See `_registryServer.mjs`
+    });
+
+    it(`should download yarn classic`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should download yarn berry`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+          packageManager: `yarn@3.0.0`,
+        });
+
+        await expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should download pnpm`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `pnpm: Hello from custom registry\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should download custom package manager`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`customPkgManager@https://registry.npmjs.org/customPkgManager/-/customPkgManager-1.0.0.tgz`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `customPkgManager: Hello from custom registry\n`,
+          stderr: ``,
+        });
+      });
+    });
+  });
+}
