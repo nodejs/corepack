@@ -912,13 +912,26 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
-  it.skip(`should return no error when signature does not match when hash is provided`, async () => {
+  it(`should return an error when signature does not match when version is provided`, async () => {
+    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+    });
+  });
+  it(`should return no error when signature does not match when hash is provided`, async () => {
     process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.9998.9999+sha1.deadbeef`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `pnpm: Hello from custom registry\n`,
+        exitCode: 1,
+        // It still throws an error because we can't predict the hash, but what we
+        // are validating it does not throw a "Signature mismatch" error.
+        stdout: /Mismatch hashes. Expected deadbeef, got /,
         stderr: ``,
       });
     });
