@@ -1,7 +1,38 @@
-import {createHash}   from 'node:crypto';
-import {once}         from 'node:events';
-import {createServer} from 'node:http';
-import {gzipSync}     from 'node:zlib';
+import {createHash, createSign, generateKeyPairSync} from 'node:crypto';
+import {once}                                        from 'node:events';
+import {createServer}                                from 'node:http';
+import {gzipSync}                                    from 'node:zlib';
+
+let privateKey, keyid;
+
+switch (process.env.TEST_INTEGRITY) {
+  case `invalid`: {
+    ({privateKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+    }));
+  }
+  // eslint-disable-next-line no-fallthrough
+  case `valid`: {
+    const {privateKey: p, publicKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+      publicKeyEncoding: {
+        type: `spki`,
+        format: `pem`,
+      },
+    });
+    privateKey ??= p;
+    process.env.COREPACK_INTEGRITY_KEYS = JSON.stringify({npm: [{
+      expires: null,
+      keyid,
+      keytype: `ecdsa-sha2-sect239k1`,
+      scheme: `ecdsa-sha2-sect239k1`,
+      key: publicKey.slice(publicKey.indexOf(`\n`), publicKey.lastIndexOf(`\n`)),
+    }]});
+    keyid = `SHA256:${createHash(`SHA256`).end(publicKey).digest(`base64`)}`;
+    break;
+  }
+}
+
 
 function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   const contentBuffer = Buffer.from(fileContent);
@@ -47,6 +78,14 @@ const registry = {
   customPkgManager: [`1.0.0`],
 };
 
+function generateSignature(packageName, version) {
+  if (privateKey == null) return undefined;
+  const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
+  return {signatures: [{
+    keyid,
+    sig: sign.sign(privateKey, `base64`),
+  }]};
+}
 function getVersionMetadata(packageName, version) {
   return {
     bin: {
@@ -58,6 +97,7 @@ function getVersionMetadata(packageName, version) {
       size: mockPackageTarGz.length,
       noattachment: false,
       tarball: `${process.env.COREPACK_NPM_REGISTRY}/${packageName}/-/${packageName}-${version}.tgz`,
+      ...generateSignature(packageName, version),
     },
   };
 }
