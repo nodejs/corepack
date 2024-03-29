@@ -1,4 +1,4 @@
-import {createHash, createVerify}                              from 'crypto';
+import {createHash, createVerify, sign}                        from 'crypto';
 import {once}                                                  from 'events';
 import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
@@ -247,30 +247,27 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const actualHash: string = hash.digest(`hex`);
   if (!build[1]) {
     const registry = getRegistryFromPackageManagerSpec(spec);
-    if (registry.type === `npm` && !process.env.COREPACK_NPM_REGISTRY) {
+    if (registry.type === `npm` && process.env.COREPACK_INTEGRITY_KEYS !== ``) {
       if (signatures! == null || integrity! == null)
         ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
-      const {npm: keys} = defaultConfig.keys;
+      const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
+        JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
+        defaultConfig.keys;
+
       const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
       const signature = signatures.find(({keyid}) => keyid === key?.keyid);
-      switch (key?.keytype) {
-        case `ecdsa-sha2-nistp256`: {
-          const message = `${registry.package}@${version}:${integrity}`;
-          const verifier = createVerify(`SHA256`);
-          verifier.write(message);
-          verifier.end();
-          const valid = verifier.verify(
-            `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
-            signature!.sig,
-            `base64`,
-          );
-          if (!valid)
-            throw new Error(`Signature does not match`);
-          break;
-        }
 
-        default: throw new Error(`Unsupported signature key`, {cause: key});
-      }
+      if (key == null || signature == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
+
+      const verifier = createVerify(`SHA256`);
+      verifier.end(`${registry.package}@${version}:${integrity}`);
+      const valid = verifier.verify(
+        `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+        signature.sig,
+        `base64`,
+      );
+      if (!valid)
+        throw new Error(`Signature does not match`);
       // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }

@@ -809,6 +809,7 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
       process.env.AUTH_TYPE = authType; // See `_registryServer.mjs`
+      process.env.COREPACK_INTEGRITY_KEYS = ``;
     });
 
     it(`should download yarn classic`, async () => {
@@ -856,3 +857,55 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
     });
   });
 }
+
+describe(`handle integrity checks`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+  });
+
+  it(`should return no error when signature matches`, async () => {
+    process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: ``,
+      });
+    });
+  });
+  it(`should return an error when signature does not match with a tag`, async () => {
+    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+    });
+  });
+  it(`should return an error when signature does not match without a tag`, async () => {
+    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+    });
+  });
+  it(`should return no error when signature does not match when hash is provided`, async () => {
+    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: ``,
+      });
+    });
+  });
+});

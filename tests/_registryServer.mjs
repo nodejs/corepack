@@ -21,14 +21,14 @@ switch (process.env.TEST_INTEGRITY) {
       },
     });
     privateKey ??= p;
+    keyid = `SHA256:${createHash(`SHA256`).end(publicKey).digest(`base64`)}`;
     process.env.COREPACK_INTEGRITY_KEYS = JSON.stringify({npm: [{
       expires: null,
       keyid,
       keytype: `ecdsa-sha2-sect239k1`,
       scheme: `ecdsa-sha2-sect239k1`,
-      key: publicKey.slice(publicKey.indexOf(`\n`), publicKey.lastIndexOf(`\n`)),
+      key: publicKey.split(`\n`).slice(1, -2).join(``),
     }]});
-    keyid = `SHA256:${createHash(`SHA256`).end(publicKey).digest(`base64`)}`;
     break;
   }
 }
