@@ -88,6 +88,8 @@ function generateSignature(packageName, version) {
 }
 function getVersionMetadata(packageName, version) {
   return {
+    name: packageName,
+    version,
     bin: {
       [packageName]: `./bin/${packageName}.js`,
     },
@@ -132,6 +134,7 @@ const server = createServer((req, res) => {
     } else {
       version = req.url.slice(packageName.length + 2);
     }
+    if (version === `latest`) version = registry[packageName].at(-1);
     if (registry[packageName].includes(version)) {
       res.end(
         isDownloadingRequest ?
