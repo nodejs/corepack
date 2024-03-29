@@ -1,4 +1,7 @@
 import {UsageError}   from 'clipanion';
+import {createVerify} from 'crypto';
+
+import defaultConfig  from '../config.json';
 
 import * as httpUtils from './httpUtils';
 
@@ -28,11 +31,46 @@ export async function fetchAsJson(packageName: string, version?: string) {
   return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
+export function verifySignature({signatures, integrity, packageName, version}: {
+  signatures: Array<{keyid: string, sig: string}>;
+  integrity: string;
+  packageName: string;
+  version: string;
+}) {
+  const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
+    JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
+    defaultConfig.keys;
+
+  const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
+  const signature = signatures.find(({keyid}) => keyid === key?.keyid);
+
+  if (key == null || signature == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
+
+  const verifier = createVerify(`SHA256`);
+  verifier.end(`${packageName}@${version}:${integrity}`);
+  const valid = verifier.verify(
+    `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+    signature.sig,
+    `base64`,
+  );
+  if (!valid) {
+    throw new Error(`Signature does not match`);
+  }
+}
+
 export async function fetchLatestStableVersion(packageName: string) {
   const metadata = await fetchAsJson(packageName, `latest`);
 
-  const {shasum} = metadata.dist;
-  return `${metadata.version}+sha1.${shasum}`;
+  const {version, dist: {shasum, integrity, signatures}} = metadata;
+
+  if (process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+    verifySignature({
+      packageName, version,
+      integrity, signatures,
+    });
+  }
+
+  return `${version}+sha1.${shasum}`;
 }
 
 export async function fetchAvailableTags(packageName: string) {

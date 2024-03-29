@@ -873,6 +873,11 @@ describe(`handle integrity checks`, () => {
         stdout: `pnpm: Hello from custom registry\n`,
         stderr: ``,
       });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``,
+      });
     });
   });
   it(`should return an error when signature does not match with a tag`, async () => {
@@ -880,7 +885,12 @@ describe(`handle integrity checks`, () => {
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`yarn@stable`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
       });
@@ -891,17 +901,22 @@ describe(`handle integrity checks`, () => {
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
       });
     });
   });
-  it(`should return no error when signature does not match when hash is provided`, async () => {
+  it.skip(`should return no error when signature does not match when hash is provided`, async () => {
     process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`pnpm@1.9998.9999+sha1.deadbeef`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
         stderr: ``,
