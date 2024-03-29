@@ -36,87 +36,75 @@ const mockPackageTarGz = gzipSync(Buffer.concat([
   Buffer.alloc(1024),
 ]));
 const shasum = createHash(`sha1`).update(mockPackageTarGz).digest(`hex`);
+const integrity = `sha512-${createHash(`sha512`).update(mockPackageTarGz).digest(`base64`)}`;
 
+const registry = {
+  __proto__: null,
+  yarn: [`1.9998.9999`],
+  pnpm: [`1.9998.9999`],
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  '@yarnpkg/cli-dist': [`5.9999.9999`],
+  customPkgManager: [`1.0.0`],
+};
+
+function getVersionMetadata(packageName, version) {
+  return {
+    bin: {
+      [packageName]: `./bin/${packageName}.js`,
+    },
+    dist: {
+      integrity,
+      shasum,
+      size: mockPackageTarGz.length,
+      noattachment: false,
+      tarball: `${process.env.COREPACK_NPM_REGISTRY}/${packageName}/-/${packageName}-${version}.tgz`,
+    },
+  };
+}
 
 const server = createServer((req, res) => {
   const auth = req.headers.authorization;
   if (!auth?.startsWith(`Bearer `) || Buffer.from(auth.slice(`Bearer `.length), `base64`).toString() !== `user:pass`) {
-    res.statusCode = 401;
-    res.end(`Unauthorized`);
+    res.writeHead(401).end(`Unauthorized`);
     return;
   }
-  switch (req.url) {
-    case `/yarn`: {
+
+  let slashPosition = req.url.indexOf(`/`, 1);
+  if (req.url.charAt(1) === `@`) slashPosition = req.url.indexOf(`/`, slashPosition + 1);
+
+  const packageName = req.url.slice(1, slashPosition === -1 ? undefined : slashPosition);
+  if (packageName in registry) {
+    if (req.url === `/${packageName}`) {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       res.end(JSON.stringify({"dist-tags": {
-        latest: `1.9998.9999`,
-      }, versions: {'1.9998.9999': {
-        dist: {
-          shasum,
-          size: mockPackageTarGz.length,
-          noattachment: false,
-          tarball: `${process.env.COREPACK_NPM_REGISTRY}/yarn.tgz`,
-        },
-      }}}));
-      break;
+        latest: registry[packageName].at(-1),
+      }, versions: Object.fromEntries(registry[packageName].map(version => [version, getVersionMetadata(packageName, version)])),
+      }));
+      return;
     }
-
-    case `/pnpm`: {
-      res.end(JSON.stringify({"dist-tags": {
-        latest: `1.9998.9999`,
-      }, versions: {'1.9998.9999': {
-        dist: {
-          shasum,
-          size: mockPackageTarGz.length,
-          noattachment: false,
-          tarball: `${process.env.COREPACK_NPM_REGISTRY}/pnpm/-/pnpm-1.9998.9999.tgz`,
-        },
-      }}}));
-      break;
+    const isDownloadingRequest = req.url.slice(packageName.length + 1, packageName.length + 4) === `/-/`;
+    let version;
+    if (isDownloadingRequest) {
+      const match = /^(.+)-(.+)\.tgz$/.exec(req.url.slice(packageName.length + 4));
+      if (match?.[1] === packageName) {
+        version = match[2];
+      }
+    } else {
+      version = req.url.slice(packageName.length + 2);
     }
-
-    case `/@yarnpkg/cli-dist`: {
-      res.end(JSON.stringify({"dist-tags": {
-        latest: `5.9999.9999`,
-      }, versions: {'5.9999.9999': {
-        bin: {
-          yarn: `./bin/yarn.js`,
-          yarnpkg: `./bin/yarn.js`,
-        },
-        dist: {
-          shasum,
-          size: mockPackageTarGz.length,
-          noattachment: false,
-          tarball: `${process.env.COREPACK_NPM_REGISTRY}/yarn.tgz`,
-        },
-      }}}));
-      break;
+    if (registry[packageName].includes(version)) {
+      res.end(
+        isDownloadingRequest ?
+          mockPackageTarGz :
+          JSON.stringify(getVersionMetadata(packageName, version)),
+      );
+    } else {
+      res.writeHead(404).end(`Not Found`);
+      throw new Error(`unsupported request`, {cause: {url: req.url, packageName, version, isDownloadingRequest}});
     }
-
-    case `/customPkgManager`: {
-      res.end(JSON.stringify({"dist-tags": {
-        latest: `1.0.0`,
-      }, versions: {'1.0.0': {
-        bin: {
-          customPkgManager: `./bin/customPkgManager.js`,
-        },
-        dist: {
-          shasum,
-          size: mockPackageTarGz.length,
-          noattachment: false,
-          tarball: `${process.env.COREPACK_NPM_REGISTRY}/customPkgManager/-/customPkgManager-1.0.0.tgz`,
-        },
-      }}}));
-      break;
-    }
-
-    case `/pnpm/-/pnpm-1.9998.9999.tgz`:
-    case `/yarn.tgz`:
-    case `/customPkgManager/-/customPkgManager-1.0.0.tgz`:
-      res.end(mockPackageTarGz);
-      break;
-
-    default:
-      throw new Error(`unsupported request`, {cause: req.url});
+  } else {
+    res.writeHead(500).end(`Internal Error`);
+    throw new Error(`unsupported request`, {cause: {url: req.url, packageName}});
   }
 }).listen(0, `localhost`);
 
