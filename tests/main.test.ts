@@ -881,7 +881,7 @@ describe(`handle integrity checks`, () => {
     });
   });
   it(`should return an error when signature does not match with a tag`, async () => {
-    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
@@ -897,7 +897,7 @@ describe(`handle integrity checks`, () => {
     });
   });
   it(`should return an error when signature does not match without a tag`, async () => {
-    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
@@ -913,25 +913,34 @@ describe(`handle integrity checks`, () => {
     });
   });
   it(`should return an error when signature does not match when version is provided`, async () => {
-    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`pnpm@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@5.9999.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
       });
     });
   });
-  it(`should return no error when signature does not match when hash is provided`, async () => {
-    process.env.TEST_INTEGRITY = `invalid`; // See `_registryServer.mjs`
+  it(`should return an error when hash does not match`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_integrity`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`pnpm@1.9998.9999+sha1.deadbeef`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@5.9999.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        // It still throws an error because we can't predict the hash, but what we
-        // are validating it does not throw a "Signature mismatch" error.
-        stdout: /Mismatch hashes. Expected deadbeef, got /,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+    });
+  });
+  it(`should return no error when signature does not match when hash is provided`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`yarn@5.9999.9999+sha1.9348de053250928f5a0448b73d5881e979ae24fc`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry`,
         stderr: ``,
       });
     });

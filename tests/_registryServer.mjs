@@ -6,12 +6,13 @@ import {gzipSync}                                    from 'node:zlib';
 let privateKey, keyid;
 
 switch (process.env.TEST_INTEGRITY) {
-  case `invalid`: {
+  case `invalid_signature`: {
     ({privateKey} = generateKeyPairSync(`ec`, {
       namedCurve: `sect239k1`,
     }));
   }
   // eslint-disable-next-line no-fallthrough
+  case `invalid_integrity`:
   case `valid`: {
     const {privateKey: p, publicKey} = generateKeyPairSync(`ec`, {
       namedCurve: `sect239k1`,
@@ -67,7 +68,11 @@ const mockPackageTarGz = gzipSync(Buffer.concat([
   Buffer.alloc(1024),
 ]));
 const shasum = createHash(`sha1`).update(mockPackageTarGz).digest(`hex`);
-const integrity = `sha512-${createHash(`sha512`).update(mockPackageTarGz).digest(`base64`)}`;
+const integrity = `sha512-${createHash(`sha512`).update(
+  process.env.TEST_INTEGRITY === `invalid_integrity` ?
+    mockPackageTarGz.subarray(1) :
+    mockPackageTarGz,
+).digest(`base64`)}`;
 
 const registry = {
   __proto__: null,
