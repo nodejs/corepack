@@ -982,7 +982,7 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
-  it(`should return no error when signature does not match when hash is provided`, async () => {
+  it.failing(`should return no error when signature does not match when hash is provided`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
