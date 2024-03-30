@@ -61,7 +61,7 @@ export function verifySignature({signatures, integrity, packageName, version}: {
 export async function fetchLatestStableVersion(packageName: string) {
   const metadata = await fetchAsJson(packageName, `latest`);
 
-  const {version, dist: {shasum, integrity, signatures}} = metadata;
+  const {version, dist: {integrity, signatures}} = metadata;
 
   if (process.env.COREPACK_INTEGRITY_KEYS !== ``) {
     verifySignature({
@@ -70,7 +70,7 @@ export async function fetchLatestStableVersion(packageName: string) {
     });
   }
 
-  return `${version}+sha1.${shasum}`;
+  return `${version}+sha512.${Buffer.from(integrity.slice(4), `base64`).toString(`hex`)}`;
 }
 
 export async function fetchAvailableTags(packageName: string) {

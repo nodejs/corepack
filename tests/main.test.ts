@@ -896,6 +896,33 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
+  it(`should return an error when hash does not match without a tag`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_integrity`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+      // A second time to validate the invalid version was not cached.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+    });
+  });
   it(`should return an error when signature does not match without a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
@@ -905,7 +932,18 @@ describe(`handle integrity checks`, () => {
         stdout: /Signature does not match/,
         stderr: ``,
       });
+      // A second time to validate the invalid version was not cached.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
@@ -921,6 +959,11 @@ describe(`handle integrity checks`, () => {
         stdout: /Signature does not match/,
         stderr: ``,
       });
+      await expect(runCli(cwd, [`use`, `yarn@5.9999.9999`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Signature does not match/,
+        stderr: ``,
+      });
     });
   });
   it(`should return an error when hash does not match`, async () => {
@@ -928,6 +971,11 @@ describe(`handle integrity checks`, () => {
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@5.9999.9999`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: ``,
+      });
+      await expect(runCli(cwd, [`use`, `yarn@5.9999.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
         stderr: ``,
