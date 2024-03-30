@@ -8,7 +8,6 @@ import path                                                    from 'path';
 import semver                                                  from 'semver';
 import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
-
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
 import * as folderUtils                                        from './folderUtils';
