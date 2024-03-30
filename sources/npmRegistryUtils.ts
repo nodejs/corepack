@@ -70,7 +70,7 @@ export async function fetchLatestStableVersion(packageName: string) {
     });
   }
 
-  return `${version}+sha512.${Buffer.from(integrity.slice(4), `base64`).toString(`hex`)}`;
+  return `${version}+sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}`;
 }
 
 export async function fetchAvailableTags(packageName: string) {
