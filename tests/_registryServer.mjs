@@ -47,7 +47,7 @@ const registry = {
   customPkgManager: [`1.0.0`],
 };
 
-function getVersionMetadata(packageName, version) {
+function generateVersionMetadata(packageName, version) {
   return {
     name: packageName,
     version,
@@ -80,8 +80,9 @@ const server = createServer((req, res) => {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       res.end(JSON.stringify({"dist-tags": {
         latest: registry[packageName].at(-1),
-      }, versions: Object.fromEntries(registry[packageName].map(version => [version, getVersionMetadata(packageName, version)])),
-      }));
+      }, versions: Object.fromEntries(registry[packageName].map(version =>
+        [version, generateVersionMetadata(packageName, version)],
+      ))}));
       return;
     }
     const isDownloadingRequest = req.url.slice(packageName.length + 1, packageName.length + 4) === `/-/`;
@@ -99,7 +100,7 @@ const server = createServer((req, res) => {
       res.end(
         isDownloadingRequest ?
           mockPackageTarGz :
-          JSON.stringify(getVersionMetadata(packageName, version)),
+          JSON.stringify(generateVersionMetadata(packageName, version)),
       );
     } else {
       res.writeHead(404).end(`Not Found`);
