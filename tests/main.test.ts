@@ -787,19 +787,19 @@ it(`should download yarn berry from custom registry`, async () => {
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@3.0.0`,
+      packageManager: `yarn@3.0.0-rc.2+sha224.f83f6d1cbfac10ba6b516a62ccd2a72ccd857aa6c514d1cd7185ec60`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `3.0.0\n`,
-      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0.tgz\n`,
+      stdout: `3.0.0-rc.2\n`,
+      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0-rc.2.tgz\n`,
     });
 
     // Should keep working with cache
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `3.0.0\n`,
+      stdout: `3.0.0-rc.2\n`,
       stderr: ``,
     });
   });
