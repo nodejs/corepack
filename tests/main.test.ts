@@ -787,19 +787,19 @@ it(`should download yarn berry from custom registry`, async () => {
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@4.0.0`,
+      packageManager: `yarn@3.0.0-rc.2+sha224.f83f6d1cbfac10ba6b516a62ccd2a72ccd857aa6c514d1cd7185ec60`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `4.0.0\n`,
-      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz\n`,
+      stdout: `3.0.0-rc.2\n`,
+      stderr: `! Corepack is about to download https://registry.npmmirror.com/@yarnpkg/cli-dist/-/cli-dist-3.0.0-rc.2.tgz\n`,
     });
 
     // Should keep working with cache
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: `4.0.0\n`,
+      stdout: `3.0.0-rc.2\n`,
       stderr: ``,
     });
   });
@@ -982,13 +982,13 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
-  it.failing(`should return no error when signature does not match when hash is provided`, async () => {
+  it(`should return no error when signature does not match when hash is provided`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@5.9999.9999+sha1.9348de053250928f5a0448b73d5881e979ae24fc`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@5.9999.9999+sha1.4246d62e5d990ed2a9b2f1101b4e995f3ac91aa2`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
-        stdout: `yarn: Hello from custom registry`,
+        stdout: `yarn: Hello from custom registry\n`,
         stderr: ``,
       });
     });
