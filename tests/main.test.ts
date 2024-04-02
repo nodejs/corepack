@@ -1009,16 +1009,15 @@ describe(`handle integrity checks`, () => {
   it(`should return no error when signature does not match when hash is provided`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
-    // First check a hash is correctly reported, without reporting the invalid signature:
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@1.9998.9999+sha1.deadbeef`, `--version`], true)).resolves.toMatchObject({
+      const result = await runCli(cwd, [`yarn@1.9998.9999+sha1.deadbeef`, `--version`], true);
+      expect(result).toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got deadbeef/,
         stderr: ``,
       });
-    });
-    await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@1.9998.9999+sha1.200615a6a8a1f376c9d0543059e5abafc236e524`, `--version`], true)).resolves.toMatchObject({
+      const match = /Mismatch hashes. Expected deadbeef, got ([a-f0-9]{40})/.exec(result.stdout);
+      if (match == null) throw new Error(`Invalid output`, {cause: result.stdout});
+      await expect(runCli(cwd, [`yarn@1.9998.9999+sha1.${match[1]}`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `yarn: Hello from custom registry\n`,
         stderr: ``,
