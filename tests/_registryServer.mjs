@@ -44,7 +44,7 @@ function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   header.write(`0001750 `, 108, 8, `utf-8`); // Owner's numeric user ID (octal) followed by a space
   header.write(`0001750 `, 116, 8, `utf-8`); // Group's numeric user ID (octal) followed by a space
   header.write(`${contentBuffer.length.toString(8)} `, 124, 12, `utf-8`); // File size in bytes (octal) followed by a space
-  header.write(`${Math.floor(Date.now() / 1000).toString(8)} `, 136, 12, `utf-8`); // Last modification time in numeric Unix time format (octal) followed by a space
+  header.write(`${Math.floor(new Date(2000, 1, 1) / 1000).toString(8)} `, 136, 12, `utf-8`); // Last modification time in numeric Unix time format (octal) followed by a space
   header.fill(` `, 148, 156); // Fill checksum area with spaces for calculation
   header.write(`ustar  `, 257, 8, `utf-8`); // UStar indicator
 

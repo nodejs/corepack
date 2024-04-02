@@ -978,12 +978,12 @@ describe(`handle integrity checks`, () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@5.9999.9999`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
       });
-      await expect(runCli(cwd, [`use`, `yarn@5.9999.9999`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Signature does not match/,
         stderr: ``,
@@ -994,12 +994,12 @@ describe(`handle integrity checks`, () => {
     process.env.TEST_INTEGRITY = `invalid_integrity`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@5.9999.9999`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
         stderr: ``,
       });
-      await expect(runCli(cwd, [`use`, `yarn@5.9999.9999`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
         stderr: ``,
@@ -1010,7 +1010,7 @@ describe(`handle integrity checks`, () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`yarn@5.9999.9999+sha1.4246d62e5d990ed2a9b2f1101b4e995f3ac91aa2`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`yarn@1.9998.9999+sha1.d862ca5bedaa7d2328b8bde6ce2bac5141681f48`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `yarn: Hello from custom registry\n`,
         stderr: ``,
