@@ -730,13 +730,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/busboy@npm:^2.0.0":
-  version: 2.1.0
-  resolution: "@fastify/busboy@npm:2.1.0"
-  checksum: 10c0/7bb641080aac7cf01d88749ad331af10ba9ec3713ec07cabbe833908c75df21bd56249bb6173bdec07f5a41896b21e3689316f86684c06635da45f91ff4565a2
-  languageName: node
-  linkType: hard
-
 "@humanwhocodes/config-array@npm:^0.11.13":
   version: 0.11.13
   resolution: "@humanwhocodes/config-array@npm:0.11.13"
@@ -2228,7 +2221,7 @@ __metadata:
     tar: "npm:^6.0.1"
     ts-node: "npm:^10.0.0"
     typescript: "npm:^5.3.3"
-    undici: "npm:^6.6.1"
+    undici: "npm:^6.11.1"
     v8-compile-cache: "npm:^2.3.0"
     which: "npm:^4.0.0"
   languageName: unknown
@@ -5998,12 +5991,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^6.6.1":
-  version: 6.6.2
-  resolution: "undici@npm:6.6.2"
-  dependencies:
-    "@fastify/busboy": "npm:^2.0.0"
-  checksum: 10c0/c8c8a436059b13603f67ed4d917b4ba6d9ef282ac55c932c4790ee1a1c8cad1369da3c11b6e0b9df5a95ed1849cb98fa2f2310f6d0f9331dd359286c912497d2
+"undici@npm:^6.11.1":
+  version: 6.11.1
+  resolution: "undici@npm:6.11.1"
+  checksum: 10c0/efac01b5e0a38325f26e0eb8ff557839bc49a9cd4b6e2ebaa4b7af94a519a02dea164ec8d701e6ab518a9cf851ea4af05c600fa5495cd85952901c3c48ddfea2
   languageName: node
   linkType: hard
 
