@@ -32,7 +32,7 @@ async function fetch(input: string | URL, init?: RequestInit) {
     } else if (`COREPACK_NPM_PASSWORD` in process.env) {
       headers =  {
         ...headers,
-        authorization: `Basic ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
+        authorization: `Basic ${Buffer.from(`${process.env.COREPACK_NPM_USERNAME}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
       };
     }
   }

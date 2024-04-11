@@ -66,7 +66,8 @@ function generateVersionMetadata(packageName, version) {
 
 const server = createServer((req, res) => {
   const auth = req.headers.authorization;
-  if (!auth?.startsWith(`Basic `) || Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`) {
+
+  if (auth?.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`) {
     res.writeHead(401).end(`Unauthorized`);
     return;
   }
@@ -127,7 +128,7 @@ switch (process.env.AUTH_TYPE) {
 
   case `COREPACK_NPM_PASSWORD`:
     process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
-    process.env.COREPACK_NPM_USER = `user`;
+    process.env.COREPACK_NPM_USERNAME = `user`;
     process.env.COREPACK_NPM_PASSWORD = `pass`;
     break;
 
