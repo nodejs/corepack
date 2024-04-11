@@ -66,7 +66,7 @@ function generateVersionMetadata(packageName, version) {
 
 const server = createServer((req, res) => {
   const auth = req.headers.authorization;
-  if (!auth?.startsWith(`Bearer `) || Buffer.from(auth.slice(`Bearer `.length), `base64`).toString() !== `user:pass`) {
+  if (!auth?.startsWith(`Basic `) || Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`) {
     res.writeHead(401).end(`Unauthorized`);
     return;
   }

@@ -20,7 +20,7 @@ async function fetch(input: string | URL, init?: RequestInit) {
   if (username || password) {
     headers =  {
       ...headers,
-      authorization: `Bearer ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
     };
     input.username = input.password = ``;
   } else if (input.origin === process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) {
@@ -32,7 +32,7 @@ async function fetch(input: string | URL, init?: RequestInit) {
     } else if (`COREPACK_NPM_PASSWORD` in process.env) {
       headers =  {
         ...headers,
-        authorization: `Bearer ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
+        authorization: `Basic ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
       };
     }
   }
