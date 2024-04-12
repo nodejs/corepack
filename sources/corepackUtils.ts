@@ -219,13 +219,15 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   let url: string;
+  let signatures: Array<{keyid: string, sig: string}>;
+  let integrity: string;
   let binPath: string | null = null;
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
       const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
-        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+        ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
         if (registry.bin) {
           binPath = registry.bin;
         }
@@ -247,7 +249,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   debugUtils.log(`Installing ${locator.name}@${version} from ${url}`);
-  const algo = build[0] ?? `sha256`;
+  const algo = build[0] ?? `sha512`;
   const {tmpFolder, outputFile, hash: actualHash} = await download(installTarget, url, algo, binPath);
 
   let bin: BinSpec | BinList;
@@ -280,6 +282,17 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
+  if (!build[1]) {
+    const registry = getRegistryFromPackageManagerSpec(spec);
+    if (registry.type === `npm` && !registry.bin && process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+      if (signatures! == null || integrity! == null)
+        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+
+      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+      // @ts-expect-error ignore readonly
+      build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
+    }
+  }
   if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
