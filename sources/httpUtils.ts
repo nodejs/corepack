@@ -16,27 +16,25 @@ async function fetch(input: string | URL, init?: RequestInit) {
     input = new URL(input);
 
   let headers = init?.headers;
-  const {username, password} = input;
+
+  const username: string | undefined = input.username ?? process.env.COREPACK_NPM_USERNAME;
+  const password: string | undefined = input.password ?? process.env.COREPACK_NPM_PASSWORD;
+
   if (username || password) {
     headers =  {
       ...headers,
-      authorization: `Bearer ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
     };
+
     input.username = input.password = ``;
-  } else if (input.origin === process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) {
-    if (process.env.COREPACK_NPM_TOKEN) {
-      headers =  {
-        ...headers,
-        authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
-      };
-    } else if (`COREPACK_NPM_PASSWORD` in process.env) {
-      headers =  {
-        ...headers,
-        authorization: `Bearer ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
-      };
-    }
   }
 
+  if (input.origin === (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) && process.env.COREPACK_NPM_TOKEN) {
+    headers =  {
+      ...headers,
+      authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+    };
+  }
 
   let response;
   try {
