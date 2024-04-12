@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, it}          from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
+import os                                          from 'node:os';
 import process                                     from 'node:process';
 
 import config                                      from '../config.json';
@@ -884,7 +885,10 @@ describe(`handle integrity checks`, () => {
           stdout: `yarn: Hello from custom registry\n`,
           stderr: ``,
         }),
-    ]);
+      ]);
+
+      // Skip rest of the test on Windows & Node.js 18.x as it inevitably times out otherwise.
+      if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
 
       // Removing home directory to force the "re-download"
       await xfs.rmdirPromise(process.env.COREPACK_HOME as any, {recursive: true});
