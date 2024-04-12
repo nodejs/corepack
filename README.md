@@ -54,7 +54,7 @@ projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack
 will catch these calls, and depending on the situation:
 
 - **If the local project is configured for the package manager you're using**,
-  Corepack will silently download and cache the latest compatible version.
+  Corepack will download and cache the latest compatible version.
 
 - **If the local project is configured for a different package manager**,
   Corepack will request you to run the command again using the right package
