@@ -16,27 +16,25 @@ async function fetch(input: string | URL, init?: RequestInit) {
     input = new URL(input);
 
   let headers = init?.headers;
-  const {username, password} = input;
+
+  const username: string | undefined = input.username ?? process.env.COREPACK_NPM_USERNAME;
+  const password: string | undefined = input.password ?? process.env.COREPACK_NPM_PASSWORD;
+
   if (username || password) {
     headers =  {
       ...headers,
-      authorization: `Bearer ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
     };
+
     input.username = input.password = ``;
-  } else if (input.origin === process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) {
-    if (process.env.COREPACK_NPM_TOKEN) {
-      headers =  {
-        ...headers,
-        authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
-      };
-    } else if (`COREPACK_NPM_PASSWORD` in process.env) {
-      headers =  {
-        ...headers,
-        authorization: `Bearer ${Buffer.from(`${process.env.COREPACK_NPM_USER}:${process.env.COREPACK_NPM_PASSWORD}`).toString(`base64`)}`,
-      };
-    }
   }
 
+  if (input.origin === (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) && process.env.COREPACK_NPM_TOKEN) {
+    headers =  {
+      ...headers,
+      authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+    };
+  }
 
   let response;
   try {
@@ -92,6 +90,8 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
   return stream;
 }
 
+let ProxyAgent: typeof import('undici').ProxyAgent;
+
 async function getProxyAgent(input: string | URL) {
   const {getProxyForUrl} = await import(`proxy-from-env`);
 
@@ -100,11 +100,20 @@ async function getProxyAgent(input: string | URL) {
 
   if (!proxy) return undefined;
 
-  // Doing a deep import here since undici isn't tree-shakeable
-  const {default: ProxyAgent} = (await import(
-    // @ts-expect-error No types for this specific file
-    `undici/lib/proxy-agent.js`
-  )) as { default: typeof import('undici').ProxyAgent };
+  if (ProxyAgent == null) {
+    // Doing a deep import here since undici isn't tree-shakeable
+    const [api, Dispatcher, _ProxyAgent] = await Promise.all([
+      // @ts-expect-error internal module is untyped
+      import(`undici/lib/api/index.js`),
+      // @ts-expect-error internal module is untyped
+      import(`undici/lib/dispatcher/dispatcher.js`),
+      // @ts-expect-error internal module is untyped
+      import(`undici/lib/dispatcher/proxy-agent.js`),
+    ]);
+
+    Object.assign(Dispatcher.default.prototype, api.default);
+    ProxyAgent = _ProxyAgent.default;
+  }
 
   return new ProxyAgent(proxy);
 }

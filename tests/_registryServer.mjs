@@ -1,6 +1,7 @@
 import {createHash, createSign, generateKeyPairSync} from 'node:crypto';
 import {once}                                        from 'node:events';
 import {createServer}                                from 'node:http';
+import {connect}                                     from 'node:net';
 import {gzipSync}                                    from 'node:zlib';
 
 let privateKey, keyid;
@@ -109,9 +110,15 @@ function generateVersionMetadata(packageName, version) {
   };
 }
 
+const TOKEN_MOCK = `SOME_DUMMY_VALUE`;
+
 const server = createServer((req, res) => {
   const auth = req.headers.authorization;
-  if (!auth?.startsWith(`Bearer `) || Buffer.from(auth.slice(`Bearer `.length), `base64`).toString() !== `user:pass`) {
+
+  if (
+    (auth?.startsWith(`Bearer `) && auth.slice(`Bearer `.length) !== TOKEN_MOCK) ||
+    (auth?.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`)
+  ) {
     res.writeHead(401).end(`Unauthorized`);
     return;
   }
@@ -155,24 +162,59 @@ const server = createServer((req, res) => {
     res.writeHead(500).end(`Internal Error`);
     throw new Error(`unsupported request`, {cause: {url: req.url, packageName}});
   }
-}).listen(0, `localhost`);
+});
 
+if (process.env.AUTH_TYPE === `PROXY`) {
+  const proxy = createServer((req, res) => {
+    res.writeHead(200, {[`Content-Type`]: `text/plain`});
+    res.end(`okay`);
+  });
+  proxy.on(`connect`, (req, clientSocket, head) => {
+    if (req.url !== `example.com:80`) {
+      // Reject all requests except those to `example.com`
+      clientSocket.end(`HTTP/1.1 404 Not Found\r\n\r\n`);
+      return;
+    }
+    const {address, port} = server.address();
+    const serverSocket = connect(port, address, () => {
+      clientSocket.write(`HTTP/1.1 200 Connection Established\r\n` +
+      `Proxy-agent: Node.js-Proxy\r\n` +
+      `\r\n`);
+      serverSocket.write(head);
+      serverSocket.pipe(clientSocket);
+      clientSocket.pipe(serverSocket);
+    });
+  });
+  proxy.listen(0, `localhost`);
+  await once(proxy, `listening`);
+  const {address, port} = proxy.address();
+  process.env.ALL_PROXY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+
+  proxy.unref();
+}
+
+server.listen(0, `localhost`);
 await once(server, `listening`);
 
 const {address, port} = server.address();
 switch (process.env.AUTH_TYPE) {
+  case `PROXY`:
+    // The proxy set up above will redirect all requests to our custom registry,
+    process.env.COREPACK_NPM_REGISTRY = `http://user:pass@example.com`;
+    break;
+
   case `COREPACK_NPM_REGISTRY`:
     process.env.COREPACK_NPM_REGISTRY = `http://user:pass@${address.includes(`:`) ? `[${address}]` : address}:${port}`;
     break;
 
   case `COREPACK_NPM_TOKEN`:
     process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
-    process.env.COREPACK_NPM_TOKEN = Buffer.from(`user:pass`).toString(`base64`);
+    process.env.COREPACK_NPM_TOKEN = TOKEN_MOCK;
     break;
 
   case `COREPACK_NPM_PASSWORD`:
     process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
-    process.env.COREPACK_NPM_USER = `user`;
+    process.env.COREPACK_NPM_USERNAME = `user`;
     process.env.COREPACK_NPM_PASSWORD = `pass`;
     break;
 
@@ -182,8 +224,11 @@ switch (process.env.AUTH_TYPE) {
 if (process.env.NOCK_ENV === `replay`) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = function fetch(i) {
-    if (!`${i}`.startsWith(`http://${address.includes(`:`) ? `[${address}]` : address}:${port}`))
-      throw new Error;
+    if (!`${i}`.startsWith(
+      process.env.AUTH_TYPE === `PROXY` ?
+        `http://example.com` :
+        `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`))
+      throw new Error(`Unexpected request to  ${i}`);
 
     return Reflect.apply(originalFetch, this, arguments);
   };

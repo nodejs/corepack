@@ -806,7 +806,7 @@ it(`should download yarn berry from custom registry`, async () => {
   });
 });
 
-for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`]) {
+for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`]) {
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
       process.env.AUTH_TYPE = authType; // See `_registryServer.mjs`
