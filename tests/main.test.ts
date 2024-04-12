@@ -911,7 +911,7 @@ describe(`handle integrity checks`, () => {
         }),
       ]);
     });
-  }, 180_000);
+  });
   it(`should return an error when signature does not match with a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
