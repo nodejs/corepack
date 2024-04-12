@@ -296,7 +296,7 @@ export class Engine {
 
     let isTransparentCommand = false;
     if (packageManager != null) {
-      const defaultVersion = await this.getDefaultVersion(packageManager);
+      const defaultVersion = binaryVersion || await this.getDefaultVersion(packageManager);
       const definition = this.config.definitions[packageManager]!;
 
       // If all leading segments match one of the patterns defined in the `transparent`

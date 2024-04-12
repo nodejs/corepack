@@ -1,8 +1,40 @@
-import {createHash}   from 'node:crypto';
-import {once}         from 'node:events';
-import {createServer} from 'node:http';
-import {connect}      from 'node:net';
-import {gzipSync}     from 'node:zlib';
+import {createHash, createSign, generateKeyPairSync} from 'node:crypto';
+import {once}                                        from 'node:events';
+import {createServer}                                from 'node:http';
+import {connect}                                     from 'node:net';
+import {gzipSync}                                    from 'node:zlib';
+
+let privateKey, keyid;
+
+switch (process.env.TEST_INTEGRITY) {
+  case `invalid_signature`: {
+    ({privateKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+    }));
+  }
+  // eslint-disable-next-line no-fallthrough
+  case `invalid_integrity`:
+  case `valid`: {
+    const {privateKey: p, publicKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+      publicKeyEncoding: {
+        type: `spki`,
+        format: `pem`,
+      },
+    });
+    privateKey ??= p;
+    keyid = `SHA256:${createHash(`SHA256`).end(publicKey).digest(`base64`)}`;
+    process.env.COREPACK_INTEGRITY_KEYS = JSON.stringify({npm: [{
+      expires: null,
+      keyid,
+      keytype: `ecdsa-sha2-sect239k1`,
+      scheme: `ecdsa-sha2-sect239k1`,
+      key: publicKey.split(`\n`).slice(1, -2).join(``),
+    }]});
+    break;
+  }
+}
+
 
 function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   const contentBuffer = Buffer.from(fileContent);
@@ -13,7 +45,7 @@ function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   header.write(`0001750 `, 108, 8, `utf-8`); // Owner's numeric user ID (octal) followed by a space
   header.write(`0001750 `, 116, 8, `utf-8`); // Group's numeric user ID (octal) followed by a space
   header.write(`${contentBuffer.length.toString(8)} `, 124, 12, `utf-8`); // File size in bytes (octal) followed by a space
-  header.write(`${Math.floor(Date.now() / 1000).toString(8)} `, 136, 12, `utf-8`); // Last modification time in numeric Unix time format (octal) followed by a space
+  header.write(`${Math.floor(new Date(2000, 1, 1) / 1000).toString(8)} `, 136, 12, `utf-8`); // Last modification time in numeric Unix time format (octal) followed by a space
   header.fill(` `, 148, 156); // Fill checksum area with spaces for calculation
   header.write(`ustar  `, 257, 8, `utf-8`); // UStar indicator
 
@@ -37,7 +69,11 @@ const mockPackageTarGz = gzipSync(Buffer.concat([
   Buffer.alloc(1024),
 ]));
 const shasum = createHash(`sha1`).update(mockPackageTarGz).digest(`hex`);
-const integrity = `sha512-${createHash(`sha512`).update(mockPackageTarGz).digest(`base64`)}`;
+const integrity = `sha512-${createHash(`sha512`).update(
+  process.env.TEST_INTEGRITY === `invalid_integrity` ?
+    mockPackageTarGz.subarray(1) :
+    mockPackageTarGz,
+).digest(`base64`)}`;
 
 const registry = {
   __proto__: null,
@@ -48,6 +84,14 @@ const registry = {
   customPkgManager: [`1.0.0`],
 };
 
+function generateSignature(packageName, version) {
+  if (privateKey == null) return undefined;
+  const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
+  return {signatures: [{
+    keyid,
+    sig: sign.sign(privateKey, `base64`),
+  }]};
+}
 function generateVersionMetadata(packageName, version) {
   return {
     name: packageName,
@@ -61,14 +105,20 @@ function generateVersionMetadata(packageName, version) {
       size: mockPackageTarGz.length,
       noattachment: false,
       tarball: `${process.env.COREPACK_NPM_REGISTRY}/${packageName}/-/${packageName}-${version}.tgz`,
+      ...generateSignature(packageName, version),
     },
   };
 }
 
+const TOKEN_MOCK = `SOME_DUMMY_VALUE`;
+
 const server = createServer((req, res) => {
   const auth = req.headers.authorization;
 
-  if (auth?.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`) {
+  if (
+    (auth?.startsWith(`Bearer `) && auth.slice(`Bearer `.length) !== TOKEN_MOCK) ||
+    (auth?.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`)
+  ) {
     res.writeHead(401).end(`Unauthorized`);
     return;
   }
@@ -159,7 +209,7 @@ switch (process.env.AUTH_TYPE) {
 
   case `COREPACK_NPM_TOKEN`:
     process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
-    process.env.COREPACK_NPM_TOKEN = Buffer.from(`user:pass`).toString(`base64`);
+    process.env.COREPACK_NPM_TOKEN = TOKEN_MOCK;
     break;
 
   case `COREPACK_NPM_PASSWORD`:
