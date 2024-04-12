@@ -868,40 +868,44 @@ describe(`handle integrity checks`, () => {
     process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `pnpm: Hello from custom registry\n`,
-        stderr: ``,
-      });
-      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `yarn: Hello from custom registry\n`,
-        stderr: ``,
-      });
-      await expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `yarn: Hello from custom registry\n`,
-        stderr: ``,
-      });
+      await Promise.all([
+        expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `pnpm: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+        expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+        expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+    ]);
 
       // Removing home directory to force the "re-download"
       await xfs.rmdirPromise(process.env.COREPACK_HOME as any, {recursive: true});
 
-      await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
-        stderr: ``,
-      });
-      await expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-        stderr: ``,
-      });
-      await expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-        stderr: ``,
-      });
+      await Promise.all([
+        expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+        expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+        expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+          stderr: ``,
+        }),
+      ]);
     });
   }, 180_000);
   it(`should return an error when signature does not match with a tag`, async () => {
