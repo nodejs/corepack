@@ -45,7 +45,7 @@
     "proxy-from-env": "^1.1.0",
     "semver": "^7.5.2",
     "supports-color": "^9.0.0",
-    "tar": "^6.0.1",
+    "tar": "^6.2.1",
     "ts-node": "^10.0.0",
     "typescript": "^5.3.3",
     "undici": "^6.6.1",
