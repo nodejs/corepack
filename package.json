@@ -52,6 +52,9 @@
     "v8-compile-cache": "^2.3.0",
     "which": "^4.0.0"
   },
+  "resolutions": {
+    "undici-types": "6.x"
+  },
   "scripts": {
     "build": "rm -rf dist shims && run build:bundle && ts-node ./mkshims.ts",
     "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node18.17.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
