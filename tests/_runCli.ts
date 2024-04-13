@@ -4,15 +4,11 @@ import * as path             from 'path';
 import {pathToFileURL}       from 'url';
 
 export async function runCli(cwd: PortablePath, argv: Array<string>, withCustomRegistry?: boolean): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
-  return spawnCmd(cwd, process.execPath, [`--no-warnings`, ...(withCustomRegistry ? [`--import`, pathToFileURL(path.join(__dirname, `_registryServer.mjs`)) as any as string] : [`-r`, require.resolve(`./recordRequests.js`)]), require.resolve(`../dist/corepack.js`), ...argv]);
-}
-
-export async function spawnCmd(cwd: PortablePath, cmd: string,  argv: Array<string>): Promise<{exitCode: number | null, stdout: string, stderr: string}> {
   const out: Array<Buffer> = [];
   const err: Array<Buffer> = [];
 
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, argv, {
+    const child = spawn(process.execPath, [`--no-warnings`, ...(withCustomRegistry ? [`--import`, pathToFileURL(path.join(__dirname, `_registryServer.mjs`)) as any as string] : [`-r`, require.resolve(`./recordRequests.js`)]), require.resolve(`../dist/corepack.js`), ...argv], {
       cwd: npath.fromPortablePath(cwd),
       env: process.env,
       stdio: `pipe`,

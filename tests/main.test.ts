@@ -7,7 +7,7 @@ import config                                      from '../config.json';
 import * as folderUtils                            from '../sources/folderUtils';
 import {SupportedPackageManagerSet}                from '../sources/types';
 
-import {runCli, spawnCmd}                          from './_runCli';
+import {runCli}                                    from './_runCli';
 
 
 beforeEach(async () => {
@@ -524,17 +524,12 @@ describe(`read-only and offline environment`, () => {
       // Reset to default
       delete process.env.COREPACK_DEFAULT_TO_LATEST;
 
-      // $ corepack enable
       await expect(runCli(installDir, [`enable`, `--install-directory`, npath.fromPortablePath(installDir), `yarn`])).resolves.toMatchObject({
         stdout: ``,
         stderr: ``,
         exitCode: 0,
       });
 
-      // Simulate the effect of `$ corepack enable` without the custom --install-directory option.
-      process.env.PATH = `${npath.toPortablePath(installDir)}:${process.env.PATH}`;
-
-      // $ corepack install --global yarn@2.2.2
       await expect(runCli(installDir, [`install`, `--global`, `yarn@2.2.2`])).resolves.toMatchObject({
         stdout: `Installing yarn@2.2.2...\n`,
         stderr: ``,
@@ -550,14 +545,7 @@ describe(`read-only and offline environment`, () => {
       process.env.HTTP_PROXY = `0.0.0.0`;
       process.env.HTTPS_PROXY = `0.0.0.0`;
 
-      // $ corepack yarn --version
       await expect(runCli(installDir, [`yarn`, `--version`])).resolves.toMatchObject({
-        stdout: `2.2.2\n`,
-        stderr: ``,
-        exitCode: 0,
-      });
-      // $ yarn --version
-      await expect(spawnCmd(installDir, `yarn`, [`--version`])).resolves.toMatchObject({
         stdout: `2.2.2\n`,
         stderr: ``,
         exitCode: 0,
