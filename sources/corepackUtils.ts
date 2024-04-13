@@ -1,6 +1,5 @@
 import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
-import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
@@ -325,26 +324,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   if (locatorIsASupportedPackageManager && process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
-    let lastKnownGoodFile: FileHandle;
-    try {
-      lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
-      const lastKnownGood = await engine.getJSONFileContent(lastKnownGoodFile);
-      const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
-      if (defaultVersion) {
-        const currentDefault = semver.parse(defaultVersion)!;
-        const downloadedVersion = locatorReference as semver.SemVer;
-        if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
-          await engine.activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, locator);
-        }
+    const lastKnownGood = await engine.getLastKnownGood();
+    const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
+    if (defaultVersion) {
+      const currentDefault = semver.parse(defaultVersion)!;
+      const downloadedVersion = locatorReference as semver.SemVer;
+      if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
+        await engine.activatePackageManager(lastKnownGood, locator);
       }
-    } catch (err) {
-      // ENOENT would mean there are no lastKnownGoodFile, in which case we can ignore.
-      if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
-        throw err;
-      }
-    } finally {
-      // @ts-expect-error used before assigned
-      await lastKnownGoodFile?.close();
     }
   }
 

@@ -476,6 +476,84 @@ it(`should support disabling the network accesses from the environment`, async (
   });
 });
 
+describe(`read-only and offline environment`, () => {
+  it(`should support running in project scope`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      // Reset to default
+      delete process.env.COREPACK_DEFAULT_TO_LATEST;
+
+      // Prepare fake project
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@2.2.2`,
+      });
+
+      // $ corepack install
+      await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
+        stdout: `Adding yarn@2.2.2 to the cache...\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      // Let corepack discover the latest yarn version.
+      // BUG: This should not be necessary with a fully specified version in package.json plus populated corepack cache.
+      // Engine.executePackageManagerRequest needs to defer the fallback work. This requires a big refactoring.
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+
+      // Make COREPACK_HOME ro
+      const home = npath.toPortablePath(folderUtils.getCorepackHomeFolder());
+      await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o444);
+      await xfs.chmodPromise(home, 0o555);
+
+      // Use fake proxies to simulate offline mode
+      process.env.HTTP_PROXY = `0.0.0.0`;
+      process.env.HTTPS_PROXY = `0.0.0.0`;
+
+      // $ corepack yarn --version
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `2.2.2\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`should support running globally`, async () => {
+    await xfs.mktempPromise(async installDir => {
+      // Reset to default
+      delete process.env.COREPACK_DEFAULT_TO_LATEST;
+
+      await expect(runCli(installDir, [`enable`, `--install-directory`, npath.fromPortablePath(installDir), `yarn`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      await expect(runCli(installDir, [`install`, `--global`, `yarn@2.2.2`])).resolves.toMatchObject({
+        stdout: `Installing yarn@2.2.2...\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      // Make COREPACK_HOME ro
+      const home = npath.toPortablePath(folderUtils.getCorepackHomeFolder());
+      await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o444);
+      await xfs.chmodPromise(home, 0o555);
+
+      // Use fake proxies to simulate offline mode
+      process.env.HTTP_PROXY = `0.0.0.0`;
+      process.env.HTTPS_PROXY = `0.0.0.0`;
+
+      await expect(runCli(installDir, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `2.2.2\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    });
+  });
+});
+
 it(`should support hydrating package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
