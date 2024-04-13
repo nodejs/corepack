@@ -278,7 +278,7 @@ export class Engine {
             if (transparent) {
               return fallbackDescriptor;
             } else {
-              throw new UsageError(`This project is configured to use ${result.spec.name}`);
+              throw new UsageError(`This project is configured to use ${result.spec.name} because ${result.target} defines a "packageManager" field`);
             }
           } else {
             return result.spec;
