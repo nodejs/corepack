@@ -1,6 +1,5 @@
 import {createHash}                                            from 'crypto';
 import {once}                                                  from 'events';
-import {FileHandle}                                            from 'fs/promises';
 import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
@@ -11,12 +10,11 @@ import {setTimeout as setTimeoutPromise}                       from 'timers/prom
 import * as engine                                             from './Engine';
 import * as debugUtils                                         from './debugUtils';
 import * as folderUtils                                        from './folderUtils';
-import * as fsUtils                                            from './fsUtils';
 import * as httpUtils                                          from './httpUtils';
 import * as nodeUtils                                          from './nodeUtils';
 import * as npmRegistryUtils                                   from './npmRegistryUtils';
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-import {BinList, BinSpec, InstallSpec}                         from './types';
+import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
 
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
@@ -133,6 +131,66 @@ function isValidBinSpec(x: unknown): x is BinSpec {
   return typeof x === `object` && x !== null && !Array.isArray(x) && Object.keys(x).length > 0;
 }
 
+async function download(installTarget: string, url: string, algo: string, binPath: string | null = null): Promise<DownloadSpec> {
+  // Creating a temporary folder inside the install folder means that we
+  // are sure it'll be in the same drive as the destination, so we can
+  // just move it there atomically once we are done
+
+  const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
+  debugUtils.log(`Downloading to ${tmpFolder}`);
+
+  const stream = await httpUtils.fetchUrlStream(url);
+
+  const parsedUrl = new URL(url);
+  const ext = path.posix.extname(parsedUrl.pathname);
+
+  let outputFile: string | null = null;
+  let sendTo: any;
+
+  if (ext === `.tgz`) {
+    const {default: tar} = await import(`tar`);
+    sendTo = tar.x({
+      strip: 1,
+      cwd: tmpFolder,
+      filter: binPath ? path => {
+        const pos = path.indexOf(`/`);
+        return pos !== -1 && path.slice(pos + 1) === binPath;
+      } : undefined,
+    });
+  } else if (ext === `.js`) {
+    outputFile = path.join(tmpFolder, path.posix.basename(parsedUrl.pathname));
+    sendTo = fs.createWriteStream(outputFile);
+  }
+  stream.pipe(sendTo);
+
+  let hash = !binPath ? stream.pipe(createHash(algo)) : null;
+  await once(sendTo, `finish`);
+
+  if (binPath) {
+    const downloadedBin = path.join(tmpFolder, binPath);
+    outputFile = path.join(tmpFolder, path.basename(downloadedBin));
+    try {
+      await renameSafe(downloadedBin, outputFile);
+    } catch (err) {
+      if ((err as nodeUtils.NodeError)?.code === `ENOENT`)
+        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, {cause: err});
+
+      throw err;
+    }
+
+    // Calculate the hash of the bin file
+    const fileStream = fs.createReadStream(outputFile);
+    hash = fileStream.pipe(createHash(algo));
+    await once(fileStream, `close`);
+  }
+
+  return {
+    tmpFolder,
+    outputFile,
+    hash: hash!.digest(`hex`),
+  };
+}
+
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}): Promise<InstallSpec> {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
   const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
@@ -160,12 +218,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   let url: string;
+  let signatures: Array<{keyid: string, sig: string}>;
+  let integrity: string;
+  let binPath: string | null = null;
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
       const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
-        url = await npmRegistryUtils.fetchTarballUrl(registry.package, version);
+        ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
+        if (registry.bin) {
+          binPath = registry.bin;
+        }
       } else {
         url = url.replace(
           npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
@@ -175,35 +239,17 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   } else {
     url = decodeURIComponent(version);
+    if (process.env.COREPACK_NPM_REGISTRY && url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
+      url = url.replace(
+        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+        () => process.env.COREPACK_NPM_REGISTRY!,
+      );
+    }
   }
 
-  // Creating a temporary folder inside the install folder means that we
-  // are sure it'll be in the same drive as the destination, so we can
-  // just move it there atomically once we are done
-
-  const tmpFolder = folderUtils.getTemporaryFolder(installTarget);
-  debugUtils.log(`Installing ${locator.name}@${version} from ${url} to ${tmpFolder}`);
-  const stream = await httpUtils.fetchUrlStream(url);
-
-  const parsedUrl = new URL(url);
-  const ext = path.posix.extname(parsedUrl.pathname);
-
-  let outputFile: string | null = null;
-
-  let sendTo: any;
-  if (ext === `.tgz`) {
-    const {default: tar} = await import(`tar`);
-    sendTo = tar.x({strip: 1, cwd: tmpFolder});
-  } else if (ext === `.js`) {
-    outputFile = path.join(tmpFolder, path.posix.basename(parsedUrl.pathname));
-    sendTo = fs.createWriteStream(outputFile);
-  }
-
-  stream.pipe(sendTo);
-
-  const algo = build[0] ?? `sha256`;
-  const hash = stream.pipe(createHash(algo));
-  await once(sendTo, `finish`);
+  debugUtils.log(`Installing ${locator.name}@${version} from ${url}`);
+  const algo = build[0] ?? `sha512`;
+  const {tmpFolder, outputFile, hash: actualHash} = await download(installTarget, url, algo, binPath);
 
   let bin: BinSpec | BinList;
   const isSingleFile = outputFile !== null;
@@ -235,7 +281,17 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  const actualHash = hash.digest(`hex`);
+  if (!build[1]) {
+    const registry = getRegistryFromPackageManagerSpec(spec);
+    if (registry.type === `npm` && !registry.bin && process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+      if (signatures! == null || integrity! == null)
+        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+
+      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+      // @ts-expect-error ignore readonly
+      build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
+    }
+  }
   if (build[1] && actualHash !== build[1])
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
 
@@ -261,33 +317,21 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
-      await fsUtils.rimraf(tmpFolder);
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     } else {
       throw err;
     }
   }
 
   if (locatorIsASupportedPackageManager && process.env.COREPACK_DEFAULT_TO_LATEST !== `0`) {
-    let lastKnownGoodFile: FileHandle;
-    try {
-      lastKnownGoodFile = await engine.getLastKnownGoodFile(`r+`);
-      const lastKnownGood = await engine.getJSONFileContent(lastKnownGoodFile);
-      const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
-      if (defaultVersion) {
-        const currentDefault = semver.parse(defaultVersion)!;
-        const downloadedVersion = locatorReference as semver.SemVer;
-        if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
-          await engine.activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, locator);
-        }
+    const lastKnownGood = await engine.getLastKnownGood();
+    const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
+    if (defaultVersion) {
+      const currentDefault = semver.parse(defaultVersion)!;
+      const downloadedVersion = locatorReference as semver.SemVer;
+      if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
+        await engine.activatePackageManager(lastKnownGood, locator);
       }
-    } catch (err) {
-      // ENOENT would mean there are no lastKnownGoodFile, in which case we can ignore.
-      if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
-        throw err;
-      }
-    } finally {
-      // @ts-expect-error used before assigned
-      await lastKnownGoodFile?.close();
     }
   }
 
@@ -298,6 +342,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     bin,
     hash: serializedHash,
   };
+}
+
+async function renameSafe(oldPath: fs.PathLike, newPath: fs.PathLike) {
+  if (process.platform === `win32`) {
+    await renameUnderWindows(oldPath, newPath);
+  } else {
+    await fs.promises.rename(oldPath, newPath);
+  }
 }
 
 async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {

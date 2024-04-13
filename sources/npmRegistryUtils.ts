@@ -1,4 +1,7 @@
 import {UsageError}   from 'clipanion';
+import {createVerify} from 'crypto';
+
+import defaultConfig  from '../config.json';
 
 import * as httpUtils from './httpUtils';
 
@@ -9,7 +12,7 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
-export async function fetchAsJson(packageName: string) {
+export async function fetchAsJson(packageName: string, version?: string) {
   const npmRegistryUrl = process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL;
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -25,18 +28,49 @@ export async function fetchAsJson(packageName: string) {
     headers.authorization = `Basic ${encodedCreds}`;
   }
 
-  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}`, {headers});
+  return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
+}
+
+export function verifySignature({signatures, integrity, packageName, version}: {
+  signatures: Array<{keyid: string, sig: string}>;
+  integrity: string;
+  packageName: string;
+  version: string;
+}) {
+  const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
+    JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
+    defaultConfig.keys;
+
+  const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
+  const signature = signatures.find(({keyid}) => keyid === key?.keyid);
+
+  if (key == null || signature == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
+
+  const verifier = createVerify(`SHA256`);
+  verifier.end(`${packageName}@${version}:${integrity}`);
+  const valid = verifier.verify(
+    `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+    signature.sig,
+    `base64`,
+  );
+  if (!valid) {
+    throw new Error(`Signature does not match`);
+  }
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
-  const metadata = await fetchAsJson(packageName);
+  const metadata = await fetchAsJson(packageName, `latest`);
 
-  const {latest} = metadata[`dist-tags`];
-  if (latest === undefined)
-    throw new Error(`${packageName} does not have a "latest" tag.`);
+  const {version, dist: {integrity, signatures}} = metadata;
 
-  const {shasum} = metadata.versions[latest].dist;
-  return `${latest}+sha1.${shasum}`;
+  if (process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+    verifySignature({
+      packageName, version,
+      integrity, signatures,
+    });
+  }
+
+  return `${version}+sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}`;
 }
 
 export async function fetchAvailableTags(packageName: string) {
@@ -49,15 +83,11 @@ export async function fetchAvailableVersions(packageName: string) {
   return Object.keys(metadata.versions);
 }
 
-export async function fetchTarballUrl(packageName: string, version: string) {
-  const metadata = await fetchAsJson(packageName);
-  const versionMetadata = metadata.versions?.[version];
-  if (versionMetadata === undefined)
-    throw new Error(`${packageName}@${version} does not exist.`);
-
-  const {tarball} = versionMetadata.dist;
+export async function fetchTarballURLAndSignature(packageName: string, version: string) {
+  const versionMetadata = await fetchAsJson(packageName, version);
+  const {tarball, signatures, integrity} = versionMetadata.dist;
   if (tarball === undefined || !tarball.startsWith(`http`))
     throw new Error(`${packageName}@${version} does not have a valid tarball.`);
 
-  return tarball;
+  return {tarball, signatures, integrity};
 }

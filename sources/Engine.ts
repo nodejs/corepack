@@ -1,5 +1,4 @@
 import {UsageError}                                           from 'clipanion';
-import type {FileHandle}                                      from 'fs/promises';
 import fs                                                     from 'fs';
 import path                                                   from 'path';
 import process                                                from 'process';
@@ -10,7 +9,6 @@ import defaultConfig                                          from '../config.js
 import * as corepackUtils                                     from './corepackUtils';
 import * as debugUtils                                        from './debugUtils';
 import * as folderUtils                                       from './folderUtils';
-import * as miscUtils                                         from './miscUtils';
 import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
 import * as specUtils                                         from './specUtils';
@@ -26,50 +24,58 @@ export type PackageManagerRequest = {
   binaryVersion: string | null;
 };
 
-export function getLastKnownGoodFile(flag = `r`) {
-  return fs.promises.open(path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`), flag);
-}
-async function createLastKnownGoodFile() {
-  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), {recursive: true});
-  return getLastKnownGoodFile(`w`);
+function getLastKnownGoodFilePath() {
+  return path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`);
 }
 
-export async function getJSONFileContent(fh: FileHandle) {
-  let lastKnownGood: unknown;
+export async function getLastKnownGood(): Promise<Record<string, string>> {
+  let raw: string;
   try {
-    lastKnownGood = JSON.parse(await fh.readFile(`utf8`));
+    raw = await fs.promises.readFile(getLastKnownGoodFilePath(), `utf8`);
+  } catch (err) {
+    if ((err as NodeError)?.code === `ENOENT`) return {};
+    throw err;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed) return {};
+    if (typeof parsed !== `object`) return {};
+    Object.entries(parsed).forEach(([key, value]) => {
+      if (typeof value !== `string`) {
+        // Ensure that all entries are strings.
+        delete parsed[key];
+      }
+    });
+    return parsed;
   } catch {
     // Ignore errors; too bad
-    return undefined;
+    return {};
   }
-
-  return lastKnownGood;
 }
 
-async function overwriteJSONFileContent(fh: FileHandle, content: unknown) {
-  await fh.truncate(0);
-  await fh.write(`${JSON.stringify(content, null, 2)}\n`, 0);
+async function createLastKnownGoodFile(lastKnownGood: Record<string, string>) {
+  const content = `${JSON.stringify(lastKnownGood, null, 2)}\n`;
+  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), {recursive: true});
+  await fs.promises.writeFile(getLastKnownGoodFilePath(), content, `utf8`);
 }
 
-export function getLastKnownGoodFromFileContent(lastKnownGood: unknown, packageManager: string) {
-  if (typeof lastKnownGood === `object` && lastKnownGood !== null &&
-    Object.hasOwn(lastKnownGood, packageManager)) {
-    const override = (lastKnownGood as any)[packageManager];
-    if (typeof override === `string`) {
-      return override;
-    }
-  }
+export function getLastKnownGoodFromFileContent(lastKnownGood: Record<string, string>, packageManager: string) {
+  if (Object.hasOwn(lastKnownGood, packageManager))
+    return lastKnownGood[packageManager];
   return undefined;
 }
 
-export async function activatePackageManagerFromFileHandle(lastKnownGoodFile: FileHandle, lastKnownGood: unknown, locator: Locator) {
-  if (typeof lastKnownGood !== `object` || lastKnownGood === null)
-    lastKnownGood = {};
+export async function activatePackageManager(lastKnownGood: Record<string, string>, locator: Locator) {
+  if (lastKnownGood[locator.name] === locator.reference) {
+    debugUtils.log(`${locator.name}@${locator.reference} is already Last Known Good version`);
+    return;
+  }
 
-  (lastKnownGood as Record<string, string>)[locator.name] = locator.reference;
+  lastKnownGood[locator.name] = locator.reference;
 
   debugUtils.log(`Setting ${locator.name}@${locator.reference} as Last Known Good version`);
-  await overwriteJSONFileContent(lastKnownGoodFile, lastKnownGood);
+  await createLastKnownGoodFile(lastKnownGood);
 }
 
 export class Engine {
@@ -151,54 +157,32 @@ export class Engine {
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${packageManager}) isn't supported by this corepack build`);
 
-    let lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
-      if ((err as NodeError)?.code !== `ENOENT` && (err as NodeError)?.code !== `EROFS`) {
-        throw err;
-      }
-    });
+    const lastKnownGood = await getLastKnownGood();
+    const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
+    if (lastKnownGoodForThisPackageManager)
+      return lastKnownGoodForThisPackageManager;
+
+    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
+      return definition.default;
+
+    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
+
     try {
-      const lastKnownGood = lastKnownGoodFile == null || await getJSONFileContent(lastKnownGoodFile!);
-      const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
-      if (lastKnownGoodForThisPackageManager)
-        return lastKnownGoodForThisPackageManager;
-
-      if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
-        return definition.default;
-
-      const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
-
-      try {
-        lastKnownGoodFile ??= await createLastKnownGoodFile();
-        await activatePackageManagerFromFileHandle(lastKnownGoodFile, lastKnownGood, {
-          name: packageManager,
-          reference,
-        });
-      } catch {
-        // If for some reason, we cannot update the last known good file, we
-        // ignore the error.
-      }
-
-      return reference;
-    } finally {
-      await lastKnownGoodFile?.close();
+      await activatePackageManager(lastKnownGood, {
+        name: packageManager,
+        reference,
+      });
+    } catch {
+      // If for some reason, we cannot update the last known good file, we
+      // ignore the error.
     }
+
+    return reference;
   }
 
   async activatePackageManager(locator: Locator) {
-    let emptyFile = false;
-    const lastKnownGoodFile = await getLastKnownGoodFile(`r+`).catch(err => {
-      if ((err as NodeError)?.code === `ENOENT`) {
-        emptyFile = true;
-        return getLastKnownGoodFile(`w`);
-      }
-
-      throw err;
-    });
-    try {
-      await activatePackageManagerFromFileHandle(lastKnownGoodFile, emptyFile || await getJSONFileContent(lastKnownGoodFile), locator);
-    } finally {
-      await lastKnownGoodFile.close();
-    }
+    const lastKnownGood = await getLastKnownGood();
+    await activatePackageManager(lastKnownGood, locator);
   }
 
   async ensurePackageManager(locator: Locator) {
@@ -289,7 +273,7 @@ export class Engine {
     }
   }
 
-  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<number | void> {
+  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
     let fallbackLocator: Locator = {
       name: binaryName as SupportedPackageManagers,
       reference: undefined as any,
@@ -297,7 +281,7 @@ export class Engine {
 
     let isTransparentCommand = false;
     if (packageManager != null) {
-      const defaultVersion = await this.getDefaultVersion(packageManager);
+      const defaultVersion = binaryVersion || await this.getDefaultVersion(packageManager);
       const definition = this.config.definitions[packageManager]!;
 
       // If all leading segments match one of the patterns defined in the `transparent`
@@ -320,16 +304,7 @@ export class Engine {
       };
     }
 
-    let descriptor: Descriptor;
-    try {
-      descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
-    } catch (err) {
-      if (err instanceof miscUtils.Cancellation) {
-        return 1;
-      } else {
-        throw err;
-      }
-    }
+    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
 
     if (binaryVersion)
       descriptor.range = binaryVersion;
