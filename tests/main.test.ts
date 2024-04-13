@@ -421,7 +421,7 @@ it(`should refuse to run a different package manager within a configured project
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: `Usage Error: This project is configured to use yarn because ${
         ppath.join(cwd, `package.json` as Filename)
-      } defines a "packageManager" field\n\n$ pnpm ...\n`,
+      } has a "packageManager" field\n\n$ pnpm ...\n`,
       exitCode: 1,
     });
 
