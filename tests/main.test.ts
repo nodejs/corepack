@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it}          from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import os                                          from 'node:os';
+import path                                        from 'node:path';
 import process                                     from 'node:process';
 
 import config                                      from '../config.json';
@@ -419,7 +420,10 @@ it(`should refuse to run a different package manager within a configured project
     process.env.FORCE_COLOR = `0`;
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
+      stdout: `Usage Error: This project is configured to use yarn because ${
+        // ppath and xfs do not format Windows correctly, the regex fixes that:
+        path.join(cwd.replace(/^\/([a-zA-Z]:)\//, `$1\\`), `package.json`)
+      } has a "packageManager" field\n\n$ pnpm ...\n`,
       exitCode: 1,
     });
 
