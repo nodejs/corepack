@@ -1,7 +1,6 @@
 import {beforeEach, describe, expect, it}          from '@jest/globals';
 import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
 import os                                          from 'node:os';
-import path                                        from 'node:path';
 import process                                     from 'node:process';
 
 import config                                      from '../config.json';
