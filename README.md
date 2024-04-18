@@ -1,5 +1,7 @@
 # <img src="./icon.svg" height="25" /> corepack
 
+[![Join us on OpenJS slack (channel #nodejs-corepack)](https://img.shields.io/badge/OpenJS%20Slack-%23nodejs--corepack-blue)](https://slack-invite.openjsf.org/)
+
 Corepack is a zero-runtime-dependency Node.js script that acts as a bridge
 between Node.js projects and the package managers they are intended to be used
 with during development. In practical terms, **Corepack lets you use Yarn, npm,
