@@ -419,7 +419,9 @@ it(`should refuse to run a different package manager within a configured project
     process.env.FORCE_COLOR = `0`;
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `Usage Error: This project is configured to use yarn\n\n$ pnpm ...\n`,
+      stdout: `Usage Error: This project is configured to use yarn because ${
+        npath.fromPortablePath(ppath.join(cwd, `package.json` as Filename))
+      } has a "packageManager" field\n\n$ pnpm ...\n`,
       exitCode: 1,
     });
 
