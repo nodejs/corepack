@@ -999,13 +999,13 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`yarn@stable`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
     });
   });
@@ -1015,19 +1015,19 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
-        stderr: ``,
+        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
-        stderr: ``,
+        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
-        stderr: ``,
+        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
@@ -1042,19 +1042,19 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
@@ -1069,8 +1069,8 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
-        stderr: ``,
+        stderr: /Signature does not match/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
@@ -1085,8 +1085,8 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
-        stderr: ``,
+        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
@@ -1102,10 +1102,10 @@ describe(`handle integrity checks`, () => {
       const result = await runCli(cwd, [`yarn@1.9998.9999+sha1.deadbeef`, `--version`], true);
       expect(result).toMatchObject({
         exitCode: 1,
-        stderr: ``,
+        stdout: ``,
       });
-      const match = /Mismatch hashes. Expected deadbeef, got ([a-f0-9]{40})/.exec(result.stdout);
-      if (match == null) throw new Error(`Invalid output`, {cause: result.stdout});
+      const match = /Mismatch hashes. Expected deadbeef, got ([a-f0-9]{40})/.exec(result.stderr);
+      if (match == null) throw new Error(`Invalid output`, {cause: result.stderr});
       await expect(runCli(cwd, [`yarn@1.9998.9999+sha1.${match[1]}`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `yarn: Hello from custom registry\n`,
