@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.28.0](https://github.com/nodejs/corepack/compare/v0.27.0...v0.28.0) (2024-04-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* call `executePackageManagerRequest` directly ([#430](https://github.com/nodejs/corepack/issues/430))
+
+### Bug Fixes
+
+* call `executePackageManagerRequest` directly ([#430](https://github.com/nodejs/corepack/issues/430)) ([0f9b748](https://github.com/nodejs/corepack/commit/0f9b74864048d5dc150a63cc582966af0c5f363f))
+
 ## [0.27.0](https://github.com/nodejs/corepack/compare/v0.26.0...v0.27.0) (2024-04-19)
 
 
