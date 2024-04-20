@@ -1,0 +1,14 @@
+diff --git a/lib/advanced/Cli.mjs b/lib/advanced/Cli.mjs
+index a1ca69103b95aa6f69fef3027552ffbdc383ed37..94bdfa06926a1d73aa25ef0c23c1590a45bb7150 100644
+--- a/lib/advanced/Cli.mjs
++++ b/lib/advanced/Cli.mjs
+@@ -412,6 +412,9 @@ class Cli {
+             if (error.stack) {
+                 result += `${error.stack.replace(/^.*\n/, ``)}\n`;
+             }
++            if (Object.hasOwn(error, 'cause')) {
++                result += `\nCause: ${error.cause?.stack ?? JSON.stringify(error.cause)}`
++            }
+         }
+         return result;
+     }
