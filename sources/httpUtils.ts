@@ -17,8 +17,8 @@ async function fetch(input: string | URL, init?: RequestInit) {
 
   let headers = init?.headers;
 
-  const username: string | undefined = input.username ?? process.env.COREPACK_NPM_USERNAME;
-  const password: string | undefined = input.password ?? process.env.COREPACK_NPM_PASSWORD;
+  const username: string | undefined = input.username || process.env.COREPACK_NPM_USERNAME;
+  const password: string | undefined = input.password || process.env.COREPACK_NPM_PASSWORD;
 
   if (username || password) {
     headers =  {
