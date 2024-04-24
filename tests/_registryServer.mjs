@@ -116,8 +116,10 @@ const server = createServer((req, res) => {
   const auth = req.headers.authorization;
 
   if (
-    (auth?.startsWith(`Bearer `) && auth.slice(`Bearer `.length) !== TOKEN_MOCK) ||
-    (auth?.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`)
+    auth == null ||
+    (auth.startsWith(`Bearer `) && auth.slice(`Bearer `.length) !== TOKEN_MOCK) ||
+    (auth.startsWith(`Basic `) && Buffer.from(auth.slice(`Basic `.length), `base64`).toString() !== `user:pass`) ||
+    !/^(Basic|Bearer) /.test(auth)
   ) {
     res.writeHead(401).end(`Unauthorized`);
     return;
