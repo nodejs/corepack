@@ -434,7 +434,6 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
 }
 
 export function shouldSkipIntegrityCheck() {
-  return [``, `0`].includes(
-    process.env.COREPACK_INTEGRITY_KEYS?.toLowerCase().trim(),
-  );
+  return process.env.COREPACK_INTEGRITY_KEYS === ``
+    || process.env.COREPACK_INTEGRITY_KEYS === `0`;
 }

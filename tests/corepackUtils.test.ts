@@ -18,11 +18,6 @@ describe(`corepack utils shouldSkipIntegrityCheck`, () => {
     expect(shouldSkipIntegrityCheck()).toBe(true);
   });
 
-  it(`should return true if COREPACK_INTEGRITY_KEYS env is set to a string with leading spaces`, () => {
-    process.env.COREPACK_INTEGRITY_KEYS = ` `;
-    expect(shouldSkipIntegrityCheck()).toBe(true);
-  });
-
   it(`should return false if COREPACK_INTEGRITY_KEYS env is set to any other value`, () => {
     process.env.COREPACK_INTEGRITY_KEYS = JSON.stringify({foo: `bar`});
     expect(shouldSkipIntegrityCheck()).toBe(false);
