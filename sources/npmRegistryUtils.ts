@@ -1,9 +1,10 @@
-import {UsageError}   from 'clipanion';
-import {createVerify} from 'crypto';
+import {UsageError}               from 'clipanion';
+import {createVerify}             from 'crypto';
 
-import defaultConfig  from '../config.json';
+import defaultConfig              from '../config.json';
 
-import * as httpUtils from './httpUtils';
+import {shouldSkipIntegrityCheck} from './corepackUtils';
+import * as httpUtils             from './httpUtils';
 
 // load abbreviated metadata as that's all we need for these calls
 // see: https://github.com/npm/registry/blob/cfe04736f34db9274a780184d1cdb2fb3e4ead2a/docs/responses/package-metadata.md
@@ -63,7 +64,7 @@ export async function fetchLatestStableVersion(packageName: string) {
 
   const {version, dist: {integrity, signatures}} = metadata;
 
-  if (process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+  if (!shouldSkipIntegrityCheck()) {
     verifySignature({
       packageName, version,
       integrity, signatures,

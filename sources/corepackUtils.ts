@@ -283,7 +283,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   if (!build[1]) {
     const registry = getRegistryFromPackageManagerSpec(spec);
-    if (registry.type === `npm` && !registry.bin && process.env.COREPACK_INTEGRITY_KEYS !== ``) {
+    if (registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck()) {
       if (signatures! == null || integrity! == null)
         ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
@@ -431,4 +431,9 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   // Use nextTick to unwind the stack, and consequently remove Corepack from
   // the stack trace of the package manager.
   process.nextTick(Module.runMain, binPath);
+}
+
+export function shouldSkipIntegrityCheck() {
+  return process.env.COREPACK_INTEGRITY_KEYS === ``
+    || process.env.COREPACK_INTEGRITY_KEYS === `0`;
 }
