@@ -1,3 +1,5 @@
+.idea/
+
 /.yarn/*
 !/.yarn/cache
 !/.yarn/patches
