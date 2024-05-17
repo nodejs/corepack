@@ -15,7 +15,7 @@ export class EnableCommand extends Command<Context> {
   static usage = Command.Usage({
     description: `Add the Corepack shims to the install directories`,
     details: `
-      When run, this commmand will check whether the shims for the specified package managers can be found with the correct values inside the install directory. If not, or if they don't exist, they will be created.
+      When run, this command will check whether the shims for the specified package managers can be found with the correct values inside the install directory. If not, or if they don't exist, they will be created.
 
       By default it will locate the install directory by running the equivalent of \`which corepack\`, but this can be tweaked by explicitly passing the install directory via the \`--install-directory\` flag.
     `,
