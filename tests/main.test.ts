@@ -835,7 +835,7 @@ it(`should be able to show the latest version`, async () => {
     });
 
     // Should keep working if the home folder is removed
-    await xfs.rmdirPromise(process.env.COREPACK_HOME as any, {recursive: true});
+    await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: /^1\.\d+\.\d+\r?\n$/,
@@ -972,7 +972,7 @@ describe(`handle integrity checks`, () => {
       if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
 
       // Removing home directory to force the "re-download"
-      await xfs.rmdirPromise(process.env.COREPACK_HOME as any, {recursive: true});
+      await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
 
       await Promise.all([
         expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
