@@ -255,7 +255,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   const isSingleFile = outputFile !== null;
 
   // In config, yarn berry is expected to be downloaded as a single file,
-  // and therefore `spec.bin` is an array. However, when dowloaded from
+  // and therefore `spec.bin` is an array. However, when downloaded from
   // custom npm registry as tarball, `bin` should be a map.
   // In this case, we ignore the configured `spec.bin`.
 
