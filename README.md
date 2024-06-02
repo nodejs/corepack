@@ -154,6 +154,11 @@ is called without parameters). Note that the npm shims will not be installed
 unless explicitly requested, as npm is currently distributed with Node.js
 through other means.
 
+```sh
+corepack enable # Enable all shims except npm
+corepack enable npm # Enable the npm shim
+```
+
 If the file system where the `corepack` binary is located is read-only, this
 command will fail. A workaround is to add the binaries as alias in your
 shell configuration file (e.g. in `~/.bash_aliases`):
