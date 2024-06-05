@@ -49,7 +49,15 @@ jobs:
 
       - name: Check if anything has changed
         id: contains-changes
-        run: echo "result=$(git --no-pager diff --quiet -- tests/nocks.db || echo "yes")" >> $GITHUB_OUTPUT
+        run: |
+          sqlite3 tests/nocks.db .dump > tests/nocks.sql
+          git add tests/nocks.sql
+          cp tests/nocks.db tests/nocks.db.new
+          git checkout HEAD -- tests/nocks.db
+          sqlite3 tests/nocks.db .dump > tests/nocks.sql
+          echo "result=$(git --no-pager diff --quiet -- tests/nocks.sql || echo "yes")" >> "$GITHUB_OUTPUT"
+          git rm -f tests/nocks.sql
+          mv tests/nocks.db.new tests/nocks.db
         shell: bash
 
       - name: Commit changes
