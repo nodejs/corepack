@@ -34,7 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Validate HEAD SHA
-        if: ${{ fromJson(steps.pr_info.outputs.DATA).repo != github.repository }}
+        if: ${{ fromJson(steps.pr_info.outputs.DATA).repo != github.repository || inputs.head_sha }}
         run: >
           [[ "$EXPECTED" == "$ACTUAL" ]] || exit 1
         env:
