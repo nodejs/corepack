@@ -50,13 +50,11 @@ jobs:
       - name: Check if anything has changed
         id: contains-changes
         run: |
-          sqlite3 tests/nocks.db .dump > tests/nocks.sql
-          git add tests/nocks.sql
+          sqlite3 tests/nocks.db .dump > /tmp/before.sql
           cp tests/nocks.db tests/nocks.db.new
           git checkout HEAD -- tests/nocks.db
-          sqlite3 tests/nocks.db .dump > tests/nocks.sql
-          echo "result=$(git --no-pager diff --quiet -- tests/nocks.sql || echo "yes")" >> "$GITHUB_OUTPUT"
-          git rm -f tests/nocks.sql
+          sqlite3 tests/nocks.db .dump > /tmp/after.sql
+          echo "result=$(git --no-pager diff --quiet --no-index /tmp/before.sql /tmp/after.sql || echo "yes")" >> "$GITHUB_OUTPUT"
           mv tests/nocks.db.new tests/nocks.db
         shell: bash
 
