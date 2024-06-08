@@ -7,6 +7,10 @@ on:
         description: PR ID
         type: number
         required: true
+      head_sha:
+        description: Commit SHA of the head of the PR branch (only required for PRs from forks)
+        type: string
+        required: false
 
 env:
   YARN_ENABLE_GLOBAL_CACHE: false
@@ -16,9 +20,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Get PR info
+        id: pr_info
+        run: |
+          {
+            echo 'DATA<<""EOF""'
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/pulls/${{ inputs.pr_id }} \
+              --jq '{ repo: .head.repo.full_name, clone_url: .head.repo.clone_url, head_sha: .head.sha, head_ref: .head.ref }'
+            echo '""EOF""'
+          } >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate HEAD SHA
+        if: ${{ fromJson(steps.pr_info.outputs.DATA).repo != github.repository || inputs.head_sha }}
+        run: >
+          [[ "$EXPECTED" == "$ACTUAL" ]] || exit 1
+        env:
+          ACTUAL: ${{ fromJson(steps.pr_info.outputs.DATA).head_sha }}
+          EXPECTED: ${{ inputs.head_sha }}
+
       - uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ inputs.pr_id }}/head
+          ref: ${{ fromJson(steps.pr_info.outputs.DATA).head_sha }}
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -68,13 +93,10 @@ jobs:
 
       - name: Push changes
         if: ${{ steps.contains-changes.outputs.result == 'yes' }}
-        run: >
-          gh api
-          -H "Accept: application/vnd.github+json"
-          /repos/${{ github.repository }}/pulls/${{ inputs.pr_id }}
-          --jq '"git push " + .head.repo.clone_url + " HEAD:refs/heads/" + .head.ref' | sh
+        run: git push "$REMOTE" "HEAD:refs/heads/$REMOTE_REF"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REMOTE: ${{ fromJson(steps.pr_info.outputs.DATA).clone_url }}
+          REMOTE_REF: ${{ fromJson(steps.pr_info.outputs.DATA).head_ref }}
 
       - name: Upload `tests/nocks.db` in case of failure
         uses: actions/upload-artifact@v4
