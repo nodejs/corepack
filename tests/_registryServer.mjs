@@ -104,7 +104,7 @@ function generateVersionMetadata(packageName, version) {
       shasum,
       size: mockPackageTarGz.length,
       noattachment: false,
-      tarball: `${process.env.COREPACK_NPM_REGISTRY}/${packageName}/-/${packageName}-${version}.tgz`,
+      tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`,
       ...generateSignature(packageName, version),
     },
   };
