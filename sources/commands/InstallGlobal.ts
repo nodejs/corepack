@@ -43,13 +43,13 @@ export class InstallGlobalCommand extends BaseCommand {
     if (this.args.length === 0)
       throw new UsageError(`No package managers specified`);
 
-    for (const arg of this.args) {
+    await Promise.all(this.args.map((arg) => {
       if (arg.endsWith(`.tgz`)) {
-        await this.installFromTarball(path.resolve(this.context.cwd, arg));
+        return this.installFromTarball(path.resolve(this.context.cwd, arg));
       } else {
-        await this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`, {enforceExactVersion: false}));
+        return this.installFromDescriptor(specUtils.parseSpec(arg, `CLI arguments`, { enforceExactVersion: false }));
       }
-    }
+    }))
   }
 
   log(locator: Locator) {
