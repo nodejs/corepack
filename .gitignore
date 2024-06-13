@@ -1,7 +1,6 @@
 .idea/
 
 /.yarn/*
-!/.yarn/cache
 !/.yarn/patches
 !/.yarn/releases
 !/.yarn/sdks
