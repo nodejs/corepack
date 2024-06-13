@@ -63,7 +63,7 @@
     "lint": "eslint .",
     "prepack": "yarn build",
     "postpack": "run clean",
-    "rimraf": "node -e 'for(let i=2; i<process.argv.length;i++)fs.rmSync(process.argv[i],{recursive:true,force:true});'",
+    "rimraf": "node -e 'for(let i=2;i<process.argv.length;i++)fs.rmSync(process.argv[i],{recursive:true,force:true});'",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
