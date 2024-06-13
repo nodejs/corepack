@@ -43,6 +43,7 @@
     "eslint-plugin-arca": "^0.16.0",
     "jest": "^29.0.0",
     "proxy-from-env": "^1.1.0",
+    "rimraf": "^5.0.7",
     "semver": "^7.5.2",
     "supports-color": "^9.0.0",
     "tar": "^6.2.1",
@@ -56,12 +57,12 @@
     "undici-types": "6.x"
   },
   "scripts": {
-    "build": "rm -rf dist shims && run build:bundle && ts-node ./mkshims.ts",
+    "build": "rimraf dist shims && run build:bundle && ts-node ./mkshims.ts",
     "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node18.17.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
     "corepack": "ts-node ./sources/_cli.ts",
     "lint": "eslint .",
     "prepack": "yarn build",
-    "postpack": "rm -rf dist shims",
+    "postpack": "rimraf dist shims",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
