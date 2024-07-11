@@ -305,7 +305,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    renameSafe(tmpFolder, installFolder);
+    await renameSafe(tmpFolder, installFolder);
   } catch (err) {
     if (
       (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
