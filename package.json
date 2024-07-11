@@ -38,7 +38,7 @@
     "better-sqlite3": "^9.4.1",
     "clipanion": "^3.0.1",
     "debug": "^4.1.1",
-    "esbuild": "0.19.5",
+    "esbuild": "^0.21.0",
     "eslint": "^8.0.0",
     "eslint-plugin-arca": "^0.16.0",
     "jest": "^29.0.0",
