@@ -2234,7 +2234,6 @@ __metadata:
     proxy-from-env: "npm:^1.1.0"
     semver: "npm:^7.5.2"
     supports-color: "npm:^9.0.0"
-    tar: "npm:^6.2.1"
     ts-node: "npm:^10.0.0"
     typescript: "npm:^5.3.3"
     undici: "npm:^6.6.1"
@@ -5886,7 +5885,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.1.11, tar@npm:^6.1.2, tar@npm:^6.2.1":
+"tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.2.1
   resolution: "tar@npm:6.2.1"
   dependencies:
