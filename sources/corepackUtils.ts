@@ -4,7 +4,10 @@ import fs                                                      from 'fs';
 import type {Dir}                                              from 'fs';
 import Module                                                  from 'module';
 import path                                                    from 'path';
-import semver                                                  from 'semver';
+import Range                                                   from 'semver/classes/range';
+import SemVer                                                  from 'semver/classes/semver';
+import semverLt                                                from 'semver/functions/lt';
+import semverParse                                             from 'semver/functions/parse';
 import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
 import * as engine                                             from './Engine';
@@ -82,9 +85,9 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
     }
   }
 
-  const range = new semver.Range(descriptor.range);
+  const range = new Range(descriptor.range);
   let bestMatch: string | null = null;
-  let maxSV: semver.SemVer | undefined = undefined;
+  let maxSV: SemVer | undefined = undefined;
 
   for await (const {name} of cacheDirectory) {
     // Some dot-folders tend to pop inside directories, especially on OSX
@@ -97,7 +100,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
     // @ts-expect-error TODO: decipher why this produces an error
     if (range.test(name) && maxSV?.compare(name) !== 1) {
       bestMatch = name;
-      maxSV = new semver.SemVer(bestMatch);
+      maxSV = new SemVer(bestMatch);
     }
   }
 
@@ -193,7 +196,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
 
 export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}): Promise<InstallSpec> {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
-  const locatorReference = locatorIsASupportedPackageManager ? semver.parse(locator.reference)! : parseURLReference(locator);
+  const locatorReference = locatorIsASupportedPackageManager ? semverParse(locator.reference)! : parseURLReference(locator);
   const {version, build} = locatorReference;
 
   const installFolder = path.join(installTarget, locator.name, version);
@@ -327,9 +330,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     const lastKnownGood = await engine.getLastKnownGood();
     const defaultVersion = engine.getLastKnownGoodFromFileContent(lastKnownGood, locator.name);
     if (defaultVersion) {
-      const currentDefault = semver.parse(defaultVersion)!;
-      const downloadedVersion = locatorReference as semver.SemVer;
-      if (currentDefault.major === downloadedVersion.major && semver.lt(currentDefault, downloadedVersion)) {
+      const currentDefault = semverParse(defaultVersion)!;
+      const downloadedVersion = locatorReference as SemVer;
+      if (currentDefault.major === downloadedVersion.major && semverLt(currentDefault, downloadedVersion)) {
         await engine.activatePackageManager(lastKnownGood, locator);
       }
     }
@@ -405,7 +408,7 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
   // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
   // [SIGSEGV]
-  if (locator.name !== `npm` || semver.lt(locator.reference, `9.7.0`))
+  if (locator.name !== `npm` || semverLt(locator.reference, `9.7.0`))
     // @ts-expect-error - No types
     await import(`v8-compile-cache`);
 

@@ -1,7 +1,7 @@
 import {UsageError}                            from 'clipanion';
 import fs                                      from 'fs';
 import path                                    from 'path';
-import semver                                  from 'semver';
+import semverValid                             from 'semver/functions/valid';
 
 import {PreparedPackageManagerInfo}            from './Engine';
 import {NodeError}                             from './nodeUtils';
@@ -34,7 +34,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 
   const isURL = URL.canParse(range);
   if (!isURL) {
-    if (enforceExactVersion && !semver.valid(range))
+    if (enforceExactVersion && !semverValid(range))
       throw new UsageError(`Invalid package manager specification in ${source} (${raw}); expected a semver version${enforceExactVersion ? `` : `, range, or tag`}`);
 
     if (!isSupportedPackageManager(name)) {
