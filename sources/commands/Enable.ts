@@ -60,18 +60,25 @@ export class EnableCommand extends Command<Context> {
       ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
+    const binNamesMap = new Map<string, Set<string>>();
+
     for (const name of new Set(names)) {
       if (!isSupportedPackageManager(name))
         throw new UsageError(`Invalid package manager name '${name}'`);
 
-      for (const binName of this.context.engine.getBinariesFor(name)) {
-        if (process.platform === `win32`) {
-          await this.generateWin32Link(installDirectory, distFolder, binName);
-        } else {
-          await this.generatePosixLink(installDirectory, distFolder, binName);
-        }
-      }
+      const binNames = this.context.engine.getBinariesFor(name);
+      binNamesMap.set(name, binNames);
     }
+
+    const allBinNames = Array.from(binNamesMap.values()).flatMap(binNames => Array.from(binNames));
+
+    await Promise.all(allBinNames.map(binName => {
+      if (process.platform === `win32`) {
+        return this.generateWin32Link(installDirectory, distFolder, binName);
+      } else {
+        return this.generatePosixLink(installDirectory, distFolder, binName);
+      }
+    }));
   }
 
   async generatePosixLink(installDirectory: string, distFolder: string, binName: string) {

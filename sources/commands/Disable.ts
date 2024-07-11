@@ -50,18 +50,25 @@ export class DisableCommand extends Command<Context> {
       ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
+    const binNamesMap = new Map<string, Set<string>>();
+
     for (const name of new Set(names)) {
       if (!isSupportedPackageManager(name))
         throw new UsageError(`Invalid package manager name '${name}'`);
 
-      for (const binName of this.context.engine.getBinariesFor(name)) {
-        if (process.platform === `win32`) {
-          await this.removeWin32Link(installDirectory, binName);
-        } else {
-          await this.removePosixLink(installDirectory, binName);
-        }
-      }
+      const binNames = this.context.engine.getBinariesFor(name);
+      binNamesMap.set(name, binNames);
     }
+
+    const allBinNames = Array.from(binNamesMap.values()).flatMap(binNames => Array.from(binNames));
+
+    await Promise.all(allBinNames.map(binName => {
+      if (process.platform === `win32`) {
+        return this.removeWin32Link(installDirectory, binName);
+      } else {
+        return this.removePosixLink(installDirectory, binName);
+      }
+    }));
   }
 
   async removePosixLink(installDirectory: string, binName: string) {
