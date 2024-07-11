@@ -2233,7 +2233,6 @@ __metadata:
     jest: "npm:^29.0.0"
     proxy-from-env: "npm:^1.1.0"
     semver: "npm:^7.5.2"
-    supports-color: "npm:^9.0.0"
     tar: "npm:^6.2.1"
     ts-node: "npm:^10.0.0"
     typescript: "npm:^5.3.3"
@@ -5844,13 +5843,6 @@ __metadata:
   dependencies:
     has-flag: "npm:^4.0.0"
   checksum: 10c0/ea1d3c275dd604c974670f63943ed9bd83623edc102430c05adb8efc56ba492746b6e95386e7831b872ec3807fd89dd8eb43f735195f37b5ec343e4234cc7e89
-  languageName: node
-  linkType: hard
-
-"supports-color@npm:^9.0.0":
-  version: 9.4.0
-  resolution: "supports-color@npm:9.4.0"
-  checksum: 10c0/6c24e6b2b64c6a60e5248490cfa50de5924da32cf09ae357ad8ebbf305cc5d2717ba705a9d4cb397d80bbf39417e8fdc8d7a0ce18bd0041bf7b5b456229164e4
   languageName: node
   linkType: hard
 
