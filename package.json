@@ -16,7 +16,7 @@
     "./package.json": "./package.json"
   },
   "license": "MIT",
-  "packageManager": "yarn@4.1.1+sha224.00f08619463229f8ba40c4ee90e8c2e4ced1f11c3115c26f3b98432e",
+  "packageManager": "yarn@4.3.1+sha224.934d21773e22af4b69a7032a2d3b4cb38c1f7c019624777cc9916b23",
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-transform-modules-commonjs": "^7.14.0",
