@@ -33,7 +33,7 @@
     "@yarnpkg/fslib": "^3.0.0-rc.48",
     "@zkochan/cmd-shim": "^6.0.0",
     "babel-plugin-dynamic-import-node": "^2.3.3",
-    "better-sqlite3": "^9.4.1",
+    "better-sqlite3": "^10.0.0",
     "clipanion": "^3.0.1",
     "debug": "^4.1.1",
     "esbuild": "0.19.5",
