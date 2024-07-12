@@ -50,17 +50,15 @@ export class DisableCommand extends Command<Context> {
       ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
-    const binNamesMap = new Map<string, Set<string>>();
+    const allBinNames: string[] = [];
 
     for (const name of new Set(names)) {
       if (!isSupportedPackageManager(name))
         throw new UsageError(`Invalid package manager name '${name}'`);
 
       const binNames = this.context.engine.getBinariesFor(name);
-      binNamesMap.set(name, binNames);
+      allBinNames.push(...binNames);
     }
-
-    const allBinNames = Array.from(binNamesMap.values()).flatMap(binNames => Array.from(binNames));
 
     await Promise.all(allBinNames.map(binName => {
       if (process.platform === `win32`) {
