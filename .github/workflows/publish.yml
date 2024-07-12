@@ -49,7 +49,7 @@ jobs:
       - run: corepack yarn pack --out corepack.tgz
 
       - name: Publish to the npm registry
-        run: npm publish corepack.tgz --tag latest --provenance
+        run: npm publish corepack.tgz --provenance
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
