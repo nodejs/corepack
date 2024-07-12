@@ -1,4 +1,5 @@
-import semver from 'semver';
+import Range  from 'semver/classes/range';
+import SemVer from 'semver/classes/semver';
 
 /**
  * Returns whether the given semver version satisfies the given range. Notably
@@ -16,7 +17,7 @@ import semver from 'semver';
 export function satisfiesWithPrereleases(version: string | null, range: string, loose: boolean = false): boolean {
   let semverRange;
   try {
-    semverRange = new semver.Range(range, loose);
+    semverRange = new Range(range, loose);
   } catch (err) {
     return false;
   }
@@ -24,9 +25,9 @@ export function satisfiesWithPrereleases(version: string | null, range: string, 
   if (!version)
     return false;
 
-  let semverVersion: semver.SemVer;
+  let semverVersion: SemVer;
   try {
-    semverVersion = new semver.SemVer(version, semverRange.loose);
+    semverVersion = new SemVer(version, semverRange.loose);
     if (semverVersion.prerelease) {
       semverVersion.prerelease = [];
     }

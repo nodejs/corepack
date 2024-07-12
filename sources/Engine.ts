@@ -2,7 +2,9 @@ import {UsageError}                                           from 'clipanion';
 import fs                                                     from 'fs';
 import path                                                   from 'path';
 import process                                                from 'process';
-import semver                                                 from 'semver';
+import semverRcompare                                         from 'semver/functions/rcompare';
+import semverValid                                            from 'semver/functions/valid';
+import semverValidRange                                       from 'semver/ranges/valid';
 
 import defaultConfig                                          from '../config.json';
 
@@ -334,7 +336,7 @@ export class Engine {
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
     let finalDescriptor = descriptor;
-    if (!semver.valid(descriptor.range) && !semver.validRange(descriptor.range)) {
+    if (!semverValid(descriptor.range) && !semverValidRange(descriptor.range)) {
       if (!allowTags)
         throw new UsageError(`Packages managers can't be referenced via tags in this context`);
 
@@ -363,7 +365,7 @@ export class Engine {
 
     // If the user asked for a specific version, no need to request the list of
     // available versions from the registry.
-    if (semver.valid(finalDescriptor.range))
+    if (semverValid(finalDescriptor.range))
       return {name: finalDescriptor.name, reference: finalDescriptor.range};
 
     const versions = await Promise.all(Object.keys(definition.ranges).map(async range => {
@@ -374,7 +376,7 @@ export class Engine {
       return versions.filter(version => semverUtils.satisfiesWithPrereleases(version, finalDescriptor.range));
     }));
 
-    const highestVersion = [...new Set(versions.flat())].sort(semver.rcompare);
+    const highestVersion = [...new Set(versions.flat())].sort(semverRcompare);
     if (highestVersion.length === 0)
       return null;
 
