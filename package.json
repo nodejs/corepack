@@ -43,7 +43,7 @@
     "semver": "^7.5.2",
     "supports-color": "^9.0.0",
     "tar": "^6.2.1",
-    "ts-node": "^10.0.0",
+    "tsx": "^4.16.2",
     "typescript": "^5.3.3",
     "undici": "^6.19.2",
     "v8-compile-cache": "^2.3.0",
@@ -53,10 +53,10 @@
     "undici-types": "6.x"
   },
   "scripts": {
-    "build": "run clean && run build:bundle && ts-node ./mkshims.ts",
+    "build": "run clean && run build:bundle && tsx ./mkshims.ts",
     "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node18.17.0 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
     "clean": "run rimraf dist shims",
-    "corepack": "ts-node ./sources/_cli.ts",
+    "corepack": "tsx ./sources/_cli.ts",
     "lint": "eslint .",
     "prepack": "yarn build",
     "postpack": "run clean",
