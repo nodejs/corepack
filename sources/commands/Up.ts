@@ -1,5 +1,7 @@
 import {Command, UsageError}           from 'clipanion';
-import semver                          from 'semver';
+import semverMajor                     from 'semver/functions/major';
+import semverValid                     from 'semver/functions/valid';
+import semverValidRange                from 'semver/ranges/valid';
 
 import type {SupportedPackageManagers} from '../types';
 
@@ -33,14 +35,14 @@ export class UpCommand extends BaseCommand {
       patterns: [],
     });
 
-    if (!semver.valid(descriptor.range) && !semver.validRange(descriptor.range))
+    if (!semverValid(descriptor.range) && !semverValidRange(descriptor.range))
       throw new UsageError(`The 'corepack up' command can only be used when your project's packageManager field is set to a semver version or semver range`);
 
     const resolved = await this.context.engine.resolveDescriptor(descriptor, {useCache: false});
     if (!resolved)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-    const majorVersion = semver.major(resolved.reference);
+    const majorVersion = semverMajor(resolved.reference);
     const majorDescriptor = {name: descriptor.name as SupportedPackageManagers, range: `^${majorVersion}.0.0`};
 
     const highestVersion = await this.context.engine.resolveDescriptor(majorDescriptor, {useCache: false});
