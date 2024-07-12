@@ -44,14 +44,15 @@ jobs:
           restore-keys: |
             ${{runner.os}}-yarn-
 
-      - name: Publish to the npm registry
-        run: |
-          corepack yarn install --immutable
-          corepack yarn npm publish
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - run: corepack yarn install --immutable
 
       - run: corepack yarn pack --out corepack.tgz
+
+      - name: Publish to the npm registry
+        run: npm publish corepack.tgz --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
       - name: Add Corepack package archive to GitHub release
         run: gh release upload ${{ needs.release-please.outputs.release_tag }} corepack.tgz
         env:
