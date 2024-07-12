@@ -307,11 +307,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
-    if (process.platform === `win32`) {
-      await renameUnderWindows(tmpFolder, installFolder);
-    } else {
-      await fs.promises.rename(tmpFolder, installFolder);
-    }
+    await renameSafe(tmpFolder, installFolder);
   } catch (err) {
     if (
       (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
