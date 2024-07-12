@@ -50,7 +50,7 @@ export class DisableCommand extends Command<Context> {
       ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
-    const allBinNames: string[] = [];
+    const allBinNames: Array<string> = [];
 
     for (const name of new Set(names)) {
       if (!isSupportedPackageManager(name))
@@ -60,13 +60,11 @@ export class DisableCommand extends Command<Context> {
       allBinNames.push(...binNames);
     }
 
-    await Promise.all(allBinNames.map(binName => {
-      if (process.platform === `win32`) {
-        return this.removeWin32Link(installDirectory, binName);
-      } else {
-        return this.removePosixLink(installDirectory, binName);
-      }
-    }));
+    const removeLink = process.platform === `win32` ?
+      (binName: string) => this.removeWin32Link(installDirectory, binName) :
+      (binName: string) => this.removePosixLink(installDirectory, binName);
+
+    await Promise.all(allBinNames.map(removeLink));
   }
 
   async removePosixLink(installDirectory: string, binName: string) {

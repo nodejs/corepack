@@ -60,7 +60,7 @@ export class EnableCommand extends Command<Context> {
       ? SupportedPackageManagerSetWithoutNpm
       : this.names;
 
-    const allBinNames: string[] = [];
+    const allBinNames: Array<string> = [];
 
     for (const name of new Set(names)) {
       if (!isSupportedPackageManager(name))
@@ -70,13 +70,11 @@ export class EnableCommand extends Command<Context> {
       allBinNames.push(...binNames);
     }
 
-    await Promise.all(allBinNames.map(binName => {
-      if (process.platform === `win32`) {
-        return this.generateWin32Link(installDirectory, distFolder, binName);
-      } else {
-        return this.generatePosixLink(installDirectory, distFolder, binName);
-      }
-    }));
+    const generateLink = process.platform === `win32` ?
+      (binName: string) => this.generateWin32Link(installDirectory, distFolder, binName) :
+      (binName: string) => this.generatePosixLink(installDirectory, distFolder, binName);
+
+    await Promise.all(allBinNames.map(generateLink));
   }
 
   async generatePosixLink(installDirectory: string, distFolder: string, binName: string) {
