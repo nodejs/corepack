@@ -51,7 +51,7 @@ jobs:
       - name: Publish to the npm registry
         run: npm publish corepack.tgz --provenance
         env:
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Add Corepack package archive to GitHub release
         run: gh release upload ${{ needs.release-please.outputs.release_tag }} corepack.tgz
