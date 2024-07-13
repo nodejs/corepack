@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.1](https://github.com/nodejs/corepack/compare/v0.29.0...v0.29.1) (2024-07-13)
+
+
+### Bug Fixes
+
+* trigger release after 0.29.0 failed to publish ([e6ba066](https://github.com/nodejs/corepack/commit/e6ba06657b0985c112f288932ca39c0562129566))
+
 ## [0.29.0](https://github.com/nodejs/corepack/compare/v0.28.2...v0.29.0) (2024-07-12)
 
 
