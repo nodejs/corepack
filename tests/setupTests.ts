@@ -1,8 +1,5 @@
-/* global jest, beforeEach, afterAll */
-
-const process = require(`process`);
-
-jest.retryTimes(2, {logErrorsBeforeRetry: true});
+import process                from 'process';
+import {beforeEach, afterAll} from 'vitest';
 
 const OLD_ENV = process.env;
 // To ensure we test the default behavior, we must remove these env vars
