@@ -27,7 +27,9 @@ export type PackageManagerRequest = {
 };
 
 function getLastKnownGoodFilePath() {
-  return path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`);
+  const lkg = path.join(folderUtils.getCorepackHomeFolder(), `lastKnownGood.json`);
+  debugUtils.log(`LastKnownGood file would be located at ${lkg}`);
+  return lkg;
 }
 
 export async function getLastKnownGood(): Promise<Record<string, string>> {
@@ -35,23 +37,34 @@ export async function getLastKnownGood(): Promise<Record<string, string>> {
   try {
     raw = await fs.promises.readFile(getLastKnownGoodFilePath(), `utf8`);
   } catch (err) {
-    if ((err as NodeError)?.code === `ENOENT`) return {};
+    if ((err as NodeError)?.code === `ENOENT`) {
+      debugUtils.log(`No LastKnownGood version found in Corepack home.`);
+      return {};
+    }
     throw err;
   }
 
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed) return {};
-    if (typeof parsed !== `object`) return {};
+    if (!parsed) {
+      debugUtils.log(`Invalid LastKnowGood file in Corepack home (JSON parsable, but falsy)`);
+      return {};
+    }
+    if (typeof parsed !== `object`) {
+      debugUtils.log(`Invalid LastKnowGood file in Corepack home (JSON parsable, but non-object)`);
+      return {};
+    }
     Object.entries(parsed).forEach(([key, value]) => {
       if (typeof value !== `string`) {
         // Ensure that all entries are strings.
+        debugUtils.log(`Ignoring key ${key} in LastKnownGood file as its value is not a string`);
         delete parsed[key];
       }
     });
     return parsed;
   } catch {
     // Ignore errors; too bad
+    debugUtils.log(`Invalid LastKnowGood file in Corepack home (maybe not JSON parsable)`);
     return {};
   }
 }
@@ -161,13 +174,18 @@ export class Engine {
 
     const lastKnownGood = await getLastKnownGood();
     const lastKnownGoodForThisPackageManager = getLastKnownGoodFromFileContent(lastKnownGood, packageManager);
-    if (lastKnownGoodForThisPackageManager)
+    if (lastKnownGoodForThisPackageManager) {
+      debugUtils.log(`Search for default version: Found ${packageManager}@${lastKnownGoodForThisPackageManager} in LastKnownGood file`);
       return lastKnownGoodForThisPackageManager;
+    }
 
-    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`)
+    if (process.env.COREPACK_DEFAULT_TO_LATEST === `0`) {
+      debugUtils.log(`Search for default version: As defined in environment, defaulting to internal config ${packageManager}@${definition.default}`);
       return definition.default;
+    }
 
     const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
+    debugUtils.log(`Search for default version: found in remote registry ${packageManager}@${reference}`);
 
     try {
       await activatePackageManager(lastKnownGood, {
@@ -175,6 +193,7 @@ export class Engine {
         reference,
       });
     } catch {
+      debugUtils.log(`Search for default version: could not activate registry version`);
       // If for some reason, we cannot update the last known good file, we
       // ignore the error.
     }
@@ -240,6 +259,7 @@ export class Engine {
 
       switch (result.type) {
         case `NoProject`:
+          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} as no project manifest were found`);
           return fallbackDescriptor;
 
         case `NoSpec`: {
@@ -257,17 +277,20 @@ export class Engine {
             await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
           }
 
+          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManage" field in ${result.target}`);
           return fallbackDescriptor;
         }
 
         case `Found`: {
           if (result.spec.name !== locator.name) {
             if (transparent) {
+              debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${result.spec.name}@${result.spec.range} project`);
               return fallbackDescriptor;
             } else {
               throw new UsageError(`This project is configured to use ${result.spec.name} because ${result.target} has a "packageManager" field`);
             }
           } else {
+            debugUtils.log(`Using ${result.spec.name}@${result.spec.range} as defined in project manifest ${result.target}`);
             return result.spec;
           }
         }

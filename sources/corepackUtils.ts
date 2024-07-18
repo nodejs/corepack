@@ -207,7 +207,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
     const corepackData = JSON.parse(corepackContent);
 
-    debugUtils.log(`Reusing ${locator.name}@${locator.reference}`);
+    debugUtils.log(`Reusing ${locator.name}@${locator.reference} found in ${installFolder}`);
 
     return {
       hash: corepackData.hash as string,
@@ -333,7 +333,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  debugUtils.log(`Install finished`);
+  debugUtils.log(`Download and install of ${locator.name}@${locator.reference} is finished`);
 
   return {
     location: installFolder,
