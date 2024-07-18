@@ -151,8 +151,8 @@ async function download(installTarget: string, url: string, algo: string, binPat
   let sendTo: any;
 
   if (ext === `.tgz`) {
-    const {default: tar} = await import(`tar`);
-    sendTo = tar.x({
+    const {extract: tarX} = await import(`tar/extract`);
+    sendTo = tarX({
       strip: 1,
       cwd: tmpFolder,
       filter: binPath ? path => {

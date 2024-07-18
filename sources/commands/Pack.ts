@@ -62,11 +62,11 @@ export class PackCommand extends BaseCommand {
       this.context.stdout.write(`Packing the selected tools in ${path.basename(outputPath)}...\n`);
     }
 
-    const {default: tar} = await import(`tar`);
+    const {create: tarC} = await import(`tar/create`);
 
     // Recreate the folder in case it was deleted somewhere else:
     await mkdir(baseInstallFolder, {recursive: true});
-    await tar.c({gzip: true, cwd: baseInstallFolder, file: path.resolve(outputPath)}, installLocations.map(location => {
+    await tarC({gzip: true, cwd: baseInstallFolder, file: path.resolve(outputPath)}, installLocations.map(location => {
       return path.relative(baseInstallFolder, location);
     }));
 
