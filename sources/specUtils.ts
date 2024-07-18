@@ -4,6 +4,7 @@ import path                                    from 'path';
 import semverValid                             from 'semver/functions/valid';
 
 import {PreparedPackageManagerInfo}            from './Engine';
+import * as debugUtils                         from './debugUtils';
 import {NodeError}                             from './nodeUtils';
 import * as nodeUtils                          from './nodeUtils';
 import {Descriptor, isSupportedPackageManager} from './types';
@@ -93,6 +94,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
+    debugUtils.log(`Checking ${manifestPath}`);
     let content: string;
     try {
       content = await fs.promises.readFile(manifestPath, `utf8`);
