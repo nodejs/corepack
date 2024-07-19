@@ -73,9 +73,9 @@ export async function fetchLatestStableVersion(packageName: string) {
 
   return `${version}+${
     integrity ?
-     `sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}`:
-     `sha1.${shasum}`
-    }`;
+      `sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}` :
+      `sha1.${shasum}`
+  }`;
 }
 
 export async function fetchAvailableTags(packageName: string) {
