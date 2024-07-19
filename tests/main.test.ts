@@ -887,6 +887,32 @@ it(`should download yarn berry from custom registry`, async () => {
   });
 });
 
+it(`should download latest pnpm from custom registry`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+    process.env.COREPACK_INTEGRITY_KEYS = `0`;
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+    });
+
+    await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm: Hello from custom registry\n`,
+      stderr: 
+        `! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing pnpm@1.9998.9999+sha1.d862ca5bedaa7d2328b8bde6ce2bac5141681f48.\n` +
+        `! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager\n`,
+    });
+
+    // Should keep working with cache
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
+
 for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`]) {
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
