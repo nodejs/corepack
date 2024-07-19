@@ -87,8 +87,7 @@ const registry = {
 function generateSignature(packageName, version) {
   if (privateKey == null) return undefined;
   const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
-  return {signatures: [{
-    integrity,
+  return {integrity, signatures: [{
     keyid,
     sig: sign.sign(privateKey, `base64`),
   }]};
