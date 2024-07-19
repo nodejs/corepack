@@ -901,7 +901,7 @@ it(`should download latest pnpm from custom registry`, async () => {
       stdout: `pnpm: Hello from custom registry\n`,
       stderr: 
         `! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing pnpm@1.9998.9999+sha1.d862ca5bedaa7d2328b8bde6ce2bac5141681f48.\n` +
-        `! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager\n`,
+        `! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager\n\n`,
     });
 
     // Should keep working with cache
