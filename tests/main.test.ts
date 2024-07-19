@@ -899,7 +899,7 @@ it(`should download latest pnpm from custom registry`, async () => {
     await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
-      stderr: /^! The local project doesn't define a 'packageManager' field\. Corepack will now add one referencing pnpm@1\.9998\.9999/,
+      stderr: /^! The local project doesn't define a 'packageManager' field\. Corepack will now add one referencing pnpm@1\.9998\.9999@sha1\./,
     });
 
     // Should keep working with cache
