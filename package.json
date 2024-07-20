@@ -32,7 +32,7 @@
     "esbuild": "^0.21.0",
     "eslint": "^8.57.0",
     "proxy-from-env": "^1.1.0",
-    "semver": "^7.5.2",
+    "semver": "^7.6.3",
     "supports-color": "^9.0.0",
     "tar": "^7.4.0",
     "tsx": "^4.16.2",
