@@ -62,7 +62,7 @@ export function verifySignature({signatures, integrity, packageName, version}: {
 export async function fetchLatestStableVersion(packageName: string) {
   const metadata = await fetchAsJson(packageName, `latest`);
 
-  const {version, dist: {integrity, signatures}} = metadata;
+  const {version, dist: {integrity, signatures, shasum}} = metadata;
 
   if (!shouldSkipIntegrityCheck()) {
     verifySignature({
@@ -71,7 +71,11 @@ export async function fetchLatestStableVersion(packageName: string) {
     });
   }
 
-  return `${version}+sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}`;
+  return `${version}+${
+    integrity ?
+      `sha512.${Buffer.from(integrity.slice(7), `base64`).toString(`hex`)}` :
+      `sha1.${shasum}`
+  }`;
 }
 
 export async function fetchAvailableTags(packageName: string) {

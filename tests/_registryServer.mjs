@@ -87,7 +87,7 @@ const registry = {
 function generateSignature(packageName, version) {
   if (privateKey == null) return undefined;
   const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
-  return {signatures: [{
+  return {integrity, signatures: [{
     keyid,
     sig: sign.sign(privateKey, `base64`),
   }]};
@@ -100,10 +100,8 @@ function generateVersionMetadata(packageName, version) {
       [packageName]: `./bin/${packageName}.js`,
     },
     dist: {
-      integrity,
       shasum,
       size: mockPackageTarGz.length,
-      noattachment: false,
       tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`,
       ...generateSignature(packageName, version),
     },
