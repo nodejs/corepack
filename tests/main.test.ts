@@ -33,14 +33,14 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
 it(`should refuse to download a known package manager from a URL`, async () => {
   await xfs.mktempPromise(async cwd => {
     // Package managers known by Corepack cannot be loaded from a URL.
-    await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz#sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
       stderr: /Illegal use of URL for known package manager/,
       stdout: ``,
     });
 
     // Unknown package managers can be loaded from a URL.
-    await expect(runCli(cwd, [`corepack@https://registry.npmjs.com/corepack/-/corepack-0.24.1.tgz`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`corepack@https://registry.npmjs.com/corepack/-/corepack-0.24.1.tgz#sha1.28afd079f6abd073dd4ccacfbb3494c728436c28`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `0.24.1\n`,
@@ -112,12 +112,12 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
   [`yarn`, `1.22.4`],
   [`yarn`, `1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`],
   [`yarn`, `1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`],
-  [`yarn`, `https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `1.22.21`],
+  // [`yarn`, `https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `1.22.21`],
   [`yarn`, `https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz#sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72`, `1.22.21`],
-  [`yarn`, `2.0.0-rc.30`],
+  // [`yarn`, `2.0.0-rc.30`],
   [`yarn`, `2.0.0-rc.30+sha1.4f0423b01bcb57f8e390b4e0f1990831f92dd1da`],
   [`yarn`, `2.0.0-rc.30+sha224.0e7a64468c358596db21c401ffeb11b6534fce7367afd3ae640eadf1`],
-  [`yarn`, `3.0.0-rc.2`],
+  // [`yarn`, `3.0.0-rc.2`],
   [`yarn`, `3.0.0-rc.2+sha1.694bdad81703169e203febd57f9dc97d3be867bd`],
   [`yarn`, `3.0.0-rc.2+sha224.f83f6d1cbfac10ba6b516a62ccd2a72ccd857aa6c514d1cd7185ec60`],
   [`pnpm`, `4.11.6`],
@@ -181,7 +181,7 @@ it(`should update the Known Good Release only when the major matches`, async () 
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -372,7 +372,7 @@ it(`should allow to call "corepack install -g" with a tag`, async () => {
 
 it(`should allow to call "corepack install -g" without any range`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`install`, `-g`, `yarn`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`install`, `-g`, `pnpm`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -381,7 +381,7 @@ it(`should allow to call "corepack install -g" without any range`, async () => {
       // empty package.json file
     });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
       stdout: expect.not.stringMatching(/^[123]\./),
       exitCode: 0,
     });
@@ -468,7 +468,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -487,12 +487,12 @@ describe(`read-only and offline environment`, () => {
 
       // Prepare fake project
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `yarn@2.2.2`,
+        packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
       });
 
       // $ corepack install
       await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
-        stdout: `Adding yarn@2.2.2 to the cache...\n`,
+        stdout: `Adding yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11 to the cache...\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -533,8 +533,8 @@ describe(`read-only and offline environment`, () => {
         exitCode: 0,
       });
 
-      await expect(runCli(installDir, [`install`, `--global`, `yarn@2.2.2`])).resolves.toMatchObject({
-        stdout: `Installing yarn@2.2.2...\n`,
+      await expect(runCli(installDir, [`install`, `--global`, `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`])).resolves.toMatchObject({
+        stdout: `Installing yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11...\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -559,7 +559,7 @@ describe(`read-only and offline environment`, () => {
 
 it(`should support hydrating package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`])).resolves.toMatchObject({
       stderr: ``,
       exitCode: 0,
     });
@@ -576,7 +576,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -589,7 +589,7 @@ it(`should support hydrating package managers from cached archives`, async () =>
 
 it(`should support hydrating package managers if cache folder was removed`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -622,7 +622,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`, `pnpm@5.8.0`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -639,7 +639,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -663,7 +663,7 @@ it(`should support hydrating multiple package managers from cached archives`, as
 it(`should support running package managers with bin array`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarnpkg`, `--version`])).resolves.toMatchObject({
@@ -683,7 +683,7 @@ it(`should support running package managers with bin array`, async () => {
 it(`should handle parallel installs`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(Promise.all([
@@ -815,7 +815,7 @@ it(`should show a warning on stderr before downloading when enable`, async() => 
   await xfs.mktempPromise(async cwd => {
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@3.0.0`,
+      packageManager: `yarn@3.0.0+sha1.e73e8b19d434b32a0fdfc1d1400aa43105284db9`,
     });
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
@@ -986,9 +986,9 @@ describe(`handle integrity checks`, () => {
           stderr: ``,
         }),
         expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `yarn: Hello from custom registry\n`,
-          stderr: ``,
+          exitCode: 1,
+          stdout: ``,
+          stderr: /Cannot validate download because the registry does not provide a signature/,
         }),
       ]);
 
@@ -1010,8 +1010,8 @@ describe(`handle integrity checks`, () => {
           stderr: ``,
         }),
         expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+          exitCode: 1,
+          stdout: /Cannot validate download because the registry does not provide a signature/,
           stderr: ``,
         }),
       ]);
@@ -1028,8 +1028,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`yarn@stable`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
         stdout: ``,
+        stderr: /Cannot validate download because the registry does not provide a signature/,
       });
     });
   });

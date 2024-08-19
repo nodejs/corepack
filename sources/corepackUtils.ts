@@ -292,6 +292,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
       // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
+    } else if (!shouldSkipIntegrityCheck()) {
+      throw new Error(`Cannot find a signature to validate the download. Please provide a hash.`);
     }
   }
   if (build[1] && actualHash !== build[1])
