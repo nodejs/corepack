@@ -14,7 +14,7 @@ describe(`UpCommand`, () => {
   it(`should upgrade the package manager from the current project`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-        packageManager: `yarn@2.1.0`,
+        packageManager: `pnpm@7.0.0`,
       });
 
       await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
@@ -23,12 +23,12 @@ describe(`UpCommand`, () => {
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
-        packageManager: `yarn@2.4.3+sha512.8dd9fedc5451829619e526c56f42609ad88ae4776d9d3f9456d578ac085115c0c2f0fb02bb7d57fd2e1b6e1ac96efba35e80a20a056668f61c96934f67694fd0`,
+        packageManager: `pnpm@7.33.7+sha512.7afe2410642b39c698df46da4ce5c7231a5cce360698d69f8cf8f42257d40b3e43f231053b07b8de849fd4ffbf4a71ff57b835137777a352388f3d3da747200e`,
       });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
-        stdout: `2.4.3\n`,
+        stdout: `7.33.7\n`,
       });
     });
   });
