@@ -855,7 +855,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -880,12 +880,12 @@ describe(`read-only and offline environment`, () => {
 
       // Prepare fake project
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `yarn@2.2.2`,
+        packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
       });
 
       // $ corepack install
       await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
-        stdout: `Adding yarn@2.2.2 to the cache...\n`,
+        stdout: `Adding yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11 to the cache...\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -1454,6 +1454,134 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
         stderr: ``,
+      });
+    });
+  });
+});
+
+describe(`unverified downloads`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+    process.env.COREPACK_INTEGRITY_KEYS = `0`;
+  });
+
+  it(`from env variable`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `error`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `ignore`;
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // No warning expected
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // Already cached, no warning expected
+      });
+    });
+  });
+
+  it(`from .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=ignore\n`);
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // No warning expected
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=warn\n`);
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // Already cached, no warning expected
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=warn\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+    });
+  });
+
+  it(`from env even if there's a .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+
+      // By default, Corepack should be using .corepack.env (or the built-in ones on Node.js 18.x) and fail.
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified`),
       });
     });
   });
