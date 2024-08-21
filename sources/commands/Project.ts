@@ -18,7 +18,7 @@ export class ProjectInstallCommand extends BaseCommand {
 
       Then, it will run the install command of the specified package manager. If no package manager is specified, it will default to NPM.
 
-      By default it will locate the install directory by running the equivalent of \`which corepack\`, but this can be tweaked by explicitly passing the install directory via the \`--install-directory\` flag.
+      Tt will locate the install directory by running the equivalent of \`which corepack\`.
     `,
     examples: [[
       `Enable all shims and install, putting shims next to the \`corepack\` binary`,
@@ -34,7 +34,7 @@ export class ProjectInstallCommand extends BaseCommand {
     if (!semverValid(descriptor.range) && !semverValidRange(descriptor.range))
       throw new UsageError(`The 'corepack project install' command can only be used when your project's packageManager field is set to a semver version or semver range`);
 
-    const resolved = await this.context.engine.resolveDescriptor(descriptor, {useCache: true});
+    const resolved = await this.context.engine.resolveDescriptor(descriptor);
     if (!resolved)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
