@@ -32,6 +32,10 @@ export abstract class BaseCommand extends Command<Context> {
       previousPackageManager,
     } = await specUtils.setLocalPackageManager(this.context.cwd, info);
 
+    await this.installLocalPackageManager(info, previousPackageManager);
+  }
+
+  async installLocalPackageManager(info: PreparedPackageManagerInfo, previousPackageManager?: string) {
     const command = this.context.engine.getPackageManagerSpecFor(info.locator).commands?.use ?? null;
     if (command === null)
       return 0;
