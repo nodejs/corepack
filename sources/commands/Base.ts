@@ -42,7 +42,9 @@ export abstract class BaseCommand extends Command<Context> {
 
     // Adding it into the environment avoids breaking package managers that
     // don't expect those options.
-    process.env.COREPACK_MIGRATE_FROM = previousPackageManager;
+    if (previousPackageManager)
+      process.env.COREPACK_MIGRATE_FROM = previousPackageManager;
+
     this.context.stdout.write(`\n`);
 
     const [binaryName, ...args] = command;
