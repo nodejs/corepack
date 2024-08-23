@@ -263,7 +263,7 @@ export class Engine {
           return fallbackDescriptor;
 
         case `NoSpec`: {
-          if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
+          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
               throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
@@ -275,9 +275,11 @@ export class Engine {
             console.error();
 
             await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+          } else {
+            debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManage" field in ${result.target}.`);
+            debugUtils.log(`It could be added for you automatically by setting the environment variable COREPACK_ENABLE_AUTO_PIN=1`);
+            debugUtils.log(`For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
           }
-
-          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManage" field in ${result.target}`);
           return fallbackDescriptor;
         }
 
