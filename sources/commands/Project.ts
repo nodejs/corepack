@@ -18,7 +18,7 @@ export class ProjectInstallCommand extends BaseCommand {
 
       Then, it will run the install command of the specified package manager. If no package manager is specified, it will default to NPM.
 
-      Tt will locate the install directory by running the equivalent of \`which corepack\`.
+      It will locate the install directory by running the equivalent of \`which corepack\`.
     `,
     examples: [[
       `Enable all shims and install, putting shims next to the \`corepack\` binary`,
