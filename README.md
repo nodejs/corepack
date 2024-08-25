@@ -230,6 +230,18 @@ version range, as it will always select the latest available version from the
 same major line. Should you need to upgrade to a new major, use an explicit
 `corepack use {name}@latest` call (or simply `corepack use {name}`).
 
+### `corepack project install`
+
+Installs the package manager used in the local project, and then uses it to
+install dependencies.
+
+This is roughly equivalent to running `corepack enable && npm install` for a
+project using npm, or `corepack enable && pnpm install` for project using pnpm
+and so on.
+
+It can be useful for writing scripts to run against arbitrary projects, when
+the package manager is not known in advance.
+
 ## Environment Variables
 
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
