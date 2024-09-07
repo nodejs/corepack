@@ -7,6 +7,10 @@ on:
 env:
   YARN_ENABLE_GLOBAL_CACHE: false
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
