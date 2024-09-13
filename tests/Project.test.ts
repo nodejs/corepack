@@ -15,7 +15,7 @@ describe(`ProjectCommand`, () => {
     it(`should install with npm`, async () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-          packageManager: `npm@10.8.2`,
+          packageManager: `npm@6.14.2`,
           dependencies: {
             ms: `2.1.3`,
           },
@@ -23,7 +23,7 @@ describe(`ProjectCommand`, () => {
 
         await expect(runCli(cwd, [`project`, `install`])).resolves.toMatchObject({
           exitCode: 0,
-          stderr: ``,
+          stderr: expect.stringContaining(`created a lockfile as package-lock.json`),
         });
 
         const dir = await xfs.readdirPromise(cwd);
@@ -35,7 +35,7 @@ describe(`ProjectCommand`, () => {
     it(`should install with pnpm`, async () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-          packageManager: `pnpm@9.4.0`,
+          packageManager: `pnpm@5.8.0`,
           dependencies: {
             ms: `2.1.3`,
           },
@@ -55,7 +55,7 @@ describe(`ProjectCommand`, () => {
     it(`should install with yarn`, async () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-          packageManager: `yarn@2.1.0`,
+          packageManager: `yarn@2.2.2`,
           dependencies: {
             ms: `2.1.3`,
           },
