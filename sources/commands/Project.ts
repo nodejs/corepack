@@ -16,7 +16,7 @@ export class ProjectInstallCommand extends BaseCommand {
     details: `
       When run, this command will check whether the shims for the specified package managers can be found with the correct values inside the install directory. If not, or if they don't exist, they will be created.
 
-      Then, it will run the install command of the specified package manager. If no package manager is specified, it will default to NPM.
+      Then, it will run the install command of the specified package manager. If no package manager is specified, it will default to npm.
 
       It will locate the install directory by running the equivalent of \`which corepack\`.
     `,
