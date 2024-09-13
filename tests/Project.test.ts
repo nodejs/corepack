@@ -16,6 +16,7 @@ describe(`ProjectCommand`, () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
           packageManager: `npm@6.14.2`,
+          license: `MIT`,
           dependencies: {
             ms: `2.1.3`,
           },
@@ -23,12 +24,13 @@ describe(`ProjectCommand`, () => {
 
         await expect(runCli(cwd, [`project`, `install`])).resolves.toMatchObject({
           exitCode: 0,
+          stdout: expect.stringMatching(/^(?!.*Error).*$/s),
           stderr: expect.stringContaining(`created a lockfile as package-lock.json`),
         });
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`package-lock.json`);
-        expect(dir).toContain(`node_modules`);
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
       });
     });
 
@@ -36,6 +38,7 @@ describe(`ProjectCommand`, () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
           packageManager: `pnpm@5.8.0`,
+          license: `MIT`,
           dependencies: {
             ms: `2.1.3`,
           },
@@ -43,19 +46,21 @@ describe(`ProjectCommand`, () => {
 
         await expect(runCli(cwd, [`project`, `install`])).resolves.toMatchObject({
           exitCode: 0,
+          stdout: expect.stringMatching(/^(?!.*Error).*$/s),
           stderr: ``,
         });
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`pnpm-lock.yaml`);
-        expect(dir).toContain(`node_modules`);
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
       });
     });
 
     it(`should install with yarn`, async () => {
       await xfs.mktempPromise(async cwd => {
         await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-          packageManager: `yarn@2.2.2`,
+          packageManager: `yarn@1.22.4`,
+          license: `MIT`,
           dependencies: {
             ms: `2.1.3`,
           },
@@ -63,12 +68,13 @@ describe(`ProjectCommand`, () => {
 
         await expect(runCli(cwd, [`project`, `install`])).resolves.toMatchObject({
           exitCode: 0,
+          stdout: expect.stringMatching(/^(?!.*Error).*$/s),
           stderr: ``,
         });
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`yarn.lock`);
-        expect(dir).toContain(`.pnp.js`);
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
       });
     });
   });
