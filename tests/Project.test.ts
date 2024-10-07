@@ -30,7 +30,7 @@ describe(`ProjectCommand`, () => {
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`package-lock.json`);
-        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true);
       });
     });
 
@@ -52,7 +52,7 @@ describe(`ProjectCommand`, () => {
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`pnpm-lock.yaml`);
-        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true);
       });
     });
 
@@ -74,7 +74,7 @@ describe(`ProjectCommand`, () => {
 
         const dir = await xfs.readdirPromise(cwd);
         expect(dir).toContain(`yarn.lock`);
-        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true)
+        expect(xfs.existsSync(ppath.join(cwd, `node_modules/ms/package.json`))).toBe(true);
       });
     });
   });
