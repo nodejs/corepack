@@ -405,9 +405,10 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
     // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
     // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
     // [SIGSEGV]
-    if (locator.name !== `npm` || semverLt(locator.reference, `9.7.0`))
+    if (locator.name !== `npm` || semverLt(locator.reference, `9.7.0`)) {
       // @ts-expect-error - No types
       await import(`v8-compile-cache`);
+    }
   }
 
   // We load the binary into the current process,
