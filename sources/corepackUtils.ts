@@ -400,12 +400,15 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
-  // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
-  // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
-  // [SIGSEGV]
-  if (locator.name !== `npm` || semverLt(locator.reference, `9.7.0`))
-    // @ts-expect-error - No types
-    await import(`v8-compile-cache`);
+  // @ts-expect-error - Missing types
+  if (!Module.enableCompileCache) {
+    // Node.js segfaults when using npm@>=9.7.0 and v8-compile-cache
+    // $ docker run -it node:20.3.0-slim corepack npm@9.7.1 --version
+    // [SIGSEGV]
+    if (locator.name !== `npm` || semverLt(locator.reference, `9.7.0`))
+      // @ts-expect-error - No types
+      await import(`v8-compile-cache`);
+  }
 
   // We load the binary into the current process,
   // while making it think it was spawned.
@@ -429,6 +432,12 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   // Use nextTick to unwind the stack, and consequently remove Corepack from
   // the stack trace of the package manager.
   process.nextTick(Module.runMain, binPath);
+
+  // @ts-expect-error - No types
+  if (Module.flushCompileCache) {
+    // @ts-expect-error - No types
+    setImmediate(Module.flushCompileCache);
+  }
 }
 
 export function shouldSkipIntegrityCheck() {

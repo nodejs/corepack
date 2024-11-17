@@ -22,6 +22,7 @@ async function main() {
   fs.writeFileSync(corepackPath, [
     `#!/usr/bin/env node`,
     `process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT??='0';`,
+    `require('module').enableCompileCache?.();`,
     `require('./lib/corepack.cjs').runMain(process.argv.slice(2));`,
   ].join(`\n`));
   fs.chmodSync(corepackPath, 0o755);
@@ -34,6 +35,7 @@ async function main() {
       const entryScript = [
         `#!/usr/bin/env node`,
         `process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT??='1'`,
+        `require('module').enableCompileCache?.();`,
         `require('./lib/corepack.cjs').runMain(['${binaryName}', ...process.argv.slice(2)]);`,
       ].join(`\n`);
 
