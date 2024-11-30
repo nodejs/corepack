@@ -9,6 +9,7 @@ import {EnableCommand}                 from './commands/Enable';
 import {InstallGlobalCommand}          from './commands/InstallGlobal';
 import {InstallLocalCommand}           from './commands/InstallLocal';
 import {PackCommand}                   from './commands/Pack';
+import {ProjectInstallCommand}         from './commands/Project';
 import {UpCommand}                     from './commands/Up';
 import {UseCommand}                    from './commands/Use';
 import {HydrateCommand}                from './commands/deprecated/Hydrate';
@@ -62,6 +63,7 @@ export async function runMain(argv: Array<string>) {
     cli.register(PackCommand);
     cli.register(UpCommand);
     cli.register(UseCommand);
+    cli.register(ProjectInstallCommand);
 
     // Deprecated commands
     cli.register(HydrateCommand);
