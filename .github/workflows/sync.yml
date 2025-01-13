@@ -6,15 +6,22 @@ on:
     # Run once a week at 00:05 UTC on Friday.
     - cron: 5 0 * * 5
 
+permissions:
+  contents: read
+
 jobs:
   fetch-latest-versions:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
+    env:
+      HEAD_BRANCH: actions/tools-update-config.json
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -47,13 +54,72 @@ jobs:
             },
           }" > config.json
 
-      - uses: gr2m/create-or-update-pull-request-action@77596e3166f328b24613f7082ab30bf2d93079d5 # v1.9.2
-        # Creates a PR or update the Action's existing PR, or
-        # no-op if the base branch is already up-to-date.
+      - name: Check if there have been changes
+        id: check-for-changes
+        run: |
+          if git fetch origin "$HEAD_BRANCH"; then
+            git diff --exit-code --quiet FETCH_HEAD config.json || echo "CONTAINS_CHANGES=true" >> "$GITHUB_OUTPUT"
+          else
+            git diff --exit-code --quiet HEAD config.json || echo "CONTAINS_CHANGES=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push changes
+        if: steps.check-for-changes.outputs.CONTAINS_CHANGES == 'true'
+        run: |
+          HEAD_SHA=
+          if git fetch origin "$HEAD_BRANCH"; then
+            HEAD_SHA="$(git rev-parse FETCH_HEAD)"
+          else
+            # The branch does not exist yet, creating it.
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/${GITHUB_REPOSITORY}/git/refs" \
+              -f "ref=refs/heads/$HEAD_BRANCH" -f "sha=$GITHUB_SHA"
+          fi
+          gh api graphql \
+            -F repo="$GITHUB_REPOSITORY" -F "branch=$HEAD_BRANCH" \
+            -F parentCommitSha="${HEAD_SHA:-$GITHUB_SHA}" \
+            -F commit_title="$COMMIT_MESSAGE" \
+            -F configChange[path]="config.json" \
+            -F configChange[contents]="$(base64 --wrap=0 config.json)" \
+            -f query='mutation ($repo: String! $branch: String!, $parentCommitSha: GitObjectID!, $configChange: FileAddition!, $commit_title: String!, $commit_body: String) {
+            createCommitOnBranch(input: {
+              branch: {
+                repositoryNameWithOwner: $repo,
+                branchName: $branch
+              },
+              message: {
+                headline: $commit_title,
+                body: $commit_body
+              },
+              expectedHeadOid: $parentCommitSha,
+              fileChanges: {
+                additions: [$configChange]
+              }
+            }) {
+              commit {
+                url
+              }
+            }
+          }'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          body: This is an automated update of package manager versions
-          branch: actions/tools-update-config.json
-          commit-message: "feat: update package manager versions"
-          title: "feat: update package manager versions"
+          COMMIT_MESSAGE: "feat: update package manager versions"
+
+      - name: Create PR if it does not exist
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${GITHUB_REPOSITORY}/pulls" \
+            -f "title=$TITLE" -f "body=$BODY" -f "head=$HEAD_BRANCH" -f "base=$BASE_BRANCH" \
+          > output.json || (<output.json jq 'if (.errors | any(.message | startswith("A pull request already exists"))) then "PR already exists, ignore error." else halt_error end')
+          cat output.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          BODY: This is an automated update of package manager versions
+          TITLE: "feat: update package manager versions"
