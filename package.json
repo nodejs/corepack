@@ -26,7 +26,7 @@
     "@yarnpkg/eslint-config": "^2.0.0",
     "@yarnpkg/fslib": "^3.0.0-rc.48",
     "@zkochan/cmd-shim": "^6.0.0",
-    "better-sqlite3": "^10.0.0",
+    "better-sqlite3": "^11.7.2",
     "clipanion": "patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch",
     "debug": "^4.1.1",
     "esbuild": "^0.21.0",
