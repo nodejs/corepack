@@ -18,7 +18,7 @@ New package managers can be added by editing the following files:
 - [`config.json`](./config.json),
 - [`.github/workflows/sync.yml`](./.github/workflows/sync.yml) that keeps pinned
   versions up-to-date,
-- [`package.json`](./package.json) to add to add the added shims to the list of
+- [`package.json`](./package.json) to add the new shims to the list of
   `"publishConfig/bin"` and `"executableFiles"`,
 - [`sources/types.ts`](./sources/types.ts) to add the package manager to the
   `SupportedPackageManagers` enum,
