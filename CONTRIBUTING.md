@@ -9,8 +9,7 @@ If you want to build Corepack yourself, you can build the project like this:
 
 The `dist/` directory now contains the corepack build and the shims.
 Call `node ./dist/corepack --help` and behold.
-
-You can also run the tests with `yarn test`. (Do not set the environment variable `DEBUG=corepack` when running tests. The additional debug logging causes tests to fail.)
+You can also run the tests with `yarn test`.
 
 # Adding a new package manager
 
