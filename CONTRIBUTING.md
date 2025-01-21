@@ -2,7 +2,7 @@
 
 If you want to build Corepack yourself, you can build the project like this:
 
-1. Clone this repository.
+1. Clone this repository. (See below [Contributing on Windows](#contributing-on-windows) if you plan to use Microsoft Windows.)
 2. Run `yarn install` (or `corepack yarn install` if the global version of
    `yarn` is not provided by Corepack).
 3. Run `yarn build` (or `corepack yarn build`).
@@ -10,6 +10,12 @@ If you want to build Corepack yourself, you can build the project like this:
 The `dist/` directory now contains the corepack build and the shims.
 Call `node ./dist/corepack --help` and behold.
 You can also run the tests with `yarn test`.
+
+## Contributing on Windows
+
+If you are cloning the repo to a directory on a Microsoft Windows operating system, it is recommended to use the same drive as your Windows `HOMEDRIVE` to avoid build and other issues related to a current restriction with Yarn Plug'n'Play caching.
+
+If you are unable to use your `HOMEDRIVE`, you may be able to work around the issue by setting the environment variable `YARN_ENABLE_GLOBAL_CACHE` to `false` before running `yarn install` (or `corepack yarn install`).
 
 # Adding a new package manager
 
