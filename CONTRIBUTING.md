@@ -2,7 +2,7 @@
 
 If you want to build Corepack yourself, you can build the project like this:
 
-1. Clone this repository. (See below [Contributing on Windows](#contributing-on-windows) if you plan to use Microsoft Windows.)
+1. Clone this repository. Some restrictions on the cloning location apply to Windows users, read [Contributing on Windows](#contributing-on-windows) for more information.
 2. Run `yarn install` (or `corepack yarn install` if the global version of
    `yarn` is not provided by Corepack).
 3. Run `yarn build` (or `corepack yarn build`).
