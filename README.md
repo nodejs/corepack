@@ -73,12 +73,12 @@ Set your package's manager with the `packageManager` field in `package.json`:
 
 ```json
 {
-  "packageManager": "yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa"
+  "packageManager": "yarn@3.2.3+sha512.f26f951f67de0c6a33ee381e5ff364709c87e70eb5e65c694e4facde3512f1fa80b8679e6ba31ce7d340fbb46f08dd683af9457e240f25a204be7427940d767e"
 }
 ```
 
 Here, `yarn` is the name of the package manager, specified at version `3.2.3`,
-along with the SHA-224 hash of this version for validation.
+along with the SHA-512 hash of this version for validation.
 `packageManager@x.y.z` is required. The hash is optional but strongly
 recommended as a security practice. Permitted values for the package manager are
 `yarn`, `npm`, and `pnpm`.
@@ -90,7 +90,7 @@ use in the archive).
 
 ```json
 {
-  "packageManager": "yarn@https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b"
+  "packageManager": "yarn@https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha512-UkZFwXikg0dWH0Tt6TmJCY8WyYWJe1nDuv2yg9gcGyydjuxQDhSHN9VwmI74J5Yy9ITcw4pOcosokb+Jg/s50A=="
 }
 ```
 
