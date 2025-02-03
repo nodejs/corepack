@@ -244,12 +244,16 @@ export class Engine {
    * project using the default package managers, and configure it so that we
    * don't need to ask again in the future.
    */
-  async findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+  async findProjectSpec(initialCwd: string, locatorName: string, getLocatorReference: () => Promise<string | undefined>, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
     // A locator is a valid descriptor (but not the other way around)
-    const fallbackDescriptor = {name: locator.name, range: `${locator.reference}`};
+    const getFallbackDescriptor: () => Promise<Descriptor> = async () => ({
+      name: locatorName,
+      range: `${await getLocatorReference()}`,
+    });
 
     if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
-      return fallbackDescriptor;
+      // Project spec is disabled. Always use the fallback descriptor
+      return await getFallbackDescriptor();
 
     if (process.env.COREPACK_ENABLE_STRICT === `0`)
       transparent = true;
@@ -258,11 +262,14 @@ export class Engine {
       const result = await specUtils.loadSpec(initialCwd);
 
       switch (result.type) {
-        case `NoProject`:
+        case `NoProject`: {
+          const fallbackDescriptor = await getFallbackDescriptor();
           debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} as no project manifest were found`);
           return fallbackDescriptor;
+        }
 
         case `NoSpec`: {
+          const fallbackDescriptor = await getFallbackDescriptor();
           if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
@@ -282,8 +289,9 @@ export class Engine {
         }
 
         case `Found`: {
-          if (result.spec.name !== locator.name) {
+          if (result.spec.name !== locatorName) {
             if (transparent) {
+              const fallbackDescriptor = await getFallbackDescriptor();
               debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${result.spec.name}@${result.spec.range} project`);
               return fallbackDescriptor;
             } else {
@@ -299,14 +307,14 @@ export class Engine {
   }
 
   async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
-    let fallbackLocator: Locator = {
+    const fallbackLocator: Locator = {
       name: binaryName as SupportedPackageManagers,
       reference: undefined as any,
     };
+    let fallbackName = binaryName;
 
     let isTransparentCommand = false;
     if (packageManager != null) {
-      const defaultVersion = binaryVersion || await this.getDefaultVersion(packageManager);
       const definition = this.config.definitions[packageManager]!;
 
       // If all leading segments match one of the patterns defined in the `transparent`
@@ -319,17 +327,24 @@ export class Engine {
         }
       }
 
-      const fallbackReference = isTransparentCommand
-        ? definition.transparent.default ?? defaultVersion
-        : defaultVersion;
-
-      fallbackLocator = {
-        name: packageManager,
-        reference: fallbackReference,
-      };
+      fallbackLocator.name = packageManager;
+      fallbackName = packageManager;
     }
 
-    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
+    const getFallbackReference = async () => {
+      if (packageManager != null) {
+        const defaultVersion = binaryVersion || await this.getDefaultVersion(packageManager);
+        const definition = this.config.definitions[packageManager]!;
+
+        return isTransparentCommand
+          ? definition.transparent.default ?? defaultVersion
+          : defaultVersion;
+      } else {
+        return undefined;
+      }
+    };
+
+    const descriptor = await this.findProjectSpec(cwd, fallbackName, getFallbackReference, {transparent: isTransparentCommand});
 
     if (binaryVersion)
       descriptor.range = binaryVersion;
