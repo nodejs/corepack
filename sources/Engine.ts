@@ -14,9 +14,9 @@ import * as folderUtils                                       from './folderUtil
 import type {NodeError}                                       from './nodeUtils';
 import * as semverUtils                                       from './semverUtils';
 import * as specUtils                                         from './specUtils';
-import {Config, Descriptor, Locator, PackageManagerSpec}      from './types';
+import {Config, Descriptor, LazyLocator, Locator}             from './types';
 import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
-import {isSupportedPackageManager}                            from './types';
+import {isSupportedPackageManager, PackageManagerSpec}        from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -161,6 +161,7 @@ export class Engine {
   async getDefaultDescriptors() {
     const locators: Array<Descriptor> = [];
 
+    debugUtils.log(`getLastKnownGood getDefaultVersion getDefaultDescriptors`);
     for (const name of SupportedPackageManagerSet as Set<SupportedPackageManagers>)
       locators.push({name, range: await this.getDefaultVersion(name)});
 
@@ -244,12 +245,16 @@ export class Engine {
    * project using the default package managers, and configure it so that we
    * don't need to ask again in the future.
    */
-  async findProjectSpec(initialCwd: string, locator: Locator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+  async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
     // A locator is a valid descriptor (but not the other way around)
     const fallbackDescriptor = {name: locator.name, range: `${locator.reference}`};
 
-    if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`)
+    if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`) {
+      if (typeof locator.reference === `function`)
+        fallbackDescriptor.range = await locator.reference();
+
       return fallbackDescriptor;
+    }
 
     if (process.env.COREPACK_ENABLE_STRICT === `0`)
       transparent = true;
@@ -258,11 +263,18 @@ export class Engine {
       const result = await specUtils.loadSpec(initialCwd);
 
       switch (result.type) {
-        case `NoProject`:
+        case `NoProject`: {
+          if (typeof locator.reference === `function`)
+            fallbackDescriptor.range = await locator.reference();
+
           debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} as no project manifest were found`);
           return fallbackDescriptor;
+        }
 
         case `NoSpec`: {
+          if (typeof locator.reference === `function`)
+            fallbackDescriptor.range = await locator.reference();
+
           if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
@@ -284,6 +296,9 @@ export class Engine {
         case `Found`: {
           if (result.spec.name !== locator.name) {
             if (transparent) {
+              if (typeof locator.reference === `function`)
+                fallbackDescriptor.range = await locator.reference();
+
               debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${result.spec.name}@${result.spec.range} project`);
               return fallbackDescriptor;
             } else {
@@ -299,14 +314,14 @@ export class Engine {
   }
 
   async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
-    let fallbackLocator: Locator = {
+    let fallbackLocator: Locator | LazyLocator = {
       name: binaryName as SupportedPackageManagers,
       reference: undefined as any,
     };
 
     let isTransparentCommand = false;
     if (packageManager != null) {
-      const defaultVersion = binaryVersion || await this.getDefaultVersion(packageManager);
+      const defaultVersion = binaryVersion || (() => this.getDefaultVersion(packageManager));
       const definition = this.config.definitions[packageManager]!;
 
       // If all leading segments match one of the patterns defined in the `transparent`
@@ -325,7 +340,7 @@ export class Engine {
 
       fallbackLocator = {
         name: packageManager,
-        reference: fallbackReference,
+        reference: fallbackReference as string,
       };
     }
 
