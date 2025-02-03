@@ -184,14 +184,8 @@ export class Engine {
       return definition.default;
     }
 
-    let reference;
-    try {
-      reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
-      debugUtils.log(`Search for default version: found in remote registry ${packageManager}@${reference}`);
-    } catch {
-      debugUtils.log(`Search for default version: failed to fetch from remote registry. defaulting to internal config${packageManager}@${definition.default}`);
-      return definition.default;
-    }
+    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
+    debugUtils.log(`Search for default version: found in remote registry ${packageManager}@${reference}`);
 
     try {
       await activatePackageManager(lastKnownGood, {
