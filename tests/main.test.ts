@@ -120,12 +120,9 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
   [`yarn`, `3.0.0-rc.2`],
   [`yarn`, `3.0.0-rc.2+sha1.694bdad81703169e203febd57f9dc97d3be867bd`],
   [`yarn`, `3.0.0-rc.2+sha224.f83f6d1cbfac10ba6b516a62ccd2a72ccd857aa6c514d1cd7185ec60`],
-  [`pnpm`, `4.11.6`],
-  [`pnpm`, `4.11.6+sha1.7cffc04295f4db4740225c6c37cc345eb923c06a`],
-  [`pnpm`, `4.11.6+sha224.7783c4b01916b7a69e6ff05d328df6f83cb7f127e9c96be88739386d`],
-  [`pnpm`, `6.6.2`],
-  [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
-  [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
+  [`pnpm`, `8.15.9`],
+  [`pnpm`, `9.15.4`],
+  [`pnpm`, `10.1.0`],
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
@@ -622,7 +619,7 @@ it(`should support hydrating package managers if cache folder was removed`, asyn
 
 it(`should support hydrating multiple package managers from cached archives`, async () => {
   await xfs.mktempPromise(async cwd => {
-    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@5.8.0`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pack`, `yarn@2.2.2`, `pnpm@8.15.9`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
     });
@@ -649,11 +646,11 @@ it(`should support hydrating multiple package managers from cached archives`, as
     });
 
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `pnpm@5.8.0`,
+      packageManager: `pnpm@8.15.9`,
     });
 
     await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-      stdout: `5.8.0\n`,
+      stdout: `8.15.9\n`,
       stderr: ``,
       exitCode: 0,
     });
