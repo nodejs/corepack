@@ -161,7 +161,6 @@ export class Engine {
   async getDefaultDescriptors() {
     const locators: Array<Descriptor> = [];
 
-    debugUtils.log(`getLastKnownGood getDefaultVersion getDefaultDescriptors`);
     for (const name of SupportedPackageManagerSet as Set<SupportedPackageManagers>)
       locators.push({name, range: await this.getDefaultVersion(name)});
 
