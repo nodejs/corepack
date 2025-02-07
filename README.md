@@ -41,6 +41,20 @@ is distributed along with Node.js itself.
 
 </details>
 
+<details><summary>Update Corepack using npm</summary>
+
+To install the latest version of Corepack, use:
+
+```shell
+npm install -g corepack@latest
+```
+
+If you are a Windows user and you [downloaded and installed Node.js](https://nodejs.org/en/download) using a Windows Installer `.msi` package then you need to disable the "corepack manager" feature of the Node.js `.msi` package by selecting "Entire feature will be unavailable" before attempting to install a different version of Corepack using npm.
+You can select the Modify option of the Node.js app settings to access the Windows Installer feature selection.
+(See [Repair apps and programs in Windows](https://support.microsoft.com/en-au/windows/repair-apps-and-programs-in-windows-e90eefe4-d0a2-7c1b-dd59-949a9030f317) for instructions on accessing the Windows apps page to modify settings.)
+
+</details>
+
 <details><summary>Install Corepack from source</summary>
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
