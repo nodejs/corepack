@@ -145,3 +145,5 @@ export interface Locator {
      */
   reference: string;
 }
+
+export type LocalEnvFile = Record<string, string | undefined>;

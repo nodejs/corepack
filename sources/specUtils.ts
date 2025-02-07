@@ -1,13 +1,16 @@
-import {UsageError}                            from 'clipanion';
-import fs                                      from 'fs';
-import path                                    from 'path';
-import semverValid                             from 'semver/functions/valid';
+import {UsageError}                      from 'clipanion';
+import fs                                from 'fs';
+import path                              from 'path';
+import semverSatisfies                   from 'semver/functions/satisfies';
+import semverValid                       from 'semver/functions/valid';
+import {parseEnv}                        from 'util';
 
-import {PreparedPackageManagerInfo}            from './Engine';
-import * as debugUtils                         from './debugUtils';
-import {NodeError}                             from './nodeUtils';
-import * as nodeUtils                          from './nodeUtils';
-import {Descriptor, isSupportedPackageManager} from './types';
+import type {PreparedPackageManagerInfo} from './Engine';
+import * as debugUtils                   from './debugUtils';
+import type {NodeError}                  from './nodeUtils';
+import * as nodeUtils                    from './nodeUtils';
+import {isSupportedPackageManager}       from './types';
+import type {LocalEnvFile, Descriptor}   from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
@@ -52,30 +55,98 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   };
 }
 
+type CorepackPackageJSON = {
+  packageManager?: string;
+  devEngines?: { packageManager?: DevEngineDependency };
+};
+
+interface DevEngineDependency {
+  name: string;
+  version: string;
+}
+function parsePackageJSON(packageJSONContent: CorepackPackageJSON, localEnv?: LocalEnvFile) {
+  if (packageJSONContent.devEngines?.packageManager) {
+    const {packageManager} = packageJSONContent.devEngines;
+
+    if (Array.isArray(packageManager))
+      throw new UsageError(`Providing several package managers is currently not supported`);
+
+    let {version} = packageManager;
+    if (!version)
+      throw new UsageError(`Providing no version nor ranger for package manager is currently not supported`);
+
+    debugUtils.log(`devEngines defines that ${packageManager.name}@${version} is the local package manager`);
+
+    const localEnvKey = `COREPACK_DEV_ENGINES_${packageManager.name.toUpperCase()}`;
+    const localEnvVersion = localEnv?.[localEnvKey];
+    if (localEnvVersion) {
+      if (!semverSatisfies(localEnvVersion, version))
+        throw new UsageError(`Local env key ${localEnvKey} defines a value of ${localEnvVersion} which does not match the version defined in package.json devEngines.packageManager of ${version}`);
+
+      debugUtils.log(`Using ${localEnvVersion} from the environment as it matches ${version} defined in project manifest`);
+      version = localEnvVersion;
+    } else {
+      const {packageManager: pm} = packageJSONContent;
+      if (pm) {
+        if (!pm.startsWith(`${packageManager.name}@`))
+          throw new UsageError(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(packageManager.name)}`);
+
+        if (!semverSatisfies(pm.slice(packageManager.name.length + 1), version))
+          throw new UsageError(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(packageManager.name)} of ${JSON.stringify(version)}`);
+
+        return pm;
+      }
+    }
+
+
+    return `${packageManager.name}@${version}`;
+  }
+
+  return packageJSONContent.packageManager;
+}
+
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
   const lookup = await loadSpec(cwd);
 
   const content = lookup.type !== `NoProject`
-    ? await fs.promises.readFile(lookup.target, `utf8`)
+    ? await fs.promises.readFile((lookup as FoundSpecResult).envFilePath ?? lookup.target, `utf8`)
     : ``;
 
-  const {data, indent} = nodeUtils.readPackageJson(content);
+  let previousPackageManager: string;
+  let newContent: string;
+  if ((lookup as FoundSpecResult).envFilePath) {
+    const envKey = `COREPACK_DEV_ENGINES_${(lookup as FoundSpecResult).spec.name.toUpperCase()}`;
+    const index = content.lastIndexOf(`\n${envKey}=`) + 1;
 
-  const previousPackageManager = data.packageManager ?? `unknown`;
-  data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+    if (index === 0 && !content.startsWith(`${envKey}=`))
+      throw new Error(`INTERNAL ASSERTION ERROR: missing expected ${envKey} in .corepack.env`);
 
-  const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
-  await fs.promises.writeFile(lookup.target, newContent, `utf8`);
+    const lineEndIndex = content.indexOf(`\n`, index);
+
+    previousPackageManager = content.slice(index, lineEndIndex === -1 ? undefined : lineEndIndex);
+    newContent = `${content.slice(0, index)}\n${envKey}=${info.locator.reference}\n${lineEndIndex === -1 ? `` : content.slice(lineEndIndex)}`;
+  } else {
+    const {data, indent} = nodeUtils.readPackageJson(content);
+
+    previousPackageManager = data.packageManager ?? `unknown`;
+    data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+
+    newContent = `${JSON.stringify(data, null, indent)}\n`;
+  }
+
+  newContent = nodeUtils.normalizeLineEndings(content, newContent);
+  await fs.promises.writeFile((lookup as FoundSpecResult).envFilePath ?? lookup.target, newContent, `utf8`);
 
   return {
     previousPackageManager,
   };
 }
 
+type FoundSpecResult = {type: `Found`, target: string, spec: Descriptor, envFilePath?: string};
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, spec: Descriptor};
+    | FoundSpecResult;
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -84,6 +155,8 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let selection: {
     data: any;
     manifestPath: string;
+    envFilePath?: string;
+    localEnv: LocalEnvFile;
   } | null = null;
 
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
@@ -111,19 +184,50 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     if (typeof data !== `object` || data === null)
       throw new UsageError(`Invalid package.json in ${path.relative(initialCwd, manifestPath)}`);
 
-    selection = {data, manifestPath};
+    let localEnv: LocalEnvFile;
+    const envFilePath = path.resolve(currCwd, process.env.COREPACK_ENV_FILE ?? `.corepack.env`);
+    if (process.env.COREPACK_ENV_FILE == `0`) {
+      debugUtils.log(`Skipping env file as configured with COREPACK_ENV_FILE`);
+      localEnv = process.env;
+    } else {
+      debugUtils.log(`Checking ${envFilePath}`);
+      try {
+        localEnv = {
+          ...Object.fromEntries(Object.entries(parseEnv(await fs.promises.readFile(envFilePath, `utf8`))).filter(e => e[0].startsWith(`COREPACK_`))),
+          ...process.env,
+        };
+        debugUtils.log(`Successfully loaded env file found at ${envFilePath}`);
+      } catch (err) {
+        if ((err as NodeError)?.code !== `ENOENT`)
+          throw err;
+
+        debugUtils.log(`No env file found at ${envFilePath}`);
+        localEnv = process.env;
+      }
+    }
+
+    selection = {data, manifestPath, localEnv, envFilePath};
   }
 
   if (selection === null)
     return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
 
-  const rawPmSpec = selection.data.packageManager;
+  const rawPmSpec = parsePackageJSON(selection.data, selection.localEnv);
   if (typeof rawPmSpec === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath};
+
+  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
+
+  let envFilePath: string | undefined;
+  if (selection.localEnv !== process.env) {
+    envFilePath = selection.envFilePath;
+    process.env = selection.localEnv;
+  }
 
   return {
     type: `Found`,
     target: selection.manifestPath,
+    envFilePath,
     spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
   };
 }
