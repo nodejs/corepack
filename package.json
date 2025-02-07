@@ -29,18 +29,18 @@
     "better-sqlite3": "^11.7.2",
     "clipanion": "patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch",
     "debug": "^4.1.1",
-    "esbuild": "^0.21.0",
+    "esbuild": "^0.24.2",
     "eslint": "^8.57.0",
     "proxy-from-env": "^1.1.0",
     "semver": "^7.6.3",
-    "supports-color": "^9.0.0",
+    "supports-color": "^10.0.0",
     "tar": "^7.4.0",
     "tsx": "^4.16.2",
     "typescript": "^5.7.3",
     "undici": "^6.19.2",
     "v8-compile-cache": "^2.3.0",
-    "vitest": "^2.0.3",
-    "which": "^4.0.0"
+    "vitest": "^3.0.5",
+    "which": "^5.0.0"
   },
   "resolutions": {
     "undici-types": "6.x"
