@@ -293,8 +293,8 @@ same major line. Should you need to upgrade to a new major, use an explicit
   environment variables are required and as plain text. If you want to send an
   empty password, explicitly set `COREPACK_NPM_PASSWORD` to an empty string.
 
-- `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through
-  [`node-proxy-agent`](https://github.com/TooTallNate/node-proxy-agent).
+- `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through Undici's
+  [`EnvHttpProxyAgent`](https://undici.nodejs.org/#/docs/api/EnvHttpProxyAgent.md).
 
 - `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
   instruct Corepack to skip integrity checks, or to a JSON string containing
