@@ -906,6 +906,144 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+  });
+
+  it(`from env variable`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env even if there's a .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = ``;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`should ignore .corepack.env file if COREPACK_ENV_FILE is set to 0`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      process.env.COREPACK_ENV_FILE = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      delete process.env.COREPACK_ENV_FILE;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+    process.env.COREPACK_ENV_FILE = `.other.env`;
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+});
+
 for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`]) {
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
