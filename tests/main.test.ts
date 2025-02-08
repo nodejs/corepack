@@ -932,7 +932,10 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
     });
   });
 
-  it(`from .corepack.env file`, async () => {
+  it(`from .corepack.env file`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       });
@@ -952,7 +955,10 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
     });
   });
 
-  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       });
@@ -983,7 +989,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
 
       await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
 
-      // By default, Corepack should be using .corepack.env and fail.
+      // By default, Corepack should be using .corepack.env (or the built-in ones on Node.js 18.x) and fail.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
         stdout: ``,
@@ -999,7 +1005,10 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
     });
   });
 
-  it(`should ignore .corepack.env file if COREPACK_ENV_FILE is set to 0`, async () => {
+  it(`should ignore .corepack.env file if COREPACK_ENV_FILE is set to 0`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       });
@@ -1022,7 +1031,10 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
     });
   });
 
-  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
     process.env.COREPACK_ENV_FILE = `.other.env`;
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
