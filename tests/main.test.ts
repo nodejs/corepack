@@ -497,15 +497,10 @@ describe(`read-only and offline environment`, () => {
         exitCode: 0,
       });
 
-      // Let corepack discover the latest yarn version.
-      // BUG: This should not be necessary with a fully specified version in package.json plus populated corepack cache.
-      // Engine.executePackageManagerRequest needs to defer the fallback work. This requires a big refactoring.
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        exitCode: 0,
-      });
-
       // Make COREPACK_HOME ro
       const home = npath.toPortablePath(folderUtils.getCorepackHomeFolder());
+      // Make a lastKnownGood.json file with not JSON-parsable content:
+      await xfs.writeFilePromise(ppath.join(home, `lastKnownGood.json`), `{`);
       await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o444);
       await xfs.chmodPromise(home, 0o555);
 
@@ -967,54 +962,63 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
 describe(`handle integrity checks`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
-    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
   });
 
-  it(`should return no error when signature matches`, async () => {
-    process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+  describe(`when signature matches`, () => {
+    beforeEach(() => {
+      process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+    });
 
-    await xfs.mktempPromise(async cwd => {
-      await Promise.all([
-        expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `pnpm: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `yarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `yarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-      ]);
-
+    it(`should return no error when calling 'corepack use'`, async () => {
+      await xfs.mktempPromise(async cwd => {
       // Skip rest of the test on Windows & Node.js 18.x as it inevitably times out otherwise.
-      if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
+        if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
 
-      // Removing home directory to force the "re-download"
-      await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
+        // Removing home directory to force the "re-download"
+        await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
 
-      await Promise.all([
-        expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-      ]);
+        await Promise.all([
+          expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+        ]);
+      });
+    });
+
+
+    it(`should return no error when fetching latest version`, async () => {
+      process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+      await xfs.mktempPromise(async cwd => {
+        await Promise.all([
+          expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `pnpm: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `yarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `yarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+        ]);
+      });
     });
   });
   it(`should return an error when signature does not match with a tag`, async () => {

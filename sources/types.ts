@@ -145,3 +145,18 @@ export interface Locator {
      */
   reference: string;
 }
+
+/**
+ *
+ */
+export interface LazyLocator {
+  /**
+     * The name of the package manager required.
+     */
+  name: string;
+
+  /**
+     * The exact version required.
+     */
+  reference: () => Promise<string>;
+}
