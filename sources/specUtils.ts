@@ -71,7 +71,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 
     const {version} = packageManager;
     if (!version)
-      throw new UsageError(`Providing no version nor ranger for package manager is currently not supported`);
+      throw new UsageError(`Package manager version or version range is required`);
 
     debugUtils.log(`devEngines defines that ${packageManager.name}@${version} is the local package manager`);
 
