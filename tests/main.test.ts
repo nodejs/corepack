@@ -258,6 +258,95 @@ it(`should ignore the packageManager field when found within a node_modules vend
   });
 });
 
+describe(`should handle invalid devEngines values`, () => {
+  it(`throw on missing version`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Version or version range is required in packageManager.devEngines.version`),
+        stdout: ``,
+      });
+    });
+  });
+  it(`throw on invalid version`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            version: `yarn@1.x`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Version or version range is required in packageManager.devEngines.version`),
+        stdout: ``,
+      });
+    });
+  });
+  it(`warn on array values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: [{
+            name: `pnpm`,
+            version: `10.x`,
+          },
+          ]},
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack does not currently support array values for devEngines.packageManager\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+  it(`warn on string values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: `pnpm@10.x`,
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack only supports objects as valid value for devEngines.packageManager. The current value ("pnpm@10.x") will be ignored.\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+  it(`warn on number values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: 10,
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack only supports objects as valid value for devEngines.packageManager. The current value (10) will be ignored.\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+});
+
 it(`should use hash from "packageManager" even when "devEngines" defines a different one`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {

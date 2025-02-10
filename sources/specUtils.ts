@@ -3,6 +3,7 @@ import fs                                      from 'fs';
 import path                                    from 'path';
 import semverSatisfies                         from 'semver/functions/satisfies';
 import semverValid                             from 'semver/functions/valid';
+import semverValidRange                        from 'semver/ranges/valid';
 
 import {PreparedPackageManagerInfo}            from './Engine';
 import * as debugUtils                         from './debugUtils';
@@ -63,17 +64,21 @@ interface DevEngineDependency {
   version: string;
 }
 function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
-  if (packageJSONContent.devEngines?.packageManager) {
+  if (packageJSONContent.devEngines?.packageManager != null) {
     const {packageManager} = packageJSONContent.devEngines;
 
+    if (typeof packageManager !== `object`) {
+      console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
+      return packageJSONContent.packageManager;
+    }
     if (Array.isArray(packageManager)) {
-      console.warn(`! Corepack does not currently supported array values for devEngines.packageManager`);
+      console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
       return packageJSONContent.packageManager;
     }
 
     const {version} = packageManager;
-    if (!version)
-      throw new UsageError(`Package manager version or version range is required`);
+    if (!version || !semverValidRange(version))
+      throw new UsageError(`Version or version range is required in packageManager.devEngines.version`);
 
     debugUtils.log(`devEngines.packageManager defines that ${packageManager.name}@${version} is the local package manager`);
 
