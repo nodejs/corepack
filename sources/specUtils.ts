@@ -66,14 +66,16 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
   if (packageJSONContent.devEngines?.packageManager) {
     const {packageManager} = packageJSONContent.devEngines;
 
-    if (Array.isArray(packageManager))
-      throw new UsageError(`Providing several package managers is currently not supported`);
+    if (Array.isArray(packageManager)) {
+      console.warn(`! Corepack does not currently supported array values for devEngines.packageManager`);
+      return packageJSONContent.packageManager;
+    }
 
     const {version} = packageManager;
     if (!version)
       throw new UsageError(`Package manager version or version range is required`);
 
-    debugUtils.log(`devEngines defines that ${packageManager.name}@${version} is the local package manager`);
+    debugUtils.log(`devEngines.packageManager defines that ${packageManager.name}@${version} is the local package manager`);
 
     const {packageManager: pm} = packageJSONContent;
     if (pm) {
