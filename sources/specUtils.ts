@@ -121,6 +121,10 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     if (process.env.COREPACK_ENV_FILE == `0`) {
       debugUtils.log(`Skipping env file as configured with COREPACK_ENV_FILE`);
       localEnv = process.env;
+    } else if (typeof parseEnv !== `function`) {
+      // TODO: remove this block when support for Node.js 18.x is dropped.
+      debugUtils.log(`Skipping env file as it is not supported by the current version of Node.js`);
+      localEnv = process.env;
     } else {
       debugUtils.log(`Checking ${envFilePath}`);
       try {
