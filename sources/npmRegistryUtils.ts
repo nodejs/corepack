@@ -38,6 +38,8 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   packageName: string;
   version: string;
 }) {
+  if (signatures == null) throw new Error(`No compatible signature found in package metadata`);
+
   const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
     JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
     defaultConfig.keys;
@@ -65,10 +67,14 @@ export async function fetchLatestStableVersion(packageName: string) {
   const {version, dist: {integrity, signatures, shasum}} = metadata;
 
   if (!shouldSkipIntegrityCheck()) {
-    verifySignature({
-      packageName, version,
-      integrity, signatures,
-    });
+    try {
+      verifySignature({
+        packageName, version,
+        integrity, signatures,
+      });
+    } catch (cause: NodeError | any) {
+      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_CHECK to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_USE_LATEST to 0`, {cause});
+    }
   }
 
   return `${version}+${
