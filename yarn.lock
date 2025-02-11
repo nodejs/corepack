@@ -1350,12 +1350,12 @@ __metadata:
 
 "clipanion@patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch":
   version: 3.2.1
-  resolution: "clipanion@patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch::version=3.2.1&hash=cd5507"
+  resolution: "clipanion@patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch::version=3.2.1&hash=687f75"
   dependencies:
     typanion: "npm:^3.8.0"
   peerDependencies:
     typanion: "*"
-  checksum: 10c0/a833a309638d9d07eaa1e4729653944f06998ce9295bc7db5ddbffc136050e41397c4f04c25a5bdc9305ac540f5c7323b7b113a4d1da134c9c552fb3206355f6
+  checksum: 10c0/0acf7ca40c196b76b166ebb0dc7504980567cb12e5d81343d53e3e9a7e13ae24b93f338cd560114984b468b9a2b989ccabdc5247813eeb293b8757df8854d836
   languageName: node
   linkType: hard
 

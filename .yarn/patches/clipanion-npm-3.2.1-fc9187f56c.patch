@@ -1,10 +1,13 @@
-diff --git a/lib/platform/package.json b/lib/platform/package.json
-index 5ea9d43740d1bdb509612376c0e9ce91d20f8b20..08d4f7327dee5e605107a343d73b2254ed08ddb9 100644
---- a/lib/platform/package.json
-+++ b/lib/platform/package.json
-@@ -1,4 +1,4 @@
- {
--    "main": "./node",
-+    "main": "./node.js",
-     "browser": "./browser"
- }
+diff --git a/package.json b/package.json
+index cbf943bcc31a864f2771e457d327e5106eba9afe..84cb1ce28a4eea4dba60bb4fa6c33a08474b2d3f 100644
+--- a/package.json
++++ b/package.json
+@@ -13,7 +13,7 @@
+     "command"
+   ],
+   "version": "3.2.1",
+-  "main": "lib/advanced/index",
++  "main": "lib/advanced/index.js",
+   "license": "MIT",
+   "sideEffects": false,
+   "repository": {
