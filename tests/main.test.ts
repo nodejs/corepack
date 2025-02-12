@@ -172,7 +172,11 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
         devEngines: {packageManager: {name, version}},
       });
 
-      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject(URL.canParse(version) ? {
+        exitCode: 1,
+        stderr: `Version or version range is required in packageManager.devEngines.version\n`,
+        stdout: ``,
+      } : {
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,
