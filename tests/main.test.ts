@@ -318,18 +318,72 @@ for (const name of SupportedPackageManagerSet) {
   });
 }
 
-it(`should configure the project when calling a package manager on it for the first time`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+describe.only(`when called on a project without any defined packageManager`, () => {
+  it(`should append the field to package.json by default`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
+      });
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
+  });
 
-    await runCli(cwd, [`yarn`]);
+  it(`should not modify package.json if disabled by env`, async () => {
+    process.env.COREPACK_ENABLE_AUTO_PIN = `0`;
 
-    const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+      });
 
-    expect(data).toMatchObject({
-      packageManager: `yarn@${config.definitions.yarn.default}`,
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+
+  it(`should not modify package.json if disabled by .corepack.env`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+  it(`should modify package.json if .corepack.env if disabled`, async () => {
+    process.env.COREPACK_ENV_FILE = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
   });
 });
