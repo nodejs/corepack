@@ -318,7 +318,7 @@ for (const name of SupportedPackageManagerSet) {
   });
 }
 
-describe.only(`when called on a project without any defined packageManager`, () => {
+describe(`when called on a project without any defined packageManager`, () => {
   it(`should append the field to package.json by default`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
