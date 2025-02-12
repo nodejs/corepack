@@ -1021,7 +1021,7 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
-  it(`should return an error when signature does not match with a tag`, async () => {
+  it(`should return an error when signature does not match with a range`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
@@ -1030,6 +1030,12 @@ describe(`handle integrity checks`, () => {
         stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
+    });
+  });
+  it(`should return an error when signature does not match with a tag`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@latest`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
         stderr: expect.stringContaining(`Signature does not match`),
