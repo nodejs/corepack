@@ -223,7 +223,7 @@ switch (process.env.AUTH_TYPE) {
   default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
 }
 
-if (process.env.NOCK_ENV === `replay`) {
+if (process.env.NOCK_ENV !== `record`) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = function fetch(i) {
     if (!`${i}`.startsWith(
