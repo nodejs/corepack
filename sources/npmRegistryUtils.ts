@@ -45,9 +45,9 @@ export function verifySignature({signatures, integrity, packageName, version}: {
     defaultConfig.keys;
 
   const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
-  const signature = signatures.find(({keyid}) => keyid === key?.keyid);
+  if (key == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
 
-  if (key == null || signature == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
+  const signature = signatures.find(({keyid}) => keyid === key.keyid)!;
 
   const verifier = createVerify(`SHA256`);
   verifier.end(`${packageName}@${version}:${integrity}`);
