@@ -1,5 +1,4 @@
 import {BaseContext, Builtins, Cli}    from 'clipanion';
-import type {UsageError}               from 'clipanion';
 
 import {version as corepackVersion}    from '../package.json';
 
@@ -85,7 +84,7 @@ export async function runMain(argv: Array<string>) {
         cwd: process.cwd(),
         args: restArgs,
       });
-    } catch (error: UsageError | any) {
+    } catch (error: any) {
       if (error?.name === `UsageError`) {
         console.error(error.message);
         process.exit(1);
