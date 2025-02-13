@@ -38,6 +38,10 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, engine: 
   };
 }
 
+function isUsageError(error: any): error is UsageError {
+  return error.name === `UsageError`;
+}
+
 export async function runMain(argv: Array<string>) {
   const engine = new Engine();
 
@@ -85,8 +89,8 @@ export async function runMain(argv: Array<string>) {
         cwd: process.cwd(),
         args: restArgs,
       });
-    } catch (error: UsageError | any) {
-      if (error?.name === `UsageError`) {
+    } catch (error) {
+      if (isUsageError(error)) {
         console.error(error.message);
         process.exit(1);
       }
