@@ -39,7 +39,7 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, engine: 
 }
 
 function isUsageError(error: any): error is UsageError {
-  return error.name === `UsageError`;
+  return error?.name === `UsageError`;
 }
 
 export async function runMain(argv: Array<string>) {
