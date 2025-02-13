@@ -48,12 +48,12 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   let key!: string;
   for (const k of trustedKeys) {
     signature = signatures.find(({keyid}) => keyid === k.keyid);
-    if (signature) {
+    if (signature != null) {
       key = k.key;
       break;
     }
   }
-  if (signature == null) throw new Error(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys})}`);
+  if (signature?.sig == null) throw new Error(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys})}`);
 
   const verifier = createVerify(`SHA256`);
   verifier.end(`${packageName}@${version}:${integrity}`);
