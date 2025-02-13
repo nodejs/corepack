@@ -38,21 +38,27 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   packageName: string;
   version: string;
 }) {
-  if (signatures == null) throw new Error(`No compatible signature found in package metadata`);
+  if (!Array.isArray(signatures) || !signatures?.length) throw new Error(`No compatible signature found in package metadata`);
 
-  const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
+  const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
     JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
     defaultConfig.keys;
 
-  const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
-  if (key == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
-
-  const signature = signatures.find(({keyid}) => keyid === key.keyid)!;
+  let signature: typeof signatures[0] | undefined;
+  let key!: string;
+  for (const k of trustedKeys) {
+    signature = signatures.find(({keyid}) => keyid === k.keyid);
+    if (signature) {
+      key = k.key;
+      break;
+    }
+  }
+  if (signature == null) throw new Error(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys})}`);
 
   const verifier = createVerify(`SHA256`);
   verifier.end(`${packageName}@${version}:${integrity}`);
   const valid = verifier.verify(
-    `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+    `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`,
     signature.sig,
     `base64`,
   );
