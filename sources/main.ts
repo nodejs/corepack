@@ -1,4 +1,5 @@
 import {BaseContext, Builtins, Cli}    from 'clipanion';
+import type {UsageError}               from 'clipanion';
 
 import {version as corepackVersion}    from '../package.json';
 
