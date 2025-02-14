@@ -39,7 +39,7 @@ jobs:
         run: corepack yarn typecheck
 
       - name: "Check for linting errors"
-        run: corepack yarn lint
+        run: corepack yarn lint --max-warnings=0
 
   build-and-test:
     strategy:
