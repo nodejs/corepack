@@ -24,7 +24,7 @@ it(`should refuse to download a package manager if the hash doesn't match`, asyn
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /Mismatch hashes/,
+      stderr: expect.stringContaining(`Mismatch hashes`),
       stdout: ``,
     });
   });
@@ -35,7 +35,7 @@ it(`should refuse to download a known package manager from a URL`, async () => {
     // Package managers known by Corepack cannot be loaded from a URL.
     await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /Illegal use of URL for known package manager/,
+      stderr: expect.stringContaining(`Illegal use of URL for known package manager`),
       stdout: ``,
     });
 
@@ -57,7 +57,7 @@ it.fails(`should refuse to download a known package manager from a URL in packag
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /Illegal use of URL for known package manager/,
+      stderr: expect.stringContaining(`Illegal use of URL for known package manager`),
       stdout: ``,
     });
 
@@ -82,7 +82,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: `No version specified for yarn in "packageManager" of package.json\n`,
       stdout: ``,
     });
 
@@ -92,7 +92,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: expect.stringContaining(`expected a semver version`),
       stdout: ``,
     });
 
@@ -102,7 +102,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: expect.stringContaining(`expected a semver version`),
       stdout: ``,
     });
   });
@@ -272,7 +272,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /This project is configured to use npm/,
+      stderr: expect.stringContaining(`This project is configured to use npm`),
     });
   });
 });
@@ -527,7 +527,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: ``,
-      stderr: /Network access disabled by the environment/,
+      stderr: expect.stringContaining(`Network access disabled by the environment`),
       exitCode: 1,
     });
   });
@@ -899,8 +899,8 @@ it(`should download yarn classic from custom registry`, async () => {
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /^1\.\d+\.\d+\r?\n$/,
-      stderr: /^! Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/,
+      stdout: expect.stringMatching(/^1\.\d+\.\d+\r?\n$/),
+      stderr: expect.stringMatching(/^! Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/),
     });
 
     // Should keep working with cache
@@ -948,7 +948,7 @@ it(`should download latest pnpm from custom registry`, async () => {
     await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
-      stderr: /^! The local project doesn't define a 'packageManager' field\. Corepack will now add one referencing pnpm@1\.9998\.9999@sha1\./,
+      stderr: expect.stringContaining(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing pnpm@1.9998.9999+sha1.`),
     });
 
     // Should keep working with cache
@@ -1225,72 +1225,80 @@ describe(`handle integrity checks`, () => {
       });
     });
   });
-  it(`should return an error when signature does not match with a tag`, async () => {
+  it(`should return an error when signature does not match with a range`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
-      await expect(runCli(cwd, [`yarn@stable`, `--version`], true)).resolves.toMatchObject({
+    });
+  });
+  it(`should return an error when signature does not match with a tag`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm@latest`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
     });
   });
   it(`should return an error when hash does not match without a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_integrity`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stderr: ``,
       });
     });
   });
   it(`should return an error when signature does not match without a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
+        stdout: expect.stringContaining(`Signature does not match`),
         stderr: ``,
       });
     });
@@ -1301,12 +1309,12 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
+        stdout: expect.stringContaining(`Signature does not match`),
         stderr: ``,
       });
     });
@@ -1317,12 +1325,12 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stderr: ``,
       });
     });
