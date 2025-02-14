@@ -860,16 +860,35 @@ it(`should support package managers in ESM format`, async () => {
   });
 });
 
-it(`should show a warning on stderr before downloading when enable`, async() => {
-  await xfs.mktempPromise(async cwd => {
-    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@3.0.0`,
+describe(`should show a warning on stderr before downloading when enable`, () => {
+  it(`when enabled by the environment`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+      });
     });
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stdout: `3.0.0\n`,
-      stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+  });
+
+  it(`should ignore setting in .corepack.env`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeFilePromise(
+        ppath.join(cwd, `.corepack.env` as Filename),
+        `COREPACK_ENABLE_DOWNLOAD_PROMPT=1\n`,
+      );
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: ``,
+      });
     });
   });
 });
