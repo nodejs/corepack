@@ -333,6 +333,14 @@ There are a wide variety of networking issues that can occur while running
   `curl [URL]` (ipv4) and `curl -6 [URL]` (ipv6) from your shell.
 - Check your proxy settings (see [Environment Variables](#environment-variables)).
 
+### Package manager
+If corepack is enabled, corepack will ensure that the correct package manager is used when specified in the package.lock.json  
+However, a potential pitfall is that if there are multiple installations of the same package manager.  
+
+Multiple package manager versions can cause an incorrect version of a package manager from being used, regardless if the version is package.lock.json.
+
+To verify there are not multiple version installed, see this [issue](https://github.com/nodejs/corepack/issues/659#issuecomment-2658982866).
+
 ## Contributing
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
