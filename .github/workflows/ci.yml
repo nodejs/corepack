@@ -55,13 +55,6 @@ jobs:
           - macos-latest
           - windows-latest
 
-      # Temporarily skipping Node.js 23 under Windows due to issue
-      # https://github.com/nodejs/corepack/issues/597
-      # ci vitest fails "handle integrity checks" on Windows Node.js 23
-        exclude:
-          - node: 23
-            platform: windows-latest
-
     name: "${{matrix.platform}} w/ Node.js ${{matrix.node}}.x"
     runs-on: ${{matrix.platform}}
 
