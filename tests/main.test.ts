@@ -275,7 +275,7 @@ describe(`should handle invalid devEngines values`, () => {
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Version or version range is required in packageManager.devEngines.version`),
+        stderr: `Invalid package manager specification in package.json (yarn@*); expected a semver version\n`,
         stdout: ``,
       });
     });
@@ -293,7 +293,7 @@ describe(`should handle invalid devEngines values`, () => {
 
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Version or version range is required in packageManager.devEngines.version`),
+        stderr: `The value of devEngines.packageManager.version "yarn@1.x" is not a valid semver range\n`,
         stdout: ``,
       });
     });
@@ -393,6 +393,21 @@ describe(`should accept range in devEngines only if a specific version is provid
           packageManager: {
             name: `pnpm`,
             version: `6.x`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+
+      // No version should also work
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
           },
         },
         packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
