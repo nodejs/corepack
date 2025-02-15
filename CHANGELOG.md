@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.31.1](https://github.com/nodejs/corepack/compare/v0.31.0...v0.31.1) (2025-02-15)
+
+
+### Bug Fixes
+
+* do not resolve fallback descriptor when `packageManager` is defined ([#632](https://github.com/nodejs/corepack/issues/632)) ([12e77e5](https://github.com/nodejs/corepack/commit/12e77e506946d42a0de9ce8e68d75af8454d6776))
+* **doc:** fix link to proxy library ([#636](https://github.com/nodejs/corepack/issues/636)) ([bae0839](https://github.com/nodejs/corepack/commit/bae08397943d4b99437389b4286546361091f4b3))
+
 ## [0.31.0](https://github.com/nodejs/corepack/compare/v0.30.0...v0.31.0) (2025-01-27)
 
 
