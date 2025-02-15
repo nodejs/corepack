@@ -421,6 +421,80 @@ describe(`should accept range in devEngines only if a specific version is provid
   });
 });
 
+describe(`when devEngines.packageManager.name does not match packageManager`, () => {
+  it(`should ignore if devEngines.packageManager.onFail is set to "ignore"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `ignore`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`should warn if devEngines.packageManager.onFail is set to "warn"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `warn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack validation warning: "packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`should throw if devEngines.packageManager.onFail is set to "error"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `error`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `"packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: ``,
+      });
+    });
+  });
+  it(`should throw by default`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `"packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: ``,
+      });
+    });
+  });
+});
+
 describe(`should reject if range in devEngines does not match version provided`,  () => {
   it(`unless onFail is set to "ignore"`, async () => {
     await xfs.mktempPromise(async cwd => {
