@@ -174,7 +174,7 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
 
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject(URL.canParse(version) ? {
         exitCode: 1,
-        stderr: `Version or version range is required in packageManager.devEngines.version\n`,
+        stderr: expect.stringMatching(/^The value of devEngines\.packageManager\.version ".+" is not a valid semver range\n$/),
         stdout: ``,
       } : {
         exitCode: 0,
@@ -407,6 +407,44 @@ describe(`should accept range in devEngines only if a specific version is provid
 });
 
 describe(`should reject if range in devEngines does not match version provided`,  () => {
+  it(`unless onFail is set to "ignore"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `10.x`,
+            onFail: `ignore`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`unless onFail is set to "warn"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `10.x`,
+            onFail: `warn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack validation warning: "packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the value defined in "devEngines.packageManager" for "pnpm" of "10.x"\n`,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
   it(`in package.json#packageManager field`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {

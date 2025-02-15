@@ -62,6 +62,18 @@ type CorepackPackageJSON = {
 interface DevEngineDependency {
   name: string;
   version: string;
+  onFail?: 'ignore' | 'warn' | 'error';
+}
+function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency['onFail']) {
+  switch (onFail) {
+    case `ignore`:
+      break;
+    case `error`:
+    case undefined:
+      throw new UsageError(errorMessage);
+    default:
+      console.warn(`! Corepack validation warning: ${errorMessage}`);
+  }
 }
 function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
   if (packageJSONContent.devEngines?.packageManager != null) {
@@ -76,25 +88,31 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
       return packageJSONContent.packageManager;
     }
 
-    const {version} = packageManager;
-    if (!version || !semverValidRange(version))
-      throw new UsageError(`Version or version range is required in packageManager.devEngines.version`);
+    const {name, version, onFail} = packageManager;
+    if (typeof name !== `string` || name.includes(`@`)) {
+      warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
+      return packageJSONContent.packageManager;
+    }
+    if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
+      warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
+      return packageJSONContent.packageManager;
+    }
 
-    debugUtils.log(`devEngines.packageManager defines that ${packageManager.name}@${version} is the local package manager`);
+    debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
     const {packageManager: pm} = packageJSONContent;
     if (pm) {
-      if (!pm.startsWith(`${packageManager.name}@`))
-        throw new UsageError(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(packageManager.name)}`);
+      if (!pm.startsWith(`${name}@`))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
 
-      if (!semverSatisfies(pm.slice(packageManager.name.length + 1), version))
-        throw new UsageError(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(packageManager.name)} of ${JSON.stringify(version)}`);
+      else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
 
       return pm;
     }
 
 
-    return `${packageManager.name}@${version}`;
+    return `${name}@${version ?? `*`}`;
   }
 
   return packageJSONContent.packageManager;
@@ -176,6 +194,9 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     type: `Found`,
     target: selection.manifestPath,
     spec,
-    range: selection.data.devEngines?.packageManager?.version && {...spec, range: selection.data.devEngines.packageManager.version},
+    range: selection.data.devEngines?.packageManager?.version && {
+      name: selection.data.devEngines.packageManager.name,
+      range: selection.data.devEngines.packageManager.version,
+    },
   };
 }

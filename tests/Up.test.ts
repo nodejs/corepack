@@ -61,5 +61,34 @@ describe(`UpCommand`, () => {
         });
       });
     });
+
+    it(`to whichever range devEngines defines even if onFail is set to ignore`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          packageManager: `pnpm@10.1.0`,
+          devEngines: {
+            packageManager: {
+              name: `yarn`,
+              version: `1.x || 2.x`,
+              onFail: `ignore`,
+            },
+          },
+        });
+
+        await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          packageManager: `yarn@2.4.3+sha512.8dd9fedc5451829619e526c56f42609ad88ae4776d9d3f9456d578ac085115c0c2f0fb02bb7d57fd2e1b6e1ac96efba35e80a20a056668f61c96934f67694fd0`,
+        });
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `2.4.3\n`,
+        });
+      });
+    });
   });
 });
