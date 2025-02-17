@@ -1621,6 +1621,7 @@ __metadata:
     supports-color: "npm:^10.0.0"
     tar: "npm:^7.4.0"
     tsx: "npm:^4.16.2"
+    tuf-js: "patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch"
     typescript: "npm:^5.7.3"
     undici: "npm:^6.19.2"
     v8-compile-cache: "npm:^2.3.0"
@@ -4703,12 +4704,12 @@ __metadata:
 
 "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch":
   version: 3.0.1
-  resolution: "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch::version=3.0.1&hash=05f694"
+  resolution: "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch::version=3.0.1&hash=26fdc2"
   dependencies:
     "@tufjs/models": "npm:3.0.1"
     debug: "npm:^4.3.6"
     make-fetch-happen: "npm:^14.0.1"
-  checksum: 10c0/8f50e885865555112d5ffc5fe7803c9270a611462300b53fd0b528914eb6b9f849b7a4782c07f356f4f0aeb6b752cbb3f7e1c5f2b068bfb574fca3990d1675d5
+  checksum: 10c0/e301844e9cfaf7dff085358285ed15ea21d7bb871ea3b6a2c6647c3558069fe62473b1dec1cb30e015955647bf1f36c547fb63c827f2563bbc7be4749281e78c
   languageName: node
   linkType: hard
 

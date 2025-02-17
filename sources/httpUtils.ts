@@ -92,7 +92,7 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
 
 let ProxyAgent: typeof import('undici').ProxyAgent;
 
-async function getProxyAgent(input: string | URL) {
+export async function getProxyAgent(input: string | URL) {
   const {getProxyForUrl} = await import(`proxy-from-env`);
 
   // @ts-expect-error - The internal implementation is compatible with a WHATWG URL instance

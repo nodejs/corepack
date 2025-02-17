@@ -48,6 +48,14 @@ async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
   // See https://github.com/npm/cli/blob/3a80a7b7d168c23b5e297cba7b47ba5b9875934d/lib/utils/verify-signatures.js#L174
   let keysRaw: string;
   try {
+    // @ts-expect-error inject custom fetch into monkey-patched `tuf-js` module.
+    globalThis.tufJsFetch = async (input: string) => {
+      const agent = await httpUtils.getProxyAgent(input);
+      return await globalThis.fetch(input, {
+        dispatcher: agent,
+      });
+
+    }
     const sigstoreTufClient = await sigstoreTuf.initTUF({
       cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`),
     });
