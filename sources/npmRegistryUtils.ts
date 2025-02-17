@@ -39,7 +39,8 @@ export async function fetchAsJson(packageName: string, version?: string) {
 
 interface KeyInfo {
   keyid: string;
-  key: crypto.KeyObject;
+  // base64 encoded DER SPKI
+  keyData: string;
 }
 
 async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
@@ -68,7 +69,7 @@ async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
     }
   }).map(k => ({
     keyid: k.keyId,
-    key: crypto.createPublicKey({key: Buffer.from(k.publicKey.rawBytes, `base64`), format: `der`, type: `spki`}),
+    keyData: k.publicKey.rawBytes,
   }));
 }
 
@@ -83,8 +84,7 @@ async function getVerificationKeys(): Promise<Array<KeyInfo>> {
     debugUtils.log(`Using COREPACK_INTEGRITY_KEYS to verify signatures: ${keys.map(k => k.keyid).join(`, `)}`);
     return keys.map(k => ({
       keyid: k.keyid,
-      key: crypto.createPublicKey(`-----BEGIN PUBLIC KEY-----\n${k.key}\n-----END PUBLIC KEY-----`,
-      ),
+      keyData: k.key,
     }));
   }
 
@@ -98,12 +98,11 @@ async function getVerificationKeys(): Promise<Array<KeyInfo>> {
   debugUtils.log(`Falling back to built-in npm verification keys`);
   return defaultConfig.keys.npm.map(k => ({
     keyid: k.keyid,
-    key: crypto.createPublicKey(`-----BEGIN PUBLIC KEY-----\n${k.key}\n-----END PUBLIC KEY-----`,
-    ),
+    keyData: k.key,
   }));
 }
 
-let verificationKeysCache: Promise<Array<{ keyid: string, key: crypto.KeyObject }>> | null = null;
+let verificationKeysCache: Promise<Array<KeyInfo>> | null = null;
 
 export async function verifySignature({signatures, integrity, packageName, version}: {
   signatures: Array<{keyid: string, sig: string}>;
@@ -115,21 +114,22 @@ export async function verifySignature({signatures, integrity, packageName, versi
     verificationKeysCache = getVerificationKeys();
 
   const keys = await verificationKeysCache;
-  const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
-  if (key == null)
+  const keyInfo = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
+  if (keyInfo == null)
     throw new Error(`Cannot find key to verify signature. signature keys: ${signatures.map(s => s.keyid)}, verification keys: ${keys.map(k => k.keyid)}`);
 
-  const signature = signatures.find(({keyid}) => keyid === key.keyid);
+  const signature = signatures.find(({keyid}) => keyid === keyInfo.keyid);
   assert(signature);
 
   const verifier = crypto.createVerify(`SHA256`);
   const payload = `${packageName}@${version}:${integrity}`;
   verifier.end(payload);
+  const key = crypto.createPublicKey({key: Buffer.from(keyInfo.keyData, `base64`), format: `der`, type: `spki`});
   const valid = verifier.verify(key, signature.sig, `base64`);
 
   if (!valid) {
     throw new Error(
-      `Signature verification failed for ${payload} with key ${key.keyid}\n` +
+      `Signature verification failed for ${payload} with key ${keyInfo.keyid}\n` +
       `If you are using a custom registry you can set COREPACK_INTEGRITY_KEYS.`,
     );
   }

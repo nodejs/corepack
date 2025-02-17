@@ -4703,12 +4703,12 @@ __metadata:
 
 "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch":
   version: 3.0.1
-  resolution: "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch::version=3.0.1&hash=a7966e"
+  resolution: "tuf-js@patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch::version=3.0.1&hash=05f694"
   dependencies:
     "@tufjs/models": "npm:3.0.1"
     debug: "npm:^4.3.6"
     make-fetch-happen: "npm:^14.0.1"
-  checksum: 10c0/d7374bf8db935947bd50e9436e4c8b3a7244fb70c876821d91bffe9f3d0e6448fab4ddccc93867f68cfe892d776fac7c988c0bbbfe9ac052b2f83482f55ea50e
+  checksum: 10c0/8f50e885865555112d5ffc5fe7803c9270a611462300b53fd0b528914eb6b9f849b7a4782c07f356f4f0aeb6b752cbb3f7e1c5f2b068bfb574fca3990d1675d5
   languageName: node
   linkType: hard
 

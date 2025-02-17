@@ -19,7 +19,7 @@ index f966ce1bb0cdc6c785ce1263f1faea15d3fe764c..3b50fa0c24fd5f6e9e29cf398a3d3bf1
 -            timeout: this.timeout,
 -            retry: this.retry,
 +        const response = await globalThis.fetch(url, {
-+            timeout: this.timeout && AbortSignal.timeout(this.timeout)
++            signal: this.timeout && AbortSignal.timeout(this.timeout)
          });
          if (!response.ok || !response?.body) {
              throw new error_1.DownloadHTTPError('Failed to download', response.status);
