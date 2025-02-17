@@ -1,13 +1,13 @@
-import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
-import os                                          from 'node:os';
-import process                                     from 'node:process';
-import {beforeEach, describe, expect, it}          from 'vitest';
+import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
+import os                                            from 'node:os';
+import process                                       from 'node:process';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import config                                      from '../config.json';
-import * as folderUtils                            from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                from '../sources/types';
+import config                                        from '../config.json';
+import * as folderUtils                              from '../sources/folderUtils';
+import {SupportedPackageManagerSet}                  from '../sources/types';
 
-import {runCli}                                    from './_runCli';
+import {runCli}                                      from './_runCli';
 
 
 beforeEach(async () => {
@@ -15,6 +15,12 @@ beforeEach(async () => {
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
 });
+
+afterEach(async () => {
+  const home = npath.toPortablePath(process.env.COREPACK_HOME!);
+  await xfs.removePromise(home, {recursive: true});
+});
+
 
 it(`should refuse to download a package manager if the hash doesn't match`, async () => {
   await xfs.mktempPromise(async cwd => {
@@ -480,6 +486,16 @@ it(`should support disabling the network accesses from the environment`, async (
 });
 
 describe(`read-only and offline environment`, () => {
+  let home: PortablePath;
+  beforeEach(() => {
+    home = npath.toPortablePath(process.env.COREPACK_HOME!);
+  });
+
+  afterEach(async () => {
+    await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o644);
+    await xfs.chmodPromise(home, 0o755);
+  });
+
   it(`should support running in project scope`, async () => {
     await xfs.mktempPromise(async cwd => {
       // Reset to default
