@@ -49,7 +49,7 @@ async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
   let keysRaw: string;
   try {
     const sigstoreTufClient = await sigstoreTuf.initTUF({
-      cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`)
+      cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`),
     });
     keysRaw = await sigstoreTufClient.getTarget(`registry.npmjs.org/keys.json`);
   } catch (error) {
