@@ -26,7 +26,7 @@ function getRequestHash(input, init) {
 
   if (init) {
     for (const key in init) {
-      if (init[key] === undefined || key === `timeout`) continue;
+      if (init[key] === undefined || key === `signal`) continue;
 
       switch (key) {
         case `headers`:

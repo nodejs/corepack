@@ -48,7 +48,9 @@ async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
   // See https://github.com/npm/cli/blob/3a80a7b7d168c23b5e297cba7b47ba5b9875934d/lib/utils/verify-signatures.js#L174
   let keysRaw: string;
   try {
-    const sigstoreTufClient = await sigstoreTuf.initTUF({cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`)});
+    const sigstoreTufClient = await sigstoreTuf.initTUF({
+      cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`)
+    });
     keysRaw = await sigstoreTufClient.getTarget(`registry.npmjs.org/keys.json`);
   } catch (error) {
     console.warn(`Failed to get signing keys from Sigstore TUF repo`, error);
