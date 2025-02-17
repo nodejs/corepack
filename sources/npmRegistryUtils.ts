@@ -54,8 +54,7 @@ async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
       return await globalThis.fetch(input, {
         dispatcher: agent,
       });
-
-    }
+    };
     const sigstoreTufClient = await sigstoreTuf.initTUF({
       cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`),
     });
