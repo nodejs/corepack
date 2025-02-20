@@ -29,7 +29,7 @@
     "better-sqlite3": "^11.7.2",
     "clipanion": "patch:clipanion@npm%3A3.2.1#~/.yarn/patches/clipanion-npm-3.2.1-fc9187f56c.patch",
     "debug": "^4.1.1",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.0",
     "eslint": "^8.57.0",
     "proxy-from-env": "^1.1.0",
     "semver": "^7.6.3",
