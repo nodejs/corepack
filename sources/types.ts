@@ -160,3 +160,5 @@ export interface LazyLocator {
      */
   reference: () => Promise<string>;
 }
+
+export type LocalEnvFile = Record<string, string | undefined>;
