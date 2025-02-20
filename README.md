@@ -295,7 +295,7 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 - `COREPACK_ENV_FILE` can be set to `0` to request Corepack to not attempt to
   load `.corepack.env`; it can be set to a path to specify a different env file.
-  Only keys that starts with `COREPACK_` will be taken into account, not all
+  Only keys that start with `COREPACK_` will be taken into account, not all
   keys that start with `COREPACK_` will be taken into account (
   `COREPACK_ENABLE_DOWNLOAD_PROMPT` and `COREPACK_ENV_FILE` are ignored).
   For Node.js 18.x users, this setting has no effect as that version doesn't
