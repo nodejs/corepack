@@ -1,15 +1,17 @@
-import {UsageError}                            from 'clipanion';
-import fs                                      from 'fs';
-import path                                    from 'path';
-import semverSatisfies                         from 'semver/functions/satisfies';
-import semverValid                             from 'semver/functions/valid';
-import semverValidRange                        from 'semver/ranges/valid';
+import {UsageError}                      from 'clipanion';
+import fs                                from 'fs';
+import path                              from 'path';
+import semverSatisfies                   from 'semver/functions/satisfies';
+import semverValid                       from 'semver/functions/valid';
+import semverValidRange                  from 'semver/ranges/valid';
+import {parseEnv}                        from 'util';
 
-import {PreparedPackageManagerInfo}            from './Engine';
-import * as debugUtils                         from './debugUtils';
-import {NodeError}                             from './nodeUtils';
-import * as nodeUtils                          from './nodeUtils';
-import {Descriptor, isSupportedPackageManager} from './types';
+import type {PreparedPackageManagerInfo} from './Engine';
+import * as debugUtils                   from './debugUtils';
+import type {NodeError}                  from './nodeUtils';
+import * as nodeUtils                    from './nodeUtils';
+import {isSupportedPackageManager}       from './types';
+import type {LocalEnvFile, Descriptor}   from './types';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
@@ -138,10 +140,11 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   };
 }
 
+type FoundSpecResult = {type: `Found`, target: string, spec: Descriptor, range?: Descriptor, envFilePath?: string};
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, spec: Descriptor, range?: Descriptor};
+    | FoundSpecResult;
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -150,6 +153,8 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let selection: {
     data: any;
     manifestPath: string;
+    envFilePath?: string;
+    localEnv: LocalEnvFile;
   } | null = null;
 
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
@@ -177,11 +182,43 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     if (typeof data !== `object` || data === null)
       throw new UsageError(`Invalid package.json in ${path.relative(initialCwd, manifestPath)}`);
 
-    selection = {data, manifestPath};
+    let localEnv: LocalEnvFile;
+    const envFilePath = path.resolve(currCwd, process.env.COREPACK_ENV_FILE ?? `.corepack.env`);
+    if (process.env.COREPACK_ENV_FILE == `0`) {
+      debugUtils.log(`Skipping env file as configured with COREPACK_ENV_FILE`);
+      localEnv = process.env;
+    } else if (typeof parseEnv !== `function`) {
+      // TODO: remove this block when support for Node.js 18.x is dropped.
+      debugUtils.log(`Skipping env file as it is not supported by the current version of Node.js`);
+      localEnv = process.env;
+    } else {
+      debugUtils.log(`Checking ${envFilePath}`);
+      try {
+        localEnv = {
+          ...Object.fromEntries(Object.entries(parseEnv(await fs.promises.readFile(envFilePath, `utf8`))).filter(e => e[0].startsWith(`COREPACK_`))),
+          ...process.env,
+        };
+        debugUtils.log(`Successfully loaded env file found at ${envFilePath}`);
+      } catch (err) {
+        if ((err as NodeError)?.code !== `ENOENT`)
+          throw err;
+
+        debugUtils.log(`No env file found at ${envFilePath}`);
+        localEnv = process.env;
+      }
+    }
+
+    selection = {data, manifestPath, localEnv, envFilePath};
   }
 
   if (selection === null)
     return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
+
+  let envFilePath: string | undefined;
+  if (selection.localEnv !== process.env) {
+    envFilePath = selection.envFilePath;
+    process.env = selection.localEnv;
+  }
 
   const rawPmSpec = parsePackageJSON(selection.data);
   if (typeof rawPmSpec === `undefined`)
@@ -189,11 +226,11 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 
   debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
 
-  const spec = parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath));
   return {
     type: `Found`,
     target: selection.manifestPath,
-    spec,
+    envFilePath,
+    spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
     range: selection.data.devEngines?.packageManager?.version && {
       name: selection.data.devEngines.packageManager.name,
       range: selection.data.devEngines.packageManager.version,
