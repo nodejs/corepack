@@ -38,7 +38,7 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   packageName: string;
   version: string;
 }) {
-  if (!Array.isArray(signatures) || !signatures?.length) throw new Error(`No compatible signature found in package metadata`);
+  if (!Array.isArray(signatures) || !signatures.length) throw new Error(`No compatible signature found in package metadata`);
 
   const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
     JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
