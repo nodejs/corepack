@@ -317,8 +317,8 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 - `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
   instruct Corepack to skip signature verification, or to a JSON string
-  containing custom keys. The format based on the response of the
-  `GET /-/npm/v1/keys` endpoint of npm registry under the `npm` key. That is,
+  containing custom keys. The format is based on the response of the
+  `GET /-/npm/v1/keys` npm registry endpoint under the `npm` key. That is,
 
   ```bash
   curl https://registry.npmjs.org/-/npm/v1/keys | jq -c '{npm: .keys}'
