@@ -1,5 +1,6 @@
 import {ppath, xfs, npath}                from '@yarnpkg/fslib';
 import process                            from 'node:process';
+import {parseEnv}                         from 'node:util';
 import {describe, beforeEach, it, expect} from 'vitest';
 
 import {runCli}                           from './_runCli';
@@ -115,6 +116,85 @@ describe(`UseCommand`, () => {
     });
   });
 
+  it(`should update .corepack.env if present and contains definition for pm version`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await Promise.all([
+      `COREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `\nCOREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `COREPACK_DEV_ENGINES_YARN=1.1.0`,
+      `\nCOREPACK_DEV_ENGINES_YARN=1.1.0`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=1.1.0`,
+    ].map(originalEnv => xfs.mktempPromise(async cwd => {
+      const pJSONContent = {
+        devEngines: {packageManager: {name: `yarn`, version: `1.x`}},
+        license: `MIT`,
+      };
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), pJSONContent);
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env`), originalEnv);
+
+      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: expect.stringContaining(`Installing yarn@1.22.4 in the project...`),
+        stderr: ``,
+      });
+
+      try {
+        await expect(xfs.readFilePromise(ppath.join(cwd, `.corepack.env`), `utf-8`).then(parseEnv)).resolves.toMatchObject({
+          COREPACK_DEV_ENGINES_YARN: `1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
+        });
+      } catch (cause) {
+        throw new Error(JSON.stringify(originalEnv), {cause});
+      }
+      // It should not have touched package.json.
+      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toStrictEqual(pJSONContent);
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+      });
+    })));
+  });
+
+  it(`should update .other.env if present`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await Promise.all([
+      `COREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `\nCOREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `COREPACK_DEV_ENGINES_YARN=1.1.0`,
+      `\nCOREPACK_DEV_ENGINES_YARN=1.1.0`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=1.1.0\n`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=1.1.0`,
+    ].map(originalEnv => xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+        devEngines: {packageManager: {name: `yarn`, version: `1.x`}},
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env`), `COREPACK_DEV_ENGINES_YARN=1.0.0\n`);
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+
+      try {
+        await expect(xfs.readFilePromise(ppath.join(cwd, `.other.env`), `utf-8`).then(parseEnv)).resolves.toMatchObject({
+          COREPACK_DEV_ENGINES_YARN: `1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
+        });
+      } catch (cause) {
+        throw new Error(JSON.stringify(originalEnv), {cause});
+      }
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+      });
+    })));
+  });
+
   it(`should create a package.json if absent`, async () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
@@ -192,5 +272,44 @@ describe(`UseCommand`, () => {
         });
       });
     }
+  });
+
+  it(`should update the ".corepack.env" file from the current project`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+    await Promise.all([
+      `COREPACK_DEV_ENGINES_YARN=2.1.0\n`,
+      `\nCOREPACK_DEV_ENGINES_YARN=2.1.0\n`,
+      `COREPACK_DEV_ENGINES_YARN=2.1.0`,
+      `\nCOREPACK_DEV_ENGINES_YARN=2.1.0`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=2.1.0\n`,
+      `FOO=bar\nCOREPACK_DEV_ENGINES_YARN=2.1.0`,
+    ].map(originalEnv => xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+        devEngines: {packageManager: {name: `yarn`, version: `1.x || 2.x`}},
+        license: `MIT`, // To avoid Yarn warning.
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env`), originalEnv);
+
+      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\nyarn install v1\.22\.4\ninfo No lockfile found\.\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+      });
+
+      try {
+        await expect(xfs.readFilePromise(ppath.join(cwd, `.corepack.env`), `utf-8`).then(parseEnv)).resolves.toMatchObject({
+          COREPACK_DEV_ENGINES_YARN: `1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
+        });
+      } catch (cause) {
+        throw new Error(JSON.stringify(originalEnv), {cause});
+      }
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: ``,
+      });
+    })));
   });
 });
