@@ -64,4 +64,50 @@ describe(`UseCommand`, () => {
       });
     });
   });
+
+  describe(`should not care if packageManager is set to an invalid value`, () => {
+    for (const {description, packageManager} of [
+      {
+        description: `when a version range is given`,
+        packageManager: `yarn@1.x`,
+      },
+      {
+        description: `when only the pm name is given`,
+        packageManager: `yarn`,
+      },
+      {
+        description: `when the version is missing`,
+        packageManager: `yarn@`,
+      },
+      {
+        description: `when the field is not a string`,
+        packageManager: [],
+      },
+    ]) {
+      it(description, async () => {
+        await xfs.mktempPromise(async cwd => {
+          await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+            packageManager,
+            license: `MIT`, // To avoid warning
+          });
+
+          await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+            exitCode: 0,
+            stderr: ``,
+            stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\nyarn install v1\.22\.4\ninfo No lockfile found\.\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+          });
+
+          await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+            packageManager: `yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
+          });
+
+          await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `1.22.4\n`,
+            stderr: ``,
+          });
+        });
+      });
+    }
+  });
 });
