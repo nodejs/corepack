@@ -132,7 +132,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
-  const lookup = await loadSpec(cwd);
+  const lookup = await loadSpec(cwd, true);
 
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile((lookup as FoundSpecResult).envFilePath ?? lookup.target, `utf8`)
@@ -140,8 +140,8 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 
   let previousPackageManager: string;
   let newContent: string;
-  if ((lookup as FoundSpecResult).envFilePath) {
-    const envKey = `COREPACK_DEV_ENGINES_${(lookup as FoundSpecResult).spec.name.toUpperCase()}`;
+  if ((lookup as FoundSpecResult).envFilePath && (lookup as FoundSpecResult).range) {
+    const envKey = `COREPACK_DEV_ENGINES_${(lookup as FoundSpecResult).range!.name.toUpperCase()}`;
     const index = content.lastIndexOf(`\n${envKey}=`) + 1;
 
     if (index === 0 && !content.startsWith(`${envKey}=`))
@@ -168,13 +168,13 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   };
 }
 
-type FoundSpecResult = {type: `Found`, target: string, spec: Descriptor, range?: Descriptor, envFilePath?: string};
-export type LoadSpecResult =
+type FoundSpecResult<SkipSpecParsing extends boolean = true> = {type: `Found`, target: string, spec: SkipSpecParsing extends true ? undefined : Descriptor, range?: Descriptor, envFilePath?: string};
+export type LoadSpecResult<SkipSpecParsing extends boolean> =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | FoundSpecResult;
+    | FoundSpecResult<SkipSpecParsing>;
 
-export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
+export async function loadSpec<SkipSpecParsing extends boolean = false>(initialCwd: string, skipSpecParsing?: SkipSpecParsing): Promise<LoadSpecResult<SkipSpecParsing>> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
@@ -258,10 +258,12 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     type: `Found`,
     target: selection.manifestPath,
     envFilePath,
-    spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
     range: selection.data.devEngines?.packageManager?.version && {
       name: selection.data.devEngines.packageManager.name,
       range: selection.data.devEngines.packageManager.version,
     },
+    spec: skipSpecParsing ?
+      (undefined as SkipSpecParsing extends true ? undefined : never) :
+      parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)) as SkipSpecParsing extends true ? never : ReturnType<typeof parseSpec>,
   };
 }
