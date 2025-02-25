@@ -76,33 +76,33 @@ function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency['onFail'
   }
 }
 function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
+  const {packageManager: pm} = packageJSONContent;
   if (packageJSONContent.devEngines?.packageManager != null) {
     const {packageManager} = packageJSONContent.devEngines;
 
     if (typeof packageManager !== `object`) {
       console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
-      return packageJSONContent.packageManager;
+      return pm;
     }
     if (Array.isArray(packageManager)) {
       console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
-      return packageJSONContent.packageManager;
+      return pm;
     }
 
     const {name, version, onFail} = packageManager;
     if (typeof name !== `string` || name.includes(`@`)) {
       warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
-      return packageJSONContent.packageManager;
+      return pm;
     }
     if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
       warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
-      return packageJSONContent.packageManager;
+      return pm;
     }
 
     debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
-    const {packageManager: pm} = packageJSONContent;
     if (pm) {
-      if (!pm.startsWith(`${name}@`))
+      if (!pm.startsWith?.(`${name}@`))
         warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
 
       else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
@@ -115,7 +115,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
     return `${name}@${version ?? `*`}`;
   }
 
-  return packageJSONContent.packageManager;
+  return pm;
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
