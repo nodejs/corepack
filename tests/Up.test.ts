@@ -21,6 +21,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -30,6 +31,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
           exitCode: 0,
           stdout: `2.4.3\n`,
+          stderr: ``,
         });
       });
     });
@@ -49,6 +51,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -58,6 +61,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
           exitCode: 0,
           stdout: `2.4.3\n`,
+          stderr: ``,
         });
       });
     });
@@ -78,6 +82,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -87,6 +92,27 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
           exitCode: 0,
           stdout: `2.4.3\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should fail if no top-level 'packageManager' field`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        process.env.NO_COLOR = `1`;
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          devEngines: {
+            packageManager: {
+              name: `yarn`,
+              version: `1.x || 2.x`,
+            },
+          },
+        });
+
+        await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
+          exitCode: 1,
+          stderr: ``,
+          stdout: `Usage Error: Invalid package manager specification in package.json (yarn@1.x || 2.x); expected a semver version\n\n$ corepack up\n`,
         });
       });
     });
