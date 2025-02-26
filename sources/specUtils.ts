@@ -53,7 +53,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
-  const lookup = await loadSpec(cwd);
+  const lookup = await loadSpec(cwd, true);
 
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile(lookup.target, `utf8`)
@@ -72,12 +72,12 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   };
 }
 
-export type LoadSpecResult =
+export type LoadSpecResult<SkipSpecParsing extends boolean> =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, spec: Descriptor};
+    | {type: `Found`, target: string, spec: SkipSpecParsing extends true ? undefined : Descriptor };
 
-export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
+export async function loadSpec<SkipSpecParsing extends boolean = false>(initialCwd: string, skipSpecParsing?: SkipSpecParsing): Promise<LoadSpecResult<SkipSpecParsing>> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
@@ -124,6 +124,8 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   return {
     type: `Found`,
     target: selection.manifestPath,
-    spec: parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
+    spec: skipSpecParsing ?
+      (undefined as SkipSpecParsing extends true ? undefined : never) :
+      parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)) as SkipSpecParsing extends true ? never : ReturnType<typeof parseSpec>,
   };
 }
