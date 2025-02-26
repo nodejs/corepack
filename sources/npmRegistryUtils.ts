@@ -38,6 +38,8 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   packageName: string;
   version: string;
 }) {
+  if (signatures == null) throw new Error(`No compatible signature found in package metadata for ${packageName}@${version}`);
+
   const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
     JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
     defaultConfig.keys;
