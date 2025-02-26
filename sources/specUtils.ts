@@ -121,13 +121,20 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
   const lookup = await loadSpec(cwd);
 
+  const range = `range` in lookup && lookup.range;
+  if (range) {
+    if (info.locator.name !== range.name || !semverSatisfies(info.locator.reference, range.range)) {
+      warnOrThrow(`The requested version of ${info.locator.name}@${info.locator.reference} does not match the devEngines specification (${range.name}@${range.range})`, range.onFail);
+    }
+  }
+
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile(lookup.target, `utf8`)
     : ``;
 
   const {data, indent} = nodeUtils.readPackageJson(content);
 
-  const previousPackageManager = data.packageManager ?? `unknown`;
+  const previousPackageManager = data.packageManager ?? (range ? `${range.name}@${range.range}` : `unknown`);
   data.packageManager = `${info.locator.name}@${info.locator.reference}`;
 
   const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
@@ -141,7 +148,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, spec: Descriptor, range?: Descriptor};
+    | {type: `Found`, target: string, spec: Descriptor, range?: Descriptor & {onFail?: DevEngineDependency['onFail']}};
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -197,6 +204,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     range: selection.data.devEngines?.packageManager?.version && {
       name: selection.data.devEngines.packageManager.name,
       range: selection.data.devEngines.packageManager.version,
+      onFail: selection.data.devEngines.packageManager.onFail,
     },
   };
 }
