@@ -289,7 +289,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       if (signatures! == null || integrity! == null)
         ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+      await npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
       // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }

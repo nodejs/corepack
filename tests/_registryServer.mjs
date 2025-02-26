@@ -7,6 +7,14 @@ import {gzipSync}                                    from 'node:zlib';
 let privateKey, keyid;
 
 switch (process.env.TEST_INTEGRITY) {
+  case `invalid_npm_signature`: {
+    ({privateKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+    }));
+    // Known npm signing key
+    keyid = `SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U`;
+    break;
+  }
   case `invalid_signature`: {
     ({privateKey} = generateKeyPairSync(`ec`, {
       namedCurve: `sect239k1`,
@@ -199,6 +207,8 @@ server.listen(0, `localhost`);
 await once(server, `listening`);
 
 const {address, port} = server.address();
+const serverAddress = `${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+
 switch (process.env.AUTH_TYPE) {
   case `PROXY`:
     // The proxy set up above will redirect all requests to our custom registry,
@@ -206,16 +216,16 @@ switch (process.env.AUTH_TYPE) {
     break;
 
   case `COREPACK_NPM_REGISTRY`:
-    process.env.COREPACK_NPM_REGISTRY = `http://user:pass@${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    process.env.COREPACK_NPM_REGISTRY = `http://user:pass@${serverAddress}`;
     break;
 
   case `COREPACK_NPM_TOKEN`:
-    process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    process.env.COREPACK_NPM_REGISTRY = `http://${serverAddress}`;
     process.env.COREPACK_NPM_TOKEN = TOKEN_MOCK;
     break;
 
   case `COREPACK_NPM_PASSWORD`:
-    process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
+    process.env.COREPACK_NPM_REGISTRY = `http://${serverAddress}`;
     process.env.COREPACK_NPM_USERNAME = `user`;
     process.env.COREPACK_NPM_PASSWORD = `pass`;
     break;
@@ -223,17 +233,23 @@ switch (process.env.AUTH_TYPE) {
   default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
 }
 
-if (process.env.NOCK_ENV === `replay`) {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = function fetch(i) {
-    if (!`${i}`.startsWith(
-      process.env.AUTH_TYPE === `PROXY` ?
-        `http://example.com` :
-        `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`))
-      throw new Error(`Unexpected request to  ${i}`);
+const passthroughUrls = [
+  process.env.AUTH_TYPE === `PROXY` ?
+    `http://example.com` :
+    `http://${serverAddress}`,
+];
 
+if (!process.env.BLOCK_SIGSTORE_TUF_REQUESTS)
+  passthroughUrls.push(`https://tuf-repo-cdn.sigstore.dev/`);
+
+
+const originalFetch = globalThis.fetch;
+globalThis.fetch = function fetch(url) {
+  if (passthroughUrls.some(passthroughUrl => url.toString().startsWith(passthroughUrl)))
     return Reflect.apply(originalFetch, this, arguments);
-  };
-}
+
+
+  throw new Error(`Unexpected request to  ${url}`);
+};
 
 server.unref();
