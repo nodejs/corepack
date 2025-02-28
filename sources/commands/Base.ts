@@ -19,7 +19,7 @@ export abstract class BaseCommand extends Command<Context> {
           throw new UsageError(`The local project doesn't feature a 'packageManager' field - please explicit the package manager to pack, or update the manifest to reference it`);
 
         default: {
-          return [lookup.spec];
+          return [lookup.getSpec()];
         }
       }
     }

@@ -75,7 +75,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, readonly spec: Descriptor };
+    | {type: `Found`, target: string, getSpec: () => Descriptor};
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -124,17 +124,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   return {
     type: `Found`,
     target: selection.manifestPath,
-    get spec() {
-      // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
-      const value = parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath));
-      Object.defineProperty(this, `spec`, {
-        // @ts-expect-error we should be using __proto__, despite what TS is saying
-        __proto__: null,
-        configurable: true,
-        writable: false,
-        value,
-      });
-      return value;
-    },
+    // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
+    getSpec: () => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
   };
 }

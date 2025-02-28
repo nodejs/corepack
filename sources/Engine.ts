@@ -293,19 +293,20 @@ export class Engine {
         }
 
         case `Found`: {
-          if (result.spec.name !== locator.name) {
+          const spec = result.getSpec();
+          if (spec.name !== locator.name) {
             if (transparent) {
               if (typeof locator.reference === `function`)
                 fallbackDescriptor.range = await locator.reference();
 
-              debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${result.spec.name}@${result.spec.range} project`);
+              debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
               return fallbackDescriptor;
             } else {
-              throw new UsageError(`This project is configured to use ${result.spec.name} because ${result.target} has a "packageManager" field`);
+              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "packageManager" field`);
             }
           } else {
-            debugUtils.log(`Using ${result.spec.name}@${result.spec.range} as defined in project manifest ${result.target}`);
-            return result.spec;
+            debugUtils.log(`Using ${spec.name}@${spec.range} as defined in project manifest ${result.target}`);
+            return spec;
           }
         }
       }
