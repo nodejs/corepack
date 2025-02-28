@@ -297,6 +297,7 @@ same major line. Should you need to upgrade to a new major, use an explicit
   set to `1` to have the URL shown. By default, when Corepack is called
   explicitly (e.g. `corepack pnpm …`), it is set to `0`; when Corepack is called
   implicitly (e.g. `pnpm …`), it is set to `1`.
+  The default value cannot be overridden in a `.corepack.env` file.
   When standard input is a TTY and no CI environment is detected, Corepack will
   ask for user input before starting the download.
 
@@ -321,6 +322,14 @@ same major line. Should you need to upgrade to a new major, use an explicit
   checking if the package manager corresponds to the one defined for the current
   project. This means that it will always use the system-wide package manager
   regardless of what is being specified in the project's `packageManager` field.
+
+- `COREPACK_ENV_FILE` can be set to `0` to request Corepack to not attempt to
+  load `.corepack.env`; it can be set to a path to specify a different env file.
+  Only keys that start with `COREPACK_` and are not in the exception list
+  (`COREPACK_ENABLE_DOWNLOAD_PROMPT` and `COREPACK_ENV_FILE` are ignored)
+  will be taken into account.
+  For Node.js 18.x users, this setting has no effect as that version doesn't
+  support parsing of `.env` files.
 
 - `COREPACK_HOME` can be set in order to define where Corepack should install
   the package managers. By default it is set to `%LOCALAPPDATA%\node\corepack`

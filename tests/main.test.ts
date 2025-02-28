@@ -647,18 +647,72 @@ for (const name of SupportedPackageManagerSet) {
   });
 }
 
-it(`should configure the project when calling a package manager on it for the first time`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+describe(`when called on a project without any defined packageManager`, () => {
+  it(`should append the field to package.json by default`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
+      });
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
+  });
 
-    await runCli(cwd, [`yarn`]);
+  it(`should not modify package.json if disabled by env`, async () => {
+    process.env.COREPACK_ENABLE_AUTO_PIN = `0`;
 
-    const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+      });
 
-    expect(data).toMatchObject({
-      packageManager: `yarn@${config.definitions.yarn.default}`,
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+
+  it(`should not modify package.json if disabled by .corepack.env`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+  it(`should modify package.json if .corepack.env if disabled`, async () => {
+    process.env.COREPACK_ENV_FILE = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
   });
 });
@@ -1141,16 +1195,35 @@ it(`should support package managers in ESM format`, async () => {
   });
 });
 
-it(`should show a warning on stderr before downloading when enable`, async() => {
-  await xfs.mktempPromise(async cwd => {
-    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@3.0.0`,
+describe(`should show a warning on stderr before downloading when enable`, () => {
+  it(`when enabled by the environment`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+      });
     });
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stdout: `3.0.0\n`,
-      stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+  });
+
+  it(`should ignore setting in .corepack.env`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeFilePromise(
+        ppath.join(cwd, `.corepack.env` as Filename),
+        `COREPACK_ENABLE_DOWNLOAD_PROMPT=1\n`,
+      );
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: ``,
+      });
     });
   });
 });
@@ -1237,6 +1310,156 @@ it(`should download latest pnpm from custom registry`, async () => {
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
       stderr: ``,
+    });
+  });
+});
+
+describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+  });
+
+  it(`from env variable`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from .corepack.env file`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env even if there's a .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+
+      // By default, Corepack should be using .corepack.env (or the built-in ones on Node.js 18.x) and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = ``;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`should ignore .corepack.env file if COREPACK_ENV_FILE is set to 0`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      process.env.COREPACK_ENV_FILE = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      delete process.env.COREPACK_ENV_FILE;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    process.env.COREPACK_ENV_FILE = `.other.env`;
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
     });
   });
 });
