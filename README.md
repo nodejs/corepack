@@ -113,6 +113,35 @@ use in the archive).
 }
 ```
 
+#### `devEngines.packageManager`
+
+When a `devEngines.packageManager` field is defined, and is an object containing
+a `"name"` field (can also optionally contain `version` and `onFail` fields),
+Corepack will use it to validate you're using a compatible package manager.
+
+Depending on the value of `devEngines.packageManager.onFail`:
+
+- if set to `ignore`, Corepack won't print any warning or error.
+- if unset or set to `error`, Corepack will throw an error in case of a mismatch.
+- if set to `warn` or some other value, Corepack will print a warning in case
+  of mismatch.
+
+If the top-level `packageManager` field is missing, Corepack will use the
+package manager defined in `devEngines.packageManager` – in which case you must
+provide a specific version in `devEngines.packageManager.version`, ideally with
+a hash, as explained in the previous section:
+
+```json
+{
+  "devEngines":{
+    "packageManager": {
+      "name": "yarn",
+      "version": "3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa"
+    }
+  }
+}
+```
+
 ## Known Good Releases
 
 When running Corepack within projects that don't list a supported package
@@ -246,6 +275,7 @@ it.
 
 Unlike `corepack use` this command doesn't take a package manager name nor a
 version range, as it will always select the latest available version from the
+range specified in `devEngines.packageManager.version`, or fallback to the
 same major line. Should you need to upgrade to a new major, use an explicit
 `corepack use {name}@latest` call (or simply `corepack use {name}`).
 

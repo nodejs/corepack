@@ -38,21 +38,27 @@ export function verifySignature({signatures, integrity, packageName, version}: {
   packageName: string;
   version: string;
 }) {
-  if (signatures == null) throw new Error(`No compatible signature found in package metadata for ${packageName}@${version}`);
+  if (!Array.isArray(signatures) || !signatures.length) throw new Error(`No compatible signature found in package metadata`);
 
-  const {npm: keys} = process.env.COREPACK_INTEGRITY_KEYS ?
+  const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
     JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
     defaultConfig.keys;
 
-  const key = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
-  const signature = signatures.find(({keyid}) => keyid === key?.keyid);
-
-  if (key == null || signature == null) throw new Error(`Cannot find matching keyid: ${JSON.stringify({signatures, keys})}`);
+  let signature: typeof signatures[0] | undefined;
+  let key!: string;
+  for (const k of trustedKeys) {
+    signature = signatures.find(({keyid}) => keyid === k.keyid);
+    if (signature != null) {
+      key = k.key;
+      break;
+    }
+  }
+  if (signature?.sig == null) throw new UsageError(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys}, undefined, 2)}`);
 
   const verifier = createVerify(`SHA256`);
   verifier.end(`${packageName}@${version}:${integrity}`);
   const valid = verifier.verify(
-    `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`,
+    `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`,
     signature.sig,
     `base64`,
   );
@@ -67,10 +73,15 @@ export async function fetchLatestStableVersion(packageName: string) {
   const {version, dist: {integrity, signatures, shasum}} = metadata;
 
   if (!shouldSkipIntegrityCheck()) {
-    verifySignature({
-      packageName, version,
-      integrity, signatures,
-    });
+    try {
+      verifySignature({
+        packageName, version,
+        integrity, signatures,
+      });
+    } catch (cause) {
+      // TODO: consider switching to `UsageError` when https://github.com/arcanis/clipanion/issues/157 is fixed
+      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_CHECK to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_USE_LATEST to 0`, {cause});
+    }
   }
 
   return `${version}+${
