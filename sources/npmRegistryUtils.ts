@@ -53,7 +53,7 @@ export function verifySignature({signatures, integrity, packageName, version}: {
       break;
     }
   }
-  if (signature?.sig == null) throw new Error(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys})}`);
+  if (signature?.sig == null) throw new UsageError(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys}, undefined, 2)}`);
 
   const verifier = createVerify(`SHA256`);
   verifier.end(`${packageName}@${version}:${integrity}`);
