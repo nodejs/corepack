@@ -1,7 +1,9 @@
 import {UsageError}                            from 'clipanion';
 import fs                                      from 'fs';
 import path                                    from 'path';
+import semverSatisfies                         from 'semver/functions/satisfies';
 import semverValid                             from 'semver/functions/valid';
+import semverValidRange                        from 'semver/ranges/valid';
 
 import {PreparedPackageManagerInfo}            from './Engine';
 import * as debugUtils                         from './debugUtils';
@@ -52,8 +54,79 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
   };
 }
 
+type CorepackPackageJSON = {
+  packageManager?: string;
+  devEngines?: { packageManager?: DevEngineDependency };
+};
+
+interface DevEngineDependency {
+  name: string;
+  version: string;
+  onFail?: 'ignore' | 'warn' | 'error';
+}
+function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency['onFail']) {
+  switch (onFail) {
+    case `ignore`:
+      break;
+    case `error`:
+    case undefined:
+      throw new UsageError(errorMessage);
+    default:
+      console.warn(`! Corepack validation warning: ${errorMessage}`);
+  }
+}
+function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
+  const {packageManager: pm} = packageJSONContent;
+  if (packageJSONContent.devEngines?.packageManager != null) {
+    const {packageManager} = packageJSONContent.devEngines;
+
+    if (typeof packageManager !== `object`) {
+      console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
+      return pm;
+    }
+    if (Array.isArray(packageManager)) {
+      console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
+      return pm;
+    }
+
+    const {name, version, onFail} = packageManager;
+    if (typeof name !== `string` || name.includes(`@`)) {
+      warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
+      return pm;
+    }
+    if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
+      warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
+      return pm;
+    }
+
+    debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
+
+    if (pm) {
+      if (!pm.startsWith?.(`${name}@`))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
+
+      else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
+
+      return pm;
+    }
+
+
+    return `${name}@${version ?? `*`}`;
+  }
+
+  return pm;
+}
+
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
   const lookup = await loadSpec(cwd);
+
+  const range = `range` in lookup && lookup.range;
+  if (range) {
+    if (info.locator.name !== range.name || !semverSatisfies(info.locator.reference, range.range)) {
+      warnOrThrow(`The requested version of ${info.locator.name}@${info.locator.reference} does not match the devEngines specification (${range.name}@${range.range})`, range.onFail);
+    }
+  }
 
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile(lookup.target, `utf8`)
@@ -61,7 +134,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 
   const {data, indent} = nodeUtils.readPackageJson(content);
 
-  const previousPackageManager = data.packageManager ?? `unknown`;
+  const previousPackageManager = data.packageManager ?? (range ? `${range.name}@${range.range}` : `unknown`);
   data.packageManager = `${info.locator.name}@${info.locator.reference}`;
 
   const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
@@ -75,7 +148,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, getSpec: () => Descriptor};
+    | {type: `Found`, target: string, getSpec: () => Descriptor, range?: Descriptor & {onFail?: DevEngineDependency['onFail']}};
 
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
@@ -117,13 +190,20 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   if (selection === null)
     return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
 
-  const rawPmSpec = selection.data.packageManager;
+  const rawPmSpec = parsePackageJSON(selection.data);
   if (typeof rawPmSpec === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath};
+
+  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
 
   return {
     type: `Found`,
     target: selection.manifestPath,
+    range: selection.data.devEngines?.packageManager?.version && {
+      name: selection.data.devEngines.packageManager.name,
+      range: selection.data.devEngines.packageManager.version,
+      onFail: selection.data.devEngines.packageManager.onFail,
+    },
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
     getSpec: () => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
   };

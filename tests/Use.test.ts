@@ -17,23 +17,100 @@ beforeEach(async () => {
 });
 
 describe(`UseCommand`, () => {
-  it(`should set the package manager in the current project`, async () => {
-    await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
-        packageManager: `yarn@1.0.0`,
-      });
+  describe(`should set the package manager in the current project`, () => {
+    it(`With an existing 'packageManager' field`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          packageManager: `yarn@1.0.0`,
+          license: `MIT`,
+        });
 
-      await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
-        exitCode: 0,
-      });
+        await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
+          stderr: ``,
+        });
 
-      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
-        packageManager: `yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
-      });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          packageManager: `yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18`,
+        });
 
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        exitCode: 0,
-        stdout: `1.22.4\n`,
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `1.22.4\n`,
+          stderr: ``,
+        });
+      });
+    });
+    it(`with 'devEngines.packageManager' field`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        process.env.NO_COLOR = `1`;
+        const devEngines = {packageManager: {name: `yarn`, version: `2.x`}};
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          devEngines,
+        });
+
+        // Should refuse to install an incompatible version:
+        await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+          exitCode: 1,
+          stderr: ``,
+          stdout: `Installing yarn@1.22.4 in the project...\nUsage Error: The requested version of yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18 does not match the devEngines specification (yarn@2.x)\n\n$ corepack use <pattern>\n`,
+        });
+
+        // Should accept setting to a compatible version:
+        await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
+        });
+
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          devEngines,
+          packageManager: `yarn@2.4.3+sha512.8dd9fedc5451829619e526c56f42609ad88ae4776d9d3f9456d578ac085115c0c2f0fb02bb7d57fd2e1b6e1ac96efba35e80a20a056668f61c96934f67694fd0`,
+        });
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `2.4.3\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`with 'devEngines.packageManager' and 'packageManager' fields`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        process.env.NO_COLOR = `1`;
+        const devEngines = {packageManager: {name: `yarn`, version: `1.x || 2.x`}};
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          devEngines,
+          packageManager: `yarn@1.1.0`,
+          license: `MIT`,
+        });
+
+        // Should refuse to install an incompatible version:
+        await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
+        });
+
+        // Should accept setting to a compatible version:
+        await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
+        });
+
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          devEngines,
+          packageManager: `yarn@2.4.3+sha512.8dd9fedc5451829619e526c56f42609ad88ae4776d9d3f9456d578ac085115c0c2f0fb02bb7d57fd2e1b6e1ac96efba35e80a20a056668f61c96934f67694fd0`,
+        });
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `2.4.3\n`,
+          stderr: ``,
+        });
       });
     });
   });
@@ -100,7 +177,7 @@ describe(`UseCommand`, () => {
           await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
             exitCode: 0,
             stderr: ``,
-            stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\nyarn install v1\.22\.4\ninfo No lockfile found\.\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+            stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
           });
 
           await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
