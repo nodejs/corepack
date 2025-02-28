@@ -4,6 +4,7 @@ import path                                    from 'path';
 import semverSatisfies                         from 'semver/functions/satisfies';
 import semverValid                             from 'semver/functions/valid';
 import semverValidRange                        from 'semver/ranges/valid';
+import {parseEnv}                              from 'util';
 
 import {PreparedPackageManagerInfo}            from './Engine';
 import * as debugUtils                         from './debugUtils';
@@ -146,7 +147,13 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   };
 }
 
-type FoundSpecResult = {type: `Found`, target: string, getSpec: () => Descriptor, range?: Descriptor, envFilePath?: string} & {onFail?: DevEngineDependency['onFail']}};
+interface FoundSpecResult {
+  type: `Found`;
+  target: string;
+  getSpec: () => Descriptor;
+  range?: Descriptor & {onFail?: DevEngineDependency['onFail']};
+  envFilePath?: string;
+}
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
