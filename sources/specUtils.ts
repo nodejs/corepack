@@ -196,7 +196,6 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 
   debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
 
-  const spec = parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath));
   return {
     type: `Found`,
     target: selection.manifestPath,
