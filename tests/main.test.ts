@@ -1,31 +1,54 @@
-import {Filename, ppath, xfs, npath, PortablePath} from '@yarnpkg/fslib';
-import os                                          from 'node:os';
-import process                                     from 'node:process';
-import {beforeEach, describe, expect, it}          from 'vitest';
+import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
+import os                                            from 'node:os';
+import process                                       from 'node:process';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import config                                      from '../config.json';
-import * as folderUtils                            from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                from '../sources/types';
+import config                                        from '../config.json';
+import * as folderUtils                              from '../sources/folderUtils';
+import {SupportedPackageManagerSet}                  from '../sources/types';
 
-import {runCli}                                    from './_runCli';
+import {runCli}                                      from './_runCli';
 
 
 beforeEach(async () => {
+  const home = await xfs.mktempPromise();
+
   // `process.env` is reset after each tests in setupTests.js.
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_HOME = npath.fromPortablePath(home);
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
+
+  return async () => {
+    await xfs.removePromise(home, {recursive: true});
+  };
 });
 
-it(`should refuse to download a package manager if the hash doesn't match`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@1.22.4+sha1.deadbeef`,
-    });
+describe(`should refuse to download a package manager if the hash doesn't match`, () => {
+  it(`the one defined in "devEngines.packageManager" field`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {name: `yarn`, version: `1.22.4+sha1.deadbeef`},
+        },
+      });
 
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: /Mismatch hashes/,
-      stdout: ``,
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Mismatch hashes`),
+        stdout: ``,
+      });
+    });
+  });
+  it(`the one defined in "packageManager" field`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4+sha1.deadbeef`,
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Mismatch hashes`),
+        stdout: ``,
+      });
     });
   });
 });
@@ -35,7 +58,7 @@ it(`should refuse to download a known package manager from a URL`, async () => {
     // Package managers known by Corepack cannot be loaded from a URL.
     await expect(runCli(cwd, [`yarn@https://registry.npmjs.com/yarn/-/yarn-1.22.21.tgz`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /Illegal use of URL for known package manager/,
+      stderr: expect.stringContaining(`Illegal use of URL for known package manager`),
       stdout: ``,
     });
 
@@ -57,7 +80,7 @@ it.fails(`should refuse to download a known package manager from a URL in packag
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /Illegal use of URL for known package manager/,
+      stderr: expect.stringContaining(`Illegal use of URL for known package manager`),
       stdout: ``,
     });
 
@@ -82,7 +105,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: `No version specified for yarn in "packageManager" of package.json\n`,
       stdout: ``,
     });
 
@@ -92,7 +115,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: expect.stringContaining(`expected a semver version`),
       stdout: ``,
     });
 
@@ -102,7 +125,7 @@ it(`should require a version to be specified`, async () => {
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /expected a semver version/,
+      stderr: expect.stringContaining(`expected a semver version`),
       stdout: ``,
     });
   });
@@ -146,6 +169,20 @@ for (const [name, version, expectedVersion = version.split(`+`, 1)[0]] of tested
       });
 
       await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `${expectedVersion}\n`,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {packageManager: {name, version}},
+      });
+
+      await expect(runCli(cwd, [name, `--version`])).resolves.toMatchObject(URL.canParse(version) ? {
+        exitCode: 1,
+        stderr: expect.stringMatching(/^The value of devEngines\.packageManager\.version ".+" is not a valid semver range\n$/),
+        stdout: ``,
+      } : {
         exitCode: 0,
         stderr: ``,
         stdout: `${expectedVersion}\n`,
@@ -231,6 +268,298 @@ it(`should ignore the packageManager field when found within a node_modules vend
   });
 });
 
+describe(`should handle invalid devEngines values`, () => {
+  it(`throw on missing version`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `Invalid package manager specification in package.json (yarn@*); expected a semver version\n`,
+        stdout: ``,
+      });
+    });
+  });
+  it(`throw on invalid version`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            version: `yarn@1.x`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `The value of devEngines.packageManager.version "yarn@1.x" is not a valid semver range\n`,
+        stdout: ``,
+      });
+    });
+  });
+  it(`warn on array values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: [{
+            name: `pnpm`,
+            version: `10.x`,
+          },
+          ]},
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack does not currently support array values for devEngines.packageManager\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+  it(`warn on string values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: `pnpm@10.x`,
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack only supports objects as valid value for devEngines.packageManager. The current value ("pnpm@10.x") will be ignored.\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+  it(`warn on number values`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+        devEngines: {
+          packageManager: 10,
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack only supports objects as valid value for devEngines.packageManager. The current value (10) will be ignored.\n`,
+        stdout: `1.22.4\n`,
+      });
+    });
+  });
+});
+
+it(`should use hash from "packageManager" even when "devEngines" defines a different one`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      packageManager: `yarn@3.0.0-rc.2+sha1.11111`,
+      devEngines: {
+        packageManager: {
+          name: `yarn`,
+          version: `3.0.0-rc.2+sha1.22222`,
+        },
+      },
+    });
+
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: expect.stringContaining(`Mismatch hashes. Expected 11111, got`),
+      stdout: ``,
+    });
+  });
+});
+
+describe(`should accept range in devEngines only if a specific version is provided`, () => {
+  it(`either in package.json#packageManager field`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `6.x`,
+          },
+        },
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `Invalid package manager specification in package.json (pnpm@6.x); expected a semver version\n`,
+        stdout: ``,
+      });
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `6.x`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+
+      // No version should also work
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+});
+
+describe(`when devEngines.packageManager.name does not match packageManager`, () => {
+  it(`should ignore if devEngines.packageManager.onFail is set to "ignore"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `ignore`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`should warn if devEngines.packageManager.onFail is set to "warn"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `warn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack validation warning: "packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`should throw if devEngines.packageManager.onFail is set to "error"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+            onFail: `error`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `"packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: ``,
+      });
+    });
+  });
+  it(`should throw by default`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `"packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the "devEngines.packageManager" field set to "yarn"\n`,
+        stdout: ``,
+      });
+    });
+  });
+});
+
+describe(`should reject if range in devEngines does not match version provided`,  () => {
+  it(`unless onFail is set to "ignore"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `10.x`,
+            onFail: `ignore`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`unless onFail is set to "warn"`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `10.x`,
+            onFail: `warn`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: `! Corepack validation warning: "packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the value defined in "devEngines.packageManager" for "pnpm" of "10.x"\n`,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+  it(`in package.json#packageManager field`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `10.x`,
+          },
+        },
+        packageManager: `pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`,
+      });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: `"packageManager" field is set to "pnpm@6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854" which does not match the value defined in "devEngines.packageManager" for "pnpm" of "10.x"\n`,
+        stdout: ``,
+      });
+    });
+  });
+});
+
 it(`should use the closest matching packageManager field`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.mkdirPromise(ppath.join(cwd, `foo` as PortablePath), {recursive: true});
@@ -272,7 +601,7 @@ it(`shouldn't allow using regular Yarn commands on npm-configured projects`, asy
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: /This project is configured to use npm/,
+      stderr: expect.stringContaining(`This project is configured to use npm`),
     });
   });
 });
@@ -318,18 +647,72 @@ for (const name of SupportedPackageManagerSet) {
   });
 }
 
-it(`should configure the project when calling a package manager on it for the first time`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+describe(`when called on a project without any defined packageManager`, () => {
+  it(`should append the field to package.json by default`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
+      });
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
+  });
 
-    await runCli(cwd, [`yarn`]);
+  it(`should not modify package.json if disabled by env`, async () => {
+    process.env.COREPACK_ENABLE_AUTO_PIN = `0`;
 
-    const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+      });
 
-    expect(data).toMatchObject({
-      packageManager: `yarn@${config.definitions.yarn.default}`,
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+
+  it(`should not modify package.json if disabled by .corepack.env`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
+    });
+  });
+  it(`should modify package.json if .corepack.env if disabled`, async () => {
+    process.env.COREPACK_ENV_FILE = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: `yarn@${config.definitions.yarn.default}`,
+      });
     });
   });
 });
@@ -473,13 +856,19 @@ it(`should support disabling the network accesses from the environment`, async (
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: ``,
-      stderr: /Network access disabled by the environment/,
+      stderr: expect.stringContaining(`Network access disabled by the environment`),
       exitCode: 1,
     });
   });
 });
 
 describe(`read-only and offline environment`, () => {
+  afterEach(async () => {
+    const home = npath.toPortablePath(process.env.COREPACK_HOME!);
+    await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o644);
+    await xfs.chmodPromise(home, 0o755);
+  });
+
   it(`should support running in project scope`, async () => {
     await xfs.mktempPromise(async cwd => {
       // Reset to default
@@ -497,15 +886,10 @@ describe(`read-only and offline environment`, () => {
         exitCode: 0,
       });
 
-      // Let corepack discover the latest yarn version.
-      // BUG: This should not be necessary with a fully specified version in package.json plus populated corepack cache.
-      // Engine.executePackageManagerRequest needs to defer the fallback work. This requires a big refactoring.
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        exitCode: 0,
-      });
-
       // Make COREPACK_HOME ro
       const home = npath.toPortablePath(folderUtils.getCorepackHomeFolder());
+      // Make a lastKnownGood.json file with not JSON-parsable content:
+      await xfs.writeFilePromise(ppath.join(home, `lastKnownGood.json`), `{`);
       await xfs.chmodPromise(ppath.join(home, `lastKnownGood.json`), 0o444);
       await xfs.chmodPromise(home, 0o555);
 
@@ -811,16 +1195,35 @@ it(`should support package managers in ESM format`, async () => {
   });
 });
 
-it(`should show a warning on stderr before downloading when enable`, async() => {
-  await xfs.mktempPromise(async cwd => {
-    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@3.0.0`,
+describe(`should show a warning on stderr before downloading when enable`, () => {
+  it(`when enabled by the environment`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+      });
     });
-    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stdout: `3.0.0\n`,
-      stderr: `! Corepack is about to download https://repo.yarnpkg.com/3.0.0/packages/yarnpkg-cli/bin/yarn.js\n`,
+  });
+
+  it(`should ignore setting in .corepack.env`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeFilePromise(
+        ppath.join(cwd, `.corepack.env` as Filename),
+        `COREPACK_ENABLE_DOWNLOAD_PROMPT=1\n`,
+      );
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@3.0.0`,
+      });
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `3.0.0\n`,
+        stderr: ``,
+      });
     });
   });
 });
@@ -850,8 +1253,8 @@ it(`should download yarn classic from custom registry`, async () => {
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /^1\.\d+\.\d+\r?\n$/,
-      stderr: /^! Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/,
+      stdout: expect.stringMatching(/^1\.\d+\.\d+\r?\n$/),
+      stderr: expect.stringMatching(/^! Corepack is about to download https:\/\/registry\.npmmirror\.com\/yarn\/-\/yarn-1\.\d+\.\d+\.tgz\r?\n$/),
     });
 
     // Should keep working with cache
@@ -899,7 +1302,7 @@ it(`should download latest pnpm from custom registry`, async () => {
     await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
-      stderr: /^! The local project doesn't define a 'packageManager' field\. Corepack will now add one referencing pnpm@1\.9998\.9999@sha1\./,
+      stderr: expect.stringContaining(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing pnpm@1.9998.9999+sha1.`),
     });
 
     // Should keep working with cache
@@ -907,6 +1310,156 @@ it(`should download latest pnpm from custom registry`, async () => {
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
       stderr: ``,
+    });
+  });
+});
+
+describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+  });
+
+  it(`from env variable`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from .corepack.env file`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env even if there's a .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS={}\n`);
+
+      // By default, Corepack should be using .corepack.env (or the built-in ones on Node.js 18.x) and fail.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      process.env.COREPACK_INTEGRITY_KEYS = ``;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`should ignore .corepack.env file if COREPACK_ENV_FILE is set to 0`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+
+      process.env.COREPACK_ENV_FILE = `0`;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      delete process.env.COREPACK_ENV_FILE;
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async t => {
+    // Skip that test on Node.js 18.x as it lacks support for .env files.
+    if (process.version.startsWith(`v18.`)) t.skip();
+
+    process.env.COREPACK_ENV_FILE = `.other.env`;
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`No compatible signature found in package metadata`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_INTEGRITY_KEYS=0\n`);
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+      });
     });
   });
 });
@@ -967,122 +1520,139 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
 describe(`handle integrity checks`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
-    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
   });
 
-  it(`should return no error when signature matches`, async () => {
-    process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+  describe(`when signature matches`, () => {
+    beforeEach(() => {
+      process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+    });
+
+    it(`should return no error when calling 'corepack use'`, async () => {
+      await xfs.mktempPromise(async cwd => {
+      // Skip rest of the test on Windows & Node.js 18.x as it inevitably times out otherwise.
+        if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
+
+        // Removing home directory to force the "re-download"
+        await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
+
+        await Promise.all([
+          expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+        ]);
+      });
+    });
+
+
+    it(`should return no error when fetching latest version`, async () => {
+      process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+      await xfs.mktempPromise(async cwd => {
+        await Promise.all([
+          expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `pnpm: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `yarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+          expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
+            exitCode: 0,
+            stdout: `yarn: Hello from custom registry\n`,
+            stderr: ``,
+          }),
+        ]);
+      });
+    });
+  });
+  it(`should return an error when signature does not match with a range`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await Promise.all([
-        expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `pnpm: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `yarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`yarn@5.x`, `--version`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `yarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-      ]);
-
-      // Skip rest of the test on Windows & Node.js 18.x as it inevitably times out otherwise.
-      if (process.version.startsWith(`v18.`) && os.platform() === `win32`) return;
-
-      // Removing home directory to force the "re-download"
-      await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
-
-      await Promise.all([
-        expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing pnpm@1.9998.9999 in the project...\n\npnpm: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`use`, `yarn@1.x`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing yarn@1.9998.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-        expect(runCli(cwd, [`use`, `yarn@latest`], true)).resolves.toMatchObject({
-          exitCode: 0,
-          stdout: `Installing yarn@5.9999.9999 in the project...\n\nyarn: Hello from custom registry\n`,
-          stderr: ``,
-        }),
-      ]);
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Signature does not match`),
+        stdout: ``,
+      });
     });
   });
   it(`should return an error when signature does not match with a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
 
     await xfs.mktempPromise(async cwd => {
-      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+      await expect(runCli(cwd, [`pnpm@latest`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
-        stdout: ``,
-      });
-      await expect(runCli(cwd, [`yarn@stable`, `--version`], true)).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
     });
   });
   it(`should return an error when hash does not match without a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_integrity`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stderr: ``,
       });
     });
   });
   it(`should return an error when signature does not match without a tag`, async () => {
     process.env.TEST_INTEGRITY = `invalid_signature`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
 
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
+        stdout: expect.stringContaining(`Signature does not match`),
         stderr: ``,
       });
     });
@@ -1093,12 +1663,12 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Signature does not match/,
+        stderr: expect.stringContaining(`Signature does not match`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Signature does not match/,
+        stdout: expect.stringContaining(`Signature does not match`),
         stderr: ``,
       });
     });
@@ -1109,12 +1679,12 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stderr: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: /Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/,
+        stdout: expect.stringMatching(/Mismatch hashes. Expected [a-f0-9]{128}, got [a-f0-9]{128}/),
         stderr: ``,
       });
     });

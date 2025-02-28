@@ -111,6 +111,8 @@ function generateVersionMetadata(packageName, version) {
 const TOKEN_MOCK = `SOME_DUMMY_VALUE`;
 
 const server = createServer((req, res) => {
+  res.setHeader(`connection`, `close`);
+
   const auth = req.headers.authorization;
 
   if (
