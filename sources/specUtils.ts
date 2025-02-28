@@ -103,6 +103,17 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 
     debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
+    const localEnvKey = `COREPACK_DEV_ENGINES_${packageManager.name.toUpperCase()}`;
+    const localEnvVersion = process.env[localEnvKey];
+    if (localEnvVersion) {
+      debugUtils.log(`Environment defines that ${name}@${localEnvVersion} is the local package manager`);
+
+      if (!semverSatisfies(localEnvVersion, version))
+        warnOrThrow(`"${localEnvKey}" environment variable is set to ${JSON.stringify(localEnvVersion)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
+
+      return `${name}@${localEnvVersion}`;
+    }
+
     if (pm) {
       if (!pm.startsWith?.(`${name}@`))
         warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
@@ -131,16 +142,33 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   }
 
   const content = lookup.type !== `NoProject`
-    ? await fs.promises.readFile(lookup.target, `utf8`)
+    ? await fs.promises.readFile((lookup as FoundSpecResult).envFilePath ?? lookup.target, `utf8`)
     : ``;
 
-  const {data, indent} = nodeUtils.readPackageJson(content);
+  let previousPackageManager: string;
+  let newContent: string;
+  if ((lookup as FoundSpecResult).envFilePath) {
+    const {name} =  range || (lookup as FoundSpecResult).getSpec();
+    const envKey = `COREPACK_DEV_ENGINES_${name.toUpperCase()}`;
+    const index = content.lastIndexOf(`\n${envKey}=`) + 1;
+    if (index === 0 && !content.startsWith(`${envKey}=`))
+      throw new Error(`INTERNAL ASSERTION ERROR: missing expected ${envKey} in .corepack.env`);
 
-  const previousPackageManager = data.packageManager ?? (range ? `${range.name}@${range.range}` : `unknown`);
-  data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+    const lineEndIndex = content.indexOf(`\n`, index);
 
-  const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
-  await fs.promises.writeFile(lookup.target, newContent, `utf8`);
+    previousPackageManager = content.slice(index, lineEndIndex === -1 ? undefined : lineEndIndex);
+    newContent = `${content.slice(0, index)}\n${envKey}=${info.locator.reference}\n${lineEndIndex === -1 ? `` : content.slice(lineEndIndex)}`;
+  } else {
+    const {data, indent} = nodeUtils.readPackageJson(content);
+
+    previousPackageManager = data.packageManager ?? (range ? `${range.name}@${range.range}` : `unknown`);
+    data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+
+    newContent = `${JSON.stringify(data, null, indent)}\n`;
+  }
+
+  newContent = nodeUtils.normalizeLineEndings(content, newContent);
+  await fs.promises.writeFile((lookup as FoundSpecResult).envFilePath ?? lookup.target, newContent, `utf8`);
 
   return {
     previousPackageManager,
