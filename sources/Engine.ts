@@ -237,7 +237,7 @@ export class Engine {
    *
    * If the project doesn't include a specification file, we just assume that
    * whatever the user uses is exactly what they want to use. Since the version
-   * isn't explicited, we fallback on known good versions.
+   * isn't specified, we fallback on known good versions.
    *
    * Finally, if the project doesn't exist at all, we ask the user whether they
    * want to create one in the current project. If they do, we initialize a new

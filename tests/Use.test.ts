@@ -5,9 +5,15 @@ import {describe, beforeEach, it, expect} from 'vitest';
 import {runCli}                           from './_runCli';
 
 beforeEach(async () => {
+  const home = await xfs.mktempPromise();
+
   // `process.env` is reset after each tests in setupTests.js.
-  process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
+  process.env.COREPACK_HOME = npath.fromPortablePath(home);
   process.env.COREPACK_DEFAULT_TO_LATEST = `0`;
+
+  return async () => {
+    await xfs.removePromise(home, {recursive: true});
+  };
 });
 
 describe(`UseCommand`, () => {
