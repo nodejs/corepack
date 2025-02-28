@@ -53,7 +53,7 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
-  const lookup = await loadSpec(cwd, true);
+  const lookup = await loadSpec(cwd);
 
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile(lookup.target, `utf8`)
@@ -72,12 +72,12 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   };
 }
 
-export type LoadSpecResult<SkipSpecParsing extends boolean> =
+export type LoadSpecResult =
     | {type: `NoProject`, target: string}
     | {type: `NoSpec`, target: string}
-    | {type: `Found`, target: string, spec: SkipSpecParsing extends true ? undefined : Descriptor };
+    | {type: `Found`, target: string, readonly spec: Descriptor };
 
-export async function loadSpec<SkipSpecParsing extends boolean = false>(initialCwd: string, skipSpecParsing?: SkipSpecParsing): Promise<LoadSpecResult<SkipSpecParsing>> {
+export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
@@ -124,8 +124,17 @@ export async function loadSpec<SkipSpecParsing extends boolean = false>(initialC
   return {
     type: `Found`,
     target: selection.manifestPath,
-    spec: skipSpecParsing ?
-      (undefined as SkipSpecParsing extends true ? undefined : never) :
-      parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)) as SkipSpecParsing extends true ? never : ReturnType<typeof parseSpec>,
+    get spec() {
+      // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
+      const value = parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath));
+      Object.defineProperty(this, `spec`, {
+        // @ts-expect-error we should be using __proto__, despite what TS is saying
+        __proto__: null,
+        configurable: true,
+        writable: false,
+        value,
+      });
+      return value;
+    },
   };
 }
