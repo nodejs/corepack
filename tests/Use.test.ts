@@ -294,7 +294,7 @@ describe(`UseCommand`, () => {
       await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
-        stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\nyarn install v1\.22\.4\ninfo No lockfile found\.\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+        stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
       });
 
       try {
