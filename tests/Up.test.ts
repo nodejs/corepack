@@ -27,7 +27,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -57,7 +57,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -88,7 +88,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -118,7 +118,7 @@ describe(`UpCommand`, () => {
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({

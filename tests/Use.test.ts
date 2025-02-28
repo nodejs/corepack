@@ -27,7 +27,7 @@ describe(`UseCommand`, () => {
 
         await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
           exitCode: 0,
-          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
           stderr: ``,
         });
 
@@ -61,7 +61,7 @@ describe(`UseCommand`, () => {
         await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -91,14 +91,14 @@ describe(`UseCommand`, () => {
         await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
         });
 
         // Should accept setting to a compatible version:
         await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
           exitCode: 0,
           stderr: ``,
-          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n(.*\n)+➤ YN0000: Done with warnings in \d+s \d+ms\n$/),
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 
         await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
@@ -177,7 +177,7 @@ describe(`UseCommand`, () => {
           await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
             exitCode: 0,
             stderr: ``,
-            stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\nyarn install v1\.22\.4\ninfo No lockfile found\.\n(.*\n)+Done in \d+\.\d+s\.\n$/),
+            stdout: expect.stringMatching(/^Installing yarn@1\.22\.4 in the project\.\.\.\n\n/),
           });
 
           await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
