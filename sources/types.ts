@@ -71,7 +71,7 @@ export interface DownloadSpec {
  */
 export interface Config {
   definitions: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     [name in SupportedPackageManagers]?: {
       /**
        * Defines the version that needs to be used when running commands within
