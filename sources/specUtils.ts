@@ -58,15 +58,15 @@ export function parseSpec(raw: unknown, source: string, {enforceExactVersion = t
 
 type CorepackPackageJSON = {
   packageManager?: string;
-  devEngines?: { packageManager?: DevEngineDependency };
+  devEngines?: {packageManager?: DevEngineDependency};
 };
 
 interface DevEngineDependency {
   name: string;
   version: string;
-  onFail?: 'ignore' | 'warn' | 'error';
+  onFail?: `ignore` | `warn` | `error`;
 }
-function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency['onFail']) {
+function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency[`onFail`]) {
   switch (onFail) {
     case `ignore`:
       break;
@@ -151,7 +151,7 @@ interface FoundSpecResult {
   type: `Found`;
   target: string;
   getSpec: () => Descriptor;
-  range?: Descriptor & {onFail?: DevEngineDependency['onFail']};
+  range?: Descriptor & {onFail?: DevEngineDependency[`onFail`]};
   envFilePath?: string;
 }
 export type LoadSpecResult =

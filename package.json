@@ -23,7 +23,7 @@
     "@types/proxy-from-env": "^1",
     "@types/semver": "^7.1.0",
     "@types/which": "^3.0.0",
-    "@yarnpkg/eslint-config": "^2.0.0",
+    "@yarnpkg/eslint-config": "^3.0.0",
     "@yarnpkg/fslib": "^3.0.0-rc.48",
     "@zkochan/cmd-shim": "^6.0.0",
     "better-sqlite3": "^11.7.2",
