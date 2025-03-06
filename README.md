@@ -4,8 +4,7 @@
 
 Corepack is a zero-runtime-dependency Node.js script that acts as a bridge
 between Node.js projects and the package managers they are intended to be used
-with during development. In practical terms, **Corepack lets you use Yarn, npm,
-and pnpm without having to install them**.
+with during development. In practical terms, **Corepack lets you use Yarn and pnpm without having to install them**.
 
 ## How to Install
 
@@ -71,7 +70,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 ### When Building Packages
 
 Just use your package managers as you usually would. Run `yarn install` in Yarn
-projects, `pnpm install` in pnpm projects, and `npm` in npm projects. Corepack
+projects and `pnpm install` in pnpm projects. Corepack
 will catch these calls, and depending on the situation:
 
 - **If the local project is configured for the package manager you're using**,
@@ -100,7 +99,7 @@ Here, `yarn` is the name of the package manager, specified at version `3.2.3`,
 along with the SHA-224 hash of this version for validation.
 `packageManager@x.y.z` is required. The hash is optional but strongly
 recommended as a security practice. Permitted values for the package manager are
-`yarn`, `npm`, and `pnpm`.
+`yarn` and `pnpm`.
 
 You can also provide a URL to a `.js` file (which will be interpreted as a
 CommonJS module) or a `.tgz` file (which will be interpreted as a package, and
@@ -198,9 +197,8 @@ Clears the local `COREPACK_HOME` cache directory.
 
 This command will detect where Corepack is installed and will create shims next
 to it for each of the specified package managers (or all of them if the command
-is called without parameters). Note that the npm shims will not be installed
-unless explicitly requested, as npm is currently distributed with Node.js
-through other means.
+is called without parameters). Note that the npm shims will not be installed,
+as npm is directly installed with Node.js.
 
 If the file system where the `corepack` binary is located is read-only, this
 command will fail. A workaround is to add the binaries as alias in your
@@ -211,8 +209,6 @@ alias yarn="corepack yarn"
 alias yarnpkg="corepack yarnpkg"
 alias pnpm="corepack pnpm"
 alias pnpx="corepack pnpx"
-alias npm="corepack npm"
-alias npx="corepack npx"
 ```
 
 On Windows PowerShell, you can add functions using the `$PROFILE` automatic
@@ -223,8 +219,6 @@ echo "function yarn { corepack yarn `$args }" >> $PROFILE
 echo "function yarnpkg { corepack yarnpkg `$args }" >> $PROFILE
 echo "function pnpm { corepack pnpm `$args }" >> $PROFILE
 echo "function pnpx { corepack pnpx `$args }" >> $PROFILE
-echo "function npm { corepack npm `$args }" >> $PROFILE
-echo "function npx { corepack npx `$args }" >> $PROFILE
 ```
 
 ### `corepack disable [... name]`
@@ -302,7 +296,7 @@ same major line. Should you need to upgrade to a new major, use an explicit
   ask for user input before starting the download.
 
 - `COREPACK_ENABLE_UNSAFE_CUSTOM_URLS` can be set to `1` to allow use of
-  custom URLs to load a package manager known by Corepack (`yarn`, `npm`, and
+  custom URLs to load a package manager known by Corepack (`yarn` and
   `pnpm`).
 
 - `COREPACK_ENABLE_NETWORK` can be set to `0` to prevent Corepack from accessing

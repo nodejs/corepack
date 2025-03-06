@@ -1,11 +1,11 @@
-import cmdShim                                                           from '@zkochan/cmd-shim';
-import {Command, Option, UsageError}                                     from 'clipanion';
-import fs                                                                from 'fs';
-import path                                                              from 'path';
-import which                                                             from 'which';
+import cmdShim                                                 from '@zkochan/cmd-shim';
+import {Command, Option, UsageError}                           from 'clipanion';
+import fs                                                      from 'fs';
+import path                                                    from 'path';
+import which                                                   from 'which';
 
-import {Context}                                                         from '../main';
-import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
+import {Context}                                               from '../main';
+import {isSupportedPackageManager, SupportedPackageManagerSet} from '../types';
 
 export class EnableCommand extends Command<Context> {
   static paths = [
@@ -57,7 +57,7 @@ export class EnableCommand extends Command<Context> {
       throw new Error(`Assertion failed: The stub folder doesn't exist`);
 
     const names = this.names.length === 0
-      ? SupportedPackageManagerSetWithoutNpm
+      ? SupportedPackageManagerSet
       : this.names;
 
     const allBinNames: Array<string> = [];
