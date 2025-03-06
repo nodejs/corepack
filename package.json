@@ -71,17 +71,11 @@
       "yarnpkg": "./dist/yarnpkg.js"
     },
     "executableFiles": [
-      "./dist/npm.js",
-      "./dist/npx.js",
       "./dist/pnpm.js",
       "./dist/pnpx.js",
       "./dist/yarn.js",
       "./dist/yarnpkg.js",
       "./dist/corepack.js",
-      "./shims/npm",
-      "./shims/npm.ps1",
-      "./shims/npx",
-      "./shims/npx.ps1",
       "./shims/pnpm",
       "./shims/pnpm.ps1",
       "./shims/pnpx",

@@ -570,7 +570,7 @@ it(`should use the closest matching packageManager field`, async () => {
       packageManager: `pnpm@10.5.2`,
     });
 
-    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`p npm`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(ppath.join(cwd, `foo` as PortablePath), [`pnpm`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `10.5.2\n`,
@@ -582,11 +582,14 @@ it(`should expose its root to spawned processes`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       packageManager: `pnpm@10.5.2`,
+      scripts: {
+        env: `node -p process.env.COREPACK_ROOT`,
+      },
     });
 
     await expect(runCli(cwd, [`pnpm`, `run`, `env`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: expect.stringContaining(`COREPACK_ROOT=${npath.dirname(__dirname)}`),
+      stdout: expect.stringContaining(npath.dirname(__dirname)),
     });
   });
 });
