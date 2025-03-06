@@ -1,4 +1,5 @@
 import {BaseContext, Builtins, Cli}    from 'clipanion';
+import type {UsageError}               from 'clipanion';
 
 import {version as corepackVersion}    from '../package.json';
 
@@ -36,6 +37,10 @@ function getPackageManagerRequestFromCli(parameter: string | undefined, engine: 
     binaryName,
     binaryVersion: binaryVersion || null,
   };
+}
+
+function isUsageError(error: any): error is UsageError {
+  return error?.name === `UsageError`;
 }
 
 export async function runMain(argv: Array<string>) {
@@ -81,9 +86,17 @@ export async function runMain(argv: Array<string>) {
       process.exitCode ??= code;
     }
   } else {
-    await engine.executePackageManagerRequest(request, {
-      cwd: process.cwd(),
-      args: restArgs,
-    });
+    try {
+      await engine.executePackageManagerRequest(request, {
+        cwd: process.cwd(),
+        args: restArgs,
+      });
+    } catch (error) {
+      if (isUsageError(error)) {
+        console.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
   }
 }

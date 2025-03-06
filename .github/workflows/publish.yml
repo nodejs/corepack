@@ -7,6 +7,10 @@ on:
 env:
   YARN_ENABLE_GLOBAL_CACHE: false
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -14,7 +18,7 @@ jobs:
       release_created:  ${{ steps.release.outputs.release_created }}
       release_tag:  ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: googleapis/release-please-action@v3
         id: release
         with:
           release-type: node

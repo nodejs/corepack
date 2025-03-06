@@ -6,7 +6,7 @@ const OLD_ENV = process.env;
 // in case the local machine already set these values.
 const processEnv = Object.fromEntries(
   Object.entries(process.env).filter(
-    ([key]) => key !== `FORCE_COLOR` && !key.startsWith(`COREPACK_`),
+    ([key]) => key !== `FORCE_COLOR` && key !== `DEBUG` && !key.startsWith(`COREPACK_`),
   ),
 );
 

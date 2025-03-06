@@ -8,6 +8,9 @@ on:
 
 jobs:
   fetch-latest-versions:
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
 
     steps:
