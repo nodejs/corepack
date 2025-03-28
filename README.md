@@ -279,6 +279,19 @@ range specified in `devEngines.packageManager.version`, or fallback to the
 same major line. Should you need to upgrade to a new major, use an explicit
 `corepack use {name}@latest` call (or simply `corepack use {name}`).
 
+## Utility Commands (deprecated)
+
+The utility commands `corepack hydrate` and `corepack prepare` were deprecated with [corepack@0.20.0](https://github.com/nodejs/corepack/releases/tag/v0.20.0).
+It is recommended to use the replacement commands as shown in the following table:
+
+| Deprecated command                                | Replacement command                                    |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| `corepack hydrate path/to/archive.tgz`            | `corepack install -g --cache-only path/to/archive.tgz` |
+| `corepack hydrate path/to/archive.tgz --activate` | `corepack install -g path/to/archive.tgz`              |
+| `corepack prepare foo@1.2.3`                      | `corepack install -g --cache-only foo@1.2.3`           |
+| `corepack prepare foo@1.2.3 --activate`           | `corepack install -g foo@1.2.3`                        |
+| `corepack prepare -o ...`                         | `corepack pack -o ...`                                 |
+
 ## Environment Variables
 
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
