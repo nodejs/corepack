@@ -79,7 +79,7 @@ const registry = {
   __proto__: null,
   yarn: [`1.9998.9999`],
   pnpm: [`1.9998.9999`],
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+
   '@yarnpkg/cli-dist': [`5.9999.9999`],
   customPkgManager: [`1.0.0`],
 };
@@ -131,7 +131,6 @@ const server = createServer((req, res) => {
   const packageName = req.url.slice(1, slashPosition === -1 ? undefined : slashPosition);
   if (packageName in registry) {
     if (req.url === `/${packageName}`) {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       res.end(JSON.stringify({"dist-tags": {
         latest: registry[packageName].at(-1),
       }, versions: Object.fromEntries(registry[packageName].map(version =>

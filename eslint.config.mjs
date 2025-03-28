@@ -13,10 +13,12 @@ export default [
   ...yarnpkg,
   {
     rules: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       'no-restricted-globals': [`error`, {
         name: `fetch`,
         message: `Use fetch from sources/httpUtils.ts`,
+      }],
+      '@typescript-eslint/no-unused-vars': [`error`, {
+        caughtErrors: `none`,
       }],
     },
   },
