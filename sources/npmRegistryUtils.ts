@@ -1,9 +1,14 @@
+import * as sigstoreTuf           from '@sigstore/tuf';
 import {UsageError}               from 'clipanion';
-import {createVerify}             from 'crypto';
+import assert                     from 'node:assert';
+import * as crypto                from 'node:crypto';
+import * as path                  from 'node:path';
 
 import defaultConfig              from '../config.json';
 
 import {shouldSkipIntegrityCheck} from './corepackUtils';
+import * as debugUtils            from './debugUtils';
+import * as folderUtils           from './folderUtils';
 import * as httpUtils             from './httpUtils';
 
 // load abbreviated metadata as that's all we need for these calls
@@ -32,7 +37,83 @@ export async function fetchAsJson(packageName: string, version?: string) {
   return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
-export function verifySignature({signatures, integrity, packageName, version}: {
+interface KeyInfo {
+  keyid: string;
+  // base64 encoded DER SPKI
+  keyData: string;
+}
+
+async function fetchSigstoreTufKeys(): Promise<Array<KeyInfo> | null> {
+  // This follows the implementation for npm.
+  // See https://github.com/npm/cli/blob/3a80a7b7d168c23b5e297cba7b47ba5b9875934d/lib/utils/verify-signatures.js#L174
+  let keysRaw: string;
+  try {
+    // @ts-expect-error inject custom fetch into monkey-patched `tuf-js` module.
+    globalThis.tufJsFetch = async (input: string) => {
+      const agent = await httpUtils.getProxyAgent(input);
+      return await globalThis.fetch(input, {
+        dispatcher: agent,
+      });
+    };
+    const sigstoreTufClient = await sigstoreTuf.initTUF({
+      cachePath: path.join(folderUtils.getCorepackHomeFolder(), `_tuf`),
+    });
+    keysRaw = await sigstoreTufClient.getTarget(`registry.npmjs.org/keys.json`);
+  } catch (error) {
+    console.warn(`Warning: Failed to get signing keys from Sigstore TUF repo`, error);
+    return null;
+  }
+
+  // The format of the key file is undocumented but follows `PublicKey` from
+  // sigstore/protobuf-specs.
+  // See https://github.com/sigstore/protobuf-specs/blob/main/gen/pb-typescript/src/__generated__/sigstore_common.ts
+  const keysFromSigstore = JSON.parse(keysRaw) as {keys: Array<{keyId: string, publicKey: {rawBytes: string, keyDetails: string}}>};
+
+  return keysFromSigstore.keys.filter(key => {
+    if (key.publicKey.keyDetails === `PKIX_ECDSA_P256_SHA_256`) {
+      return true;
+    } else {
+      debugUtils.log(`Unsupported verification key type ${key.publicKey.keyDetails}`);
+      return false;
+    }
+  }).map(k => ({
+    keyid: k.keyId,
+    keyData: k.publicKey.rawBytes,
+  }));
+}
+
+async function getVerificationKeys(): Promise<Array<KeyInfo>> {
+  let keys: Array<{keyid: string, key: string}>;
+
+  if (process.env.COREPACK_INTEGRITY_KEYS) {
+    // We use the format of the `GET /-/npm/v1/keys` endpoint with `npm` instead
+    // of `keys` as the wrapping key.
+    const keysFromEnv = JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as {npm: Array<{keyid: string, key: string}>};
+    keys = keysFromEnv.npm;
+    debugUtils.log(`Using COREPACK_INTEGRITY_KEYS to verify signatures: ${keys.map(k => k.keyid).join(`, `)}`);
+    return keys.map(k => ({
+      keyid: k.keyid,
+      keyData: k.key,
+    }));
+  }
+
+
+  const sigstoreKeys = await fetchSigstoreTufKeys();
+  if (sigstoreKeys) {
+    debugUtils.log(`Using NPM keys from @sigstore/tuf to verify signatures: ${sigstoreKeys.map(k => k.keyid).join(`, `)}`);
+    return sigstoreKeys;
+  }
+
+  debugUtils.log(`Falling back to built-in npm verification keys`);
+  return defaultConfig.keys.npm.map(k => ({
+    keyid: k.keyid,
+    keyData: k.key,
+  }));
+}
+
+let verificationKeysCache: Promise<Array<KeyInfo>> | null = null;
+
+export async function verifySignature({signatures, integrity, packageName, version}: {
   signatures: Array<{keyid: string, sig: string}>;
   integrity: string;
   packageName: string;
@@ -40,30 +121,28 @@ export function verifySignature({signatures, integrity, packageName, version}: {
 }) {
   if (!Array.isArray(signatures) || !signatures.length) throw new Error(`No compatible signature found in package metadata`);
 
-  const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
-    JSON.parse(process.env.COREPACK_INTEGRITY_KEYS) as typeof defaultConfig.keys :
-    defaultConfig.keys;
+  if (!verificationKeysCache)
+    verificationKeysCache = getVerificationKeys();
 
-  let signature: typeof signatures[0] | undefined;
-  let key!: string;
-  for (const k of trustedKeys) {
-    signature = signatures.find(({keyid}) => keyid === k.keyid);
-    if (signature != null) {
-      key = k.key;
-      break;
-    }
-  }
-  if (signature?.sig == null) throw new UsageError(`The package was not signed by any trusted keys: ${JSON.stringify({signatures, trustedKeys}, undefined, 2)}`);
+  const keys = await verificationKeysCache;
+  const keyInfo = keys.find(({keyid}) => signatures.some(s => s.keyid === keyid));
+  if (keyInfo == null)
+    throw new Error(`Cannot find key to verify signature. signature keys: ${signatures.map(s => s.keyid)}, verification keys: ${keys.map(k => k.keyid)}`);
 
-  const verifier = createVerify(`SHA256`);
-  verifier.end(`${packageName}@${version}:${integrity}`);
-  const valid = verifier.verify(
-    `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`,
-    signature.sig,
-    `base64`,
-  );
+  const signature = signatures.find(({keyid}) => keyid === keyInfo.keyid);
+  assert(signature);
+
+  const verifier = crypto.createVerify(`SHA256`);
+  const payload = `${packageName}@${version}:${integrity}`;
+  verifier.end(payload);
+  const key = crypto.createPublicKey({key: Buffer.from(keyInfo.keyData, `base64`), format: `der`, type: `spki`});
+  const valid = verifier.verify(key, signature.sig, `base64`);
+
   if (!valid) {
-    throw new Error(`Signature does not match`);
+    throw new Error(
+      `Signature verification failed for ${payload} with key ${keyInfo.keyid}\n` +
+      `If you are using a custom registry you can set COREPACK_INTEGRITY_KEYS.`,
+    );
   }
 }
 
@@ -74,7 +153,7 @@ export async function fetchLatestStableVersion(packageName: string) {
 
   if (!shouldSkipIntegrityCheck()) {
     try {
-      verifySignature({
+      await verifySignature({
         packageName, version,
         integrity, signatures,
       });
