@@ -355,8 +355,17 @@ same major line. Should you need to upgrade to a new major, use an explicit
   [`proxy-from-env`](https://github.com/Rob--W/proxy-from-env).
 
 - `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
-  instruct Corepack to skip integrity checks, or to a JSON string containing
-  custom keys.
+  instruct Corepack to skip signature verification, or to a JSON string
+  containing custom keys. The format based on the response of the
+  `GET /-/npm/v1/keys` endpoint of npm registry under the `npm` key. That is,
+
+  ```bash
+  curl https://registry.npmjs.org/-/npm/v1/keys | jq -c '{npm: .keys}'
+  ```
+
+  See the [npm documentation on
+  signatures](https://docs.npmjs.com/about-registry-signatures) for more
+  information.
 
 ## Troubleshooting
 

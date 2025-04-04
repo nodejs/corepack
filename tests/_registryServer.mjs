@@ -7,6 +7,14 @@ import {gzipSync}                                    from 'node:zlib';
 let privateKey, keyid;
 
 switch (process.env.TEST_INTEGRITY) {
+  case `invalid_npm_signature`: {
+    // Claim to use a known NPM signing key but provide an invalid signature
+    keyid = `SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U`;
+    ({privateKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `sect239k1`,
+    }));
+    break;
+  }
   case `invalid_signature`: {
     ({privateKey} = generateKeyPairSync(`ec`, {
       namedCurve: `sect239k1`,
@@ -195,6 +203,7 @@ if (process.env.AUTH_TYPE === `PROXY`) {
 }
 
 server.listen(0, `localhost`);
+server.unref();
 await once(server, `listening`);
 
 const {address, port} = server.address();
@@ -222,17 +231,8 @@ switch (process.env.AUTH_TYPE) {
   default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
 }
 
-if (process.env.NOCK_ENV === `replay`) {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = function fetch(i) {
-    if (!`${i}`.startsWith(
-      process.env.AUTH_TYPE === `PROXY` ?
-        `http://example.com` :
-        `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`))
-      throw new Error(`Unexpected request to  ${i}`);
-
-    return Reflect.apply(originalFetch, this, arguments);
-  };
-}
-
-server.unref();
+globalThis.fetch.passthroughUrls.push(
+  process.env.AUTH_TYPE === `PROXY` ?
+    `http://example.com` :
+    `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`,
+);

@@ -2,6 +2,7 @@
 const path = require(`node:path`);
 const crypto = require(`node:crypto`);
 const SQLite3 = require(`better-sqlite3`);
+const FakeTimers = require(`@sinonjs/fake-timers`);
 
 const db = new SQLite3(path.join(__dirname, `nocks.db`));
 process.once(`exit`, () => {
@@ -26,7 +27,7 @@ function getRequestHash(input, init) {
 
   if (init) {
     for (const key in init) {
-      if (init[key] === undefined) continue;
+      if (init[key] === undefined || key === `signal`) continue;
 
       switch (key) {
         case `headers`:
@@ -41,11 +42,20 @@ function getRequestHash(input, init) {
   return hash.digest();
 }
 
+const originalFetch = globalThis.fetch;
+const passthroughUrls = [];
+
 if (process.env.NOCK_ENV === `record`) {
   const insertNockStatement = db.prepare(`INSERT OR REPLACE INTO nocks (hash, body, headers, status) VALUES (?, ?, jsonb(?), ?)`);
-  const realFetch = globalThis.fetch;
+
   globalThis.fetch = async (input, init) => {
-    const response = await realFetch(input, init);
+    if (passthroughUrls.some(passThrough => input.toString().startsWith(passThrough)))
+      return originalFetch(input, init);
+    if (process.env.BLOCK_SIGSTORE_TUF_REQUESTS && input.toString().startsWith(`https://tuf-repo-cdn.sigstore.dev`))
+      throw new Error(`Request to Sigstore TUF repository are blocked`);
+
+
+    const response = await originalFetch(input, init);
     const data = await response.arrayBuffer();
 
     const minimalHeaders = new Headers();
@@ -69,14 +79,30 @@ if (process.env.NOCK_ENV === `record`) {
       headers: minimalHeaders,
     });
   };
-} else if (process.env.NOCK_ENV === `replay`) {
+} else {
+  FakeTimers.install({
+    // When you re-record requests this needs to be set to the time of the
+    // recording so that TUF accepts recorded requests.
+    now: new Date(`2025-04-09`),
+    toFake: [`Date`],
+  });
+
   const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
 
   globalThis.fetch = async (input, init) => {
+    if (passthroughUrls.some(passThrough => input.toString().startsWith(passThrough)))
+      return originalFetch(input, init);
+    if (process.env.BLOCK_SIGSTORE_TUF_REQUESTS && input.toString().startsWith(`https://tuf-repo-cdn.sigstore.dev`))
+      throw new Error(`Request to Sigstore TUF repository are blocked`);
+
     const requestHash = getRequestHash(input, init);
 
     const mock = getNockStatement.get(requestHash);
-    if (!mock) throw new Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`);
+    if (!mock) {
+      // Crash process so that corepack cannot catch this error
+      console.error(Error(`No mock found for ${input}; run the tests with NOCK_ENV=record to generate one`));
+      process.exit(10);
+    }
 
     return new Response(mock.body, {
       status: mock.status,
@@ -84,3 +110,5 @@ if (process.env.NOCK_ENV === `record`) {
     });
   };
 }
+
+globalThis.fetch.passthroughUrls = passthroughUrls;

@@ -18,6 +18,8 @@
   "license": "MIT",
   "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728",
   "devDependencies": {
+    "@sigstore/tuf": "^3.1.0",
+    "@sinonjs/fake-timers": "^14.0.0",
     "@types/debug": "^4.1.5",
     "@types/node": "^20.4.6",
     "@types/proxy-from-env": "^1",
@@ -43,7 +45,8 @@
     "which": "^5.0.0"
   },
   "resolutions": {
-    "undici-types": "6.x"
+    "undici-types": "6.x",
+    "tuf-js@npm:^3.0.1": "patch:tuf-js@npm%3A3.0.1#~/.yarn/patches/tuf-js-npm-3.0.1-9135d15fbd.patch"
   },
   "scripts": {
     "build": "run clean && run build:bundle && tsx ./mkshims.ts",
