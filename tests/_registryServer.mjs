@@ -8,7 +8,7 @@ let privateKey, keyid;
 
 switch (process.env.TEST_INTEGRITY) {
   case `invalid_npm_signature`: {
-    // Claim to use a known NPM signing key but provide an invalid signature
+    // Claim to use a known NPM signing key but provide a signature from a different key
     keyid = `SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U`;
     ({privateKey} = generateKeyPairSync(`ec`, {
       namedCurve: `sect239k1`,
