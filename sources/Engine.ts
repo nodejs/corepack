@@ -288,7 +288,7 @@ export class Engine {
             await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
           }
 
-          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManage" field in ${result.target}`);
+          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManager" field in ${result.target}`);
           return fallbackDescriptor;
         }
 
