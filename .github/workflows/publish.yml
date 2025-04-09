@@ -29,6 +29,8 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -48,10 +50,10 @@ jobs:
           restore-keys: |
             ${{runner.os}}-yarn-
 
+      - run: corepack yarn install --immutable
+
       - name: Publish to the npm registry
-        run: |
-          corepack yarn install --immutable
-          corepack yarn npm publish
+        run: corepack yarn npm publish --provenance
         env:
           YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
