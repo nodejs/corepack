@@ -1,0 +1,31 @@
+diff --git a/dist/fetcher.js b/dist/fetcher.js
+index f966ce1bb0cdc6c785ce1263f1faea15d3fe764c..111588c64ba0cc049cabeb471d39f0fdc78bbb7e 100644
+--- a/dist/fetcher.js
++++ b/dist/fetcher.js
+@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DefaultFetcher = exports.BaseFetcher = void 0;
+ const debug_1 = __importDefault(require("debug"));
+ const fs_1 = __importDefault(require("fs"));
+-const make_fetch_happen_1 = __importDefault(require("make-fetch-happen"));
++const stream = require("node:stream")
+ const util_1 = __importDefault(require("util"));
+ const error_1 = require("./error");
+ const tmpfile_1 = require("./utils/tmpfile");
+@@ -61,14 +61,12 @@ class DefaultFetcher extends BaseFetcher {
+     }
+     async fetch(url) {
+         log('GET %s', url);
+-        const response = await (0, make_fetch_happen_1.default)(url, {
+-            timeout: this.timeout,
+-            retry: this.retry,
+-        });
++        const response = await globalThis.tufJsFetch(url);
++
+         if (!response.ok || !response?.body) {
+             throw new error_1.DownloadHTTPError('Failed to download', response.status);
+         }
+-        return response.body;
++        return stream.Readable.fromWeb(response.body);
+     }
+ }
+ exports.DefaultFetcher = DefaultFetcher;
