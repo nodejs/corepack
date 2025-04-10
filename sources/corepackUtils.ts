@@ -224,6 +224,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   let signatures: Array<{keyid: string, sig: string}>;
   let integrity: string;
   let binPath: string | null = null;
+  const registryUrl = npmRegistryUtils.getRegistryUrl();
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
@@ -234,17 +235,17 @@ export async function installVersion(installTarget: string, locator: Locator, {s
           binPath = registry.bin;
         }
       }
-      url = url.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      );
     }
+    url = url.replace(
+      npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
+      () => registryUrl,
+    );
   } else {
     url = decodeURIComponent(version);
-    if (process.env.COREPACK_NPM_REGISTRY && url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
+    if (url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
       url = url.replace(
         npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
+        () => registryUrl,
       );
     }
   }
