@@ -286,6 +286,10 @@ same major line. Should you need to upgrade to a new major, use an explicit
   package manager, and to not update the Last Known Good version when it
   downloads a new version of the same major line.
 
+- `COREPACK_DEV_ENGINES_${UPPER_CASE_PACKAGE_MANAGER_NAME}` can be set to give
+  Corepack a specific version matching the range defined in `package.json`'s
+  `devEngines.packageManager` field.
+
 - `COREPACK_ENABLE_AUTO_PIN` can be set to `0` to prevent Corepack from
   updating the `packageManager` field when it detects that the local package
   doesn't list it. In general we recommend to always list a `packageManager`
