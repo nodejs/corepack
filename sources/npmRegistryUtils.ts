@@ -18,9 +18,9 @@ const normalize = (url: string) => url.endsWith(`/`) ? url.slice(0, -1) : url;
 export const DEFAULT_NPM_REGISTRY_URL = normalize(defaultUrl);
 
 export function getRegistryUrl() {
-  if (process.env.COREPACK_NPM_REGISTRY) {
+  if (process.env.COREPACK_NPM_REGISTRY)
     return process.env.COREPACK_NPM_REGISTRY;
-  }
+
   return normalize(registryUrl());
 }
 

@@ -1,10 +1,10 @@
-import assert                     from 'assert';
-import {UsageError}               from 'clipanion';
-import {once}                     from 'events';
-import {stderr, stdin}            from 'process';
-import {Readable}                 from 'stream';
+import assert           from 'assert';
+import {UsageError}     from 'clipanion';
+import {once}           from 'events';
+import {stderr, stdin}  from 'process';
+import {Readable}       from 'stream';
 
-import {getRegistryUrl}           from './npmRegistryUtils';
+import {getRegistryUrl} from './npmRegistryUtils';
 
 async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
