@@ -36,6 +36,15 @@ describe(`npm registry utils fetchAsJson`, () => {
     expect(httpFetchAsJson).lastCalledWith(`${process.env.COREPACK_NPM_REGISTRY}/package-name`, {headers: DEFAULT_HEADERS});
   });
 
+  it(`loads from npm registry url`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.npm_config_registry = `https://registry.example.org`;
+    await fetchAsJson(`package-name`);
+
+    expect(httpFetchAsJson).toBeCalled();
+    expect(httpFetchAsJson).lastCalledWith(`${process.env.npm_config_registry}/package-name`, {headers: DEFAULT_HEADERS});
+  });
+
   it(`adds authorization header with bearer token if COREPACK_NPM_TOKEN is set`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
@@ -45,6 +54,20 @@ describe(`npm registry utils fetchAsJson`, () => {
 
     expect(httpFetchAsJson).toBeCalled();
     expect(httpFetchAsJson).lastCalledWith(`${DEFAULT_NPM_REGISTRY_URL}/package-name`, {headers: {
+      ...DEFAULT_HEADERS,
+      authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+    }});
+  });
+
+  it(`uses npm registry url if COREPACK_NPM_TOKEN is set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.COREPACK_NPM_TOKEN = `foo`;
+    process.env.npm_config_registry = `https://registry.example.org`;
+
+    await fetchAsJson(`package-name`);
+
+    expect(httpFetchAsJson).toBeCalled();
+    expect(httpFetchAsJson).lastCalledWith(`${process.env.npm_config_registry}/package-name`, {headers: {
       ...DEFAULT_HEADERS,
       authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
     }});
