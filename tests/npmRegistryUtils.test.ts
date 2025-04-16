@@ -20,6 +20,7 @@ describe(`npm registry utils fetchAsJson`, () => {
   });
 
   it(`loads from DEFAULT_NPM_REGISTRY_URL by default`, async () => {
+    process.env.npm_config_registry = `https://registry.npmjs.org`;
     await fetchAsJson(`package-name`);
 
     expect(httpFetchAsJson).toBeCalled();
@@ -35,9 +36,19 @@ describe(`npm registry utils fetchAsJson`, () => {
     expect(httpFetchAsJson).lastCalledWith(`${process.env.COREPACK_NPM_REGISTRY}/package-name`, {headers: DEFAULT_HEADERS});
   });
 
+  it(`loads from npm registry url`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.npm_config_registry = `https://registry.example.org`;
+    await fetchAsJson(`package-name`);
+
+    expect(httpFetchAsJson).toBeCalled();
+    expect(httpFetchAsJson).lastCalledWith(`${process.env.npm_config_registry}/package-name`, {headers: DEFAULT_HEADERS});
+  });
+
   it(`adds authorization header with bearer token if COREPACK_NPM_TOKEN is set`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
+    process.env.npm_config_registry = `https://registry.npmjs.org`;
 
     await fetchAsJson(`package-name`);
 
@@ -48,11 +59,26 @@ describe(`npm registry utils fetchAsJson`, () => {
     }});
   });
 
+  it(`uses npm registry url if COREPACK_NPM_TOKEN is set`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.COREPACK_NPM_TOKEN = `foo`;
+    process.env.npm_config_registry = `https://registry.example.org`;
+
+    await fetchAsJson(`package-name`);
+
+    expect(httpFetchAsJson).toBeCalled();
+    expect(httpFetchAsJson).lastCalledWith(`${process.env.npm_config_registry}/package-name`, {headers: {
+      ...DEFAULT_HEADERS,
+      authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+    }});
+  });
+
   it(`only adds authorization header with bearer token if COREPACK_NPM_TOKEN and COREPACK_NPM_USERNAME are set`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
     process.env.COREPACK_NPM_USERNAME = `bar`;
     process.env.COREPACK_NPM_PASSWORD = `foobar`;
+    process.env.npm_config_registry = `https://registry.npmjs.org`;
 
     await fetchAsJson(`package-name`);
 
@@ -68,6 +94,7 @@ describe(`npm registry utils fetchAsJson`, () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_USERNAME = `foo`;
     process.env.COREPACK_NPM_PASSWORD = `bar`;
+    process.env.npm_config_registry = `https://registry.npmjs.org`;
 
     const encodedCreds = Buffer.from(`${process.env.COREPACK_NPM_USERNAME}:${process.env.COREPACK_NPM_PASSWORD}`, `utf8`).toString(`base64`);
 
@@ -80,9 +107,10 @@ describe(`npm registry utils fetchAsJson`, () => {
     }});
   });
 
-  it(`does not add authorization header if COREPACK_NPM_USERNAME is set and COREPACK_NPM_PASSWORD is not.`, async () => {
+  it(`does not add authorization header if COREPACK_NPM_USERNAME is set and COREPACK_NPM_PASSWORD is not`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_USERNAME = `foo`;
+    process.env.npm_config_registry = `https://registry.npmjs.org`;
 
     await fetchAsJson(`package-name`);
 
