@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.1](https://github.com/nodejs/corepack/compare/v0.32.0...v0.32.1) (2025-04-30)
+
+
+### Bug Fixes
+
+* debug text typo ([#698](https://github.com/nodejs/corepack/issues/698)) ([0b94797](https://github.com/nodejs/corepack/commit/0b94797f96e30e46e466873fe7d437d0471cd92c))
+
 ## [0.32.0](https://github.com/nodejs/corepack/compare/v0.31.0...v0.32.0) (2025-02-28)
 
 
