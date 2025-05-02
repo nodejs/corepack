@@ -1,10 +1,10 @@
-import assert                     from 'assert';
-import {UsageError}               from 'clipanion';
-import {once}                     from 'events';
-import {stderr, stdin}            from 'process';
-import {Readable}                 from 'stream';
+import assert           from 'assert';
+import {UsageError}     from 'clipanion';
+import {once}           from 'events';
+import {stderr, stdin}  from 'process';
+import {Readable}       from 'stream';
 
-import {DEFAULT_NPM_REGISTRY_URL} from './npmRegistryUtils';
+import {getRegistryUrl} from './npmRegistryUtils';
 
 async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
@@ -29,7 +29,7 @@ async function fetch(input: string | URL, init?: RequestInit) {
     input.username = input.password = ``;
   }
 
-  if (input.origin === (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) && process.env.COREPACK_NPM_TOKEN) {
+  if (process.env.COREPACK_NPM_TOKEN && input.origin === getRegistryUrl()) {
     headers =  {
       ...headers,
       authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
