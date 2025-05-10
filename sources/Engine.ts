@@ -274,7 +274,7 @@ export class Engine {
           if (typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
 
-          if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
+          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
               throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);

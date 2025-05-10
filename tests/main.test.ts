@@ -648,25 +648,7 @@ for (const name of SupportedPackageManagerSet) {
 }
 
 describe(`when called on a project without any defined packageManager`, () => {
-  it(`should append the field to package.json by default`, async () => {
-    await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      // empty package.json file
-      });
-
-      await runCli(cwd, [`yarn`]);
-
-      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
-
-      expect(data).toMatchObject({
-        packageManager: `yarn@${config.definitions.yarn.default}`,
-      });
-    });
-  });
-
-  it(`should not modify package.json if disabled by env`, async () => {
-    process.env.COREPACK_ENABLE_AUTO_PIN = `0`;
-
+  it(`should not modify package.json by default`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       // empty package.json file
@@ -680,7 +662,25 @@ describe(`when called on a project without any defined packageManager`, () => {
     });
   });
 
-  it(`should not modify package.json if disabled by .corepack.env`, async t => {
+  it(`should modify package.json if enabled by env`, async () => {
+    process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+      });
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(data).toMatchObject({
+        packageManager: expect.stringMatching(/^yarn@/),
+      });
+    });
+  });
+
+  it(`should modify package.json if enabled by .corepack.env`, async t => {
     // Skip that test on Node.js 18.x as it lacks support for .env files.
     if (process.version.startsWith(`v18.`)) t.skip();
 
@@ -688,31 +688,32 @@ describe(`when called on a project without any defined packageManager`, () => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         // empty package.json file
       });
-      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
-
-      await runCli(cwd, [`yarn`]);
-
-      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
-
-      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
-    });
-  });
-  it(`should modify package.json if .corepack.env if disabled`, async () => {
-    process.env.COREPACK_ENV_FILE = `0`;
-
-    await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        // empty package.json file
-      });
-      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=0\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=1\n`);
 
       await runCli(cwd, [`yarn`]);
 
       const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
 
       expect(data).toMatchObject({
-        packageManager: `yarn@${config.definitions.yarn.default}`,
+        packageManager: expect.stringMatching(/^yarn@/),
       });
+    });
+  });
+
+  it(`should not modify package.json if .corepack.env is disabled`, async () => {
+    process.env.COREPACK_ENV_FILE = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        // empty package.json file
+      });
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ENABLE_AUTO_PIN=1\n`);
+
+      await runCli(cwd, [`yarn`]);
+
+      const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename));
+
+      expect(Object.hasOwn(data, `packageManager`)).toBeFalsy();
     });
   });
 });
@@ -1302,7 +1303,7 @@ it(`should download latest pnpm from custom registry`, async () => {
     await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
-      stderr: expect.stringContaining(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing pnpm@1.9998.9999+sha1.`),
+      stderr: ``,
     });
 
     // Should keep working with cache
@@ -1335,7 +1336,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
@@ -1358,7 +1359,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
@@ -1385,7 +1386,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
@@ -1408,7 +1409,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
@@ -1434,7 +1435,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
@@ -1458,7 +1459,7 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
-        stderr: expect.stringContaining(`The local project doesn't define a 'packageManager' field`),
+        stderr: ``,
       });
     });
   });
