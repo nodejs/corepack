@@ -1586,7 +1586,7 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed`),
         stdout: ``,
       });
     });
@@ -1597,7 +1597,7 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm@latest`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed`),
         stdout: ``,
       });
     });
@@ -1637,23 +1637,23 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
         stdout: ``,
       });
       // A second time to validate the invalid version was not cached.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed for yarn@1.9998.9999`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
+        stdout: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
         stderr: ``,
       });
     });
@@ -1664,12 +1664,12 @@ describe(`handle integrity checks`, () => {
     await xfs.mktempPromise(async cwd => {
       await expect(runCli(cwd, [`yarn@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
+        stderr: expect.stringContaining(`Signature verification failed for yarn@1.9998.9999`),
         stdout: ``,
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
+        stdout: expect.stringContaining(`Signature verification failed for yarn@1.9998.9999`),
         stderr: ``,
       });
     });
@@ -1705,6 +1705,45 @@ describe(`handle integrity checks`, () => {
         exitCode: 0,
         stdout: `yarn: Hello from custom registry\n`,
         stderr: ``,
+      });
+    });
+  });
+
+  it(`rejects invalid signatures for npm keys`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_npm_signature`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
+        stdout: ``,
+      });
+
+      await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
+        stderr: ``,
+      });
+    });
+  });
+
+  it(`rejects invalid signatures when TUF repo cannot be reached`, async () => {
+    process.env.TEST_INTEGRITY = `invalid_npm_signature`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`; // Necessary as the version defined in `config.json` does not exist on the custom registry.
+    process.env.BLOCK_SIGSTORE_TUF_REQUESTS = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
+        stdout: ``,
+      });
+
+      await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: expect.stringContaining(`Signature verification failed for pnpm@1.9998.9999`),
+        stderr: expect.stringContaining(`Failed to get signing keys from Sigstore TUF repo`),
       });
     });
   });
