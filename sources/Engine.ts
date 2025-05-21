@@ -274,7 +274,7 @@ export class Engine {
           if (typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
 
-          if (process.env.COREPACK_ENABLE_AUTO_PIN !== `0`) {
+          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
               throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
@@ -288,7 +288,7 @@ export class Engine {
             await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
           }
 
-          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManage" field in ${result.target}`);
+          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManager" field in ${result.target}`);
           return fallbackDescriptor;
         }
 
