@@ -83,6 +83,13 @@ export class EnableCommand extends Command<Context> {
 
     if (fs.existsSync(file)) {
       const currentSymlink = await fs.promises.readlink(file);
+      const currentTarget = await fs.promises.realpath(file);
+
+      if (binName.includes(`yarn`) && currentTarget.match(/[/\\]switch[/\\]/)) {
+        console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
+        return;
+      }
+
       if (currentSymlink !== symlink) {
         await fs.promises.unlink(file);
       } else {

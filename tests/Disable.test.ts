@@ -97,4 +97,23 @@ describe(`DisableCommand`, () => {
       await expect(sortedEntries).resolves.toEqual([...binNames].sort());
     });
   });
+
+  it(`shouldn't remove Yarn binaries if they are in a /switch/ folder`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.mkdirPromise(ppath.join(cwd, `switch`));
+      await xfs.writeFilePromise(ppath.join(cwd, `switch/yarn`), `hello`);
+
+      await xfs.linkPromise(
+        ppath.join(cwd, `switch/yarn`),
+        ppath.join(cwd, `yarn`),
+      );
+
+      await expect(runCli(cwd, [`disable`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+
+      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
+      expect(file).toBe(`hello`);
+    });
+  });
 });

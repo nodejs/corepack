@@ -70,6 +70,13 @@ export class DisableCommand extends Command<Context> {
   async removePosixLink(installDirectory: string, binName: string) {
     const file = path.join(installDirectory, binName);
     try {
+      const currentTarget = await fs.promises.realpath(file);
+
+      if (binName.includes(`yarn`) && currentTarget.match(/[/\\]switch[/\\]/)) {
+        console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
+        return;
+      }
+
       await fs.promises.unlink(file);
     } catch (err) {
       if ((err as NodeError).code !== `ENOENT`) {

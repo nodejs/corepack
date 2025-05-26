@@ -11,6 +11,10 @@ import {runCli}                                                         from './
 
 const engine = new Engine();
 
+const testNotWindows = process.platform === `win32`
+  ? it.skip
+  : it;
+
 beforeEach(async () => {
   // `process.env` is reset after each tests in setupTests.js.
   process.env.COREPACK_HOME = npath.fromPortablePath(await xfs.mktempPromise());
@@ -85,6 +89,44 @@ describe(`EnableCommand`, () => {
         expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+    });
+  });
+
+  testNotWindows(`should overwrite existing files`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeFilePromise(ppath.join(cwd, `yarn`), `hello`);
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
+      expect(file).toBe(`hello`);
+    });
+  });
+
+  testNotWindows(`shouldn't overwrite Yarn files if they are in a /switch/ folder`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.mkdirPromise(ppath.join(cwd, `switch`));
+      await xfs.writeFilePromise(ppath.join(cwd, `switch/yarn`), `hello`);
+
+      await xfs.linkPromise(
+        ppath.join(cwd, `switch/yarn`),
+        ppath.join(cwd, `yarn`),
+      );
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
+      expect(file).toBe(`hello`);
     });
   });
 });
