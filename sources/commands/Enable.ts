@@ -4,6 +4,7 @@ import fs                                                                from 'f
 import path                                                              from 'path';
 import which                                                             from 'which';
 
+import * as corepackUtils                                                from '../corepackUtils';
 import {Context}                                                         from '../main';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
 
@@ -83,9 +84,8 @@ export class EnableCommand extends Command<Context> {
 
     if (fs.existsSync(file)) {
       const currentSymlink = await fs.promises.readlink(file);
-      const currentTarget = await fs.promises.realpath(file);
 
-      if (binName.includes(`yarn`) && currentTarget.match(/[/\\]switch[/\\]bin[/\\]/)) {
+      if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
         console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
         return;
       }
