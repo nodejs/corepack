@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.33.0](https://github.com/nodejs/corepack/compare/v0.32.0...v0.33.0) (2025-05-27)
+
+
+### Features
+
+* update package manager versions ([#671](https://github.com/nodejs/corepack/issues/671)) ([b45b3a3](https://github.com/nodejs/corepack/commit/b45b3a3244bacfbaf65188ae8c04209a1e98307d))
+
+
+### Bug Fixes
+
+* debug text typo ([#698](https://github.com/nodejs/corepack/issues/698)) ([0b94797](https://github.com/nodejs/corepack/commit/0b94797f96e30e46e466873fe7d437d0471cd92c))
+
 ## [0.32.0](https://github.com/nodejs/corepack/compare/v0.31.0...v0.32.0) (2025-02-28)
 
 
