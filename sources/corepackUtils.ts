@@ -19,6 +19,12 @@ import * as npmRegistryUtils                                   from './npmRegist
 import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
 import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
 
+const YARN_SWITCH_REGEX = /[/\\]switch[/\\]bin[/\\]/;
+
+export function isYarnSwitchPath(p: string) {
+  return YARN_SWITCH_REGEX.test(p);
+}
+
 export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
   return process.env.COREPACK_NPM_REGISTRY
     ? spec.npmRegistry ?? spec.registry

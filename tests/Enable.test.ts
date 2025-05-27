@@ -1,7 +1,7 @@
 import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
 import {delimiter}                                                      from 'node:path';
 import process                                                          from 'node:process';
-import {describe, beforeEach, it, expect}                               from 'vitest';
+import {describe, beforeEach, it, expect, test}                         from 'vitest';
 
 import {Engine}                                                         from '../sources/Engine';
 import {SupportedPackageManagers, SupportedPackageManagerSetWithoutNpm} from '../sources/types';
@@ -85,6 +85,44 @@ describe(`EnableCommand`, () => {
         expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+    });
+  });
+
+  test.skipIf(process.platform === `win32`)(`should overwrite existing files`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeFilePromise(ppath.join(cwd, `yarn`), `hello`);
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
+      expect(file).toBe(`hello`);
+    });
+  });
+
+  test.skipIf(process.platform === `win32`)(`shouldn't overwrite Yarn files if they are in a /switch/ folder`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.mkdirPromise(ppath.join(cwd, `switch/bin`), {recursive: true});
+      await xfs.writeFilePromise(ppath.join(cwd, `switch/bin/yarn`), `hello`);
+
+      await xfs.linkPromise(
+        ppath.join(cwd, `switch/bin/yarn`),
+        ppath.join(cwd, `yarn`),
+      );
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
+      expect(file).toBe(`hello`);
     });
   });
 });
