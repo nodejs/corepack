@@ -1,7 +1,7 @@
 import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
 import {delimiter}                                                      from 'node:path';
 import process                                                          from 'node:process';
-import {describe, beforeEach, it, expect}                               from 'vitest';
+import {describe, beforeEach, it, expect, test}                         from 'vitest';
 
 import {Engine}                                                         from '../sources/Engine';
 import {SupportedPackageManagers, SupportedPackageManagerSetWithoutNpm} from '../sources/types';
@@ -104,7 +104,7 @@ describe(`EnableCommand`, () => {
     });
   });
 
-  testNotWindows(`shouldn't overwrite Yarn files if they are in a /switch/ folder`, async () => {
+  test.skipIf(process.platform === `win32`)(`shouldn't overwrite Yarn files if they are in a /switch/ folder`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.mkdirPromise(ppath.join(cwd, `switch/bin`), {recursive: true});
       await xfs.writeFilePromise(ppath.join(cwd, `switch/bin/yarn`), `hello`);
