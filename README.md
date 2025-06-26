@@ -11,7 +11,7 @@ and pnpm without having to install them**.
 
 ### Default Installs
 
-Corepack is [distributed till Node.js 24](https://nodejs.org/api/corepack.html).
+Corepack is [distributed with Node.js 18 to Node.js 24](https://nodejs.org/api/corepack.html). However, it stopped being included starting with Node.js 25. 
 Run `corepack enable` to install the required Yarn and pnpm binaries on your path.
 
 ### Manual Installs
