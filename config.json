@@ -38,7 +38,7 @@
       }
     },
     "pnpm": {
-      "default": "10.12.1+sha1.4bd977ce548dc9fcd1ca0c62838c55646cea6847",
+      "default": "10.12.4+sha1.88a0ccfe72d6345dede50dc9d6158400be2420eb",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "pnpm"
