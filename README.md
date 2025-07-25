@@ -341,7 +341,9 @@ same major line. Should you need to upgrade to a new major, use an explicit
   (useful for commands like `yarn init`).
 
 - `COREPACK_NPM_REGISTRY` sets the registry base url used when retrieving
-  package managers from npm. Default value is `https://registry.npmjs.org`
+  package managers from npm. Default value is the result of command
+  `npm config get registry`, which is typically `https://registry.npmjs.org`
+  unless it has been customized.
 
 - `COREPACK_NPM_TOKEN` sets a Bearer token authorization header when connecting
   to a npm type registry.
