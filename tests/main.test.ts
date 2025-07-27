@@ -377,23 +377,9 @@ it(`should use hash from "packageManager" even when "devEngines" defines a diffe
   });
 });
 
-describe(`should accept range in devEngines only if a specific version is provided`, () => {
-  it(`either in package.json#packageManager field`, async () => {
+describe(`should accept range in devEngines only if`, () => {
+  it(`either is fully defined in package.json#packageManager field`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
-        devEngines: {
-          packageManager: {
-            name: `pnpm`,
-            version: `6.x`,
-          },
-        },
-      });
-      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: `Invalid package manager specification in package.json (pnpm@6.x); expected a semver version\n`,
-        stdout: ``,
-      });
-
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
         devEngines: {
           packageManager: {
@@ -408,8 +394,11 @@ describe(`should accept range in devEngines only if a specific version is provid
         stderr: ``,
         stdout: `6.6.2\n`,
       });
+    });
+  });
 
-      // No version should also work
+  it(`has no packageManager.version at all`, async () => {
+    await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
         devEngines: {
           packageManager: {
@@ -418,6 +407,25 @@ describe(`should accept range in devEngines only if a specific version is provid
         },
         packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
       });
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `6.6.2\n`,
+      });
+    });
+  });
+
+  it(`does not use package.json#packageManager at all`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `~6.6.0`,
+          },
+        },
+      });
+
       await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
