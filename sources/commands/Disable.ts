@@ -3,6 +3,7 @@ import fs                                                                from 'f
 import path                                                              from 'path';
 import which                                                             from 'which';
 
+import * as corepackUtils                                                from '../corepackUtils';
 import {Context}                                                         from '../main';
 import type {NodeError}                                                  from '../nodeUtils';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
@@ -70,6 +71,11 @@ export class DisableCommand extends Command<Context> {
   async removePosixLink(installDirectory: string, binName: string) {
     const file = path.join(installDirectory, binName);
     try {
+      if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
+        console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
+        return;
+      }
+
       await fs.promises.unlink(file);
     } catch (err) {
       if ((err as NodeError).code !== `ENOENT`) {
