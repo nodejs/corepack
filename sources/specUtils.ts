@@ -77,47 +77,51 @@ function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency[`onFail`
       console.warn(`! Corepack validation warning: ${errorMessage}`);
   }
 }
-function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
-  const {packageManager: pm} = packageJSONContent;
-  if (packageJSONContent.devEngines?.packageManager != null) {
-    const {packageManager} = packageJSONContent.devEngines;
+function parsePackageJSON({devEngines, packageManager}: CorepackPackageJSON) {
+  const spec = {
+    packageManager,
+    enforceExactVersion: true,
+  };
 
-    if (typeof packageManager !== `object`) {
-      console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
-      return pm;
+  if (devEngines?.packageManager != null) {
+    const {packageManager: pm} = devEngines;
+
+    if (typeof pm !== `object`) {
+      console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(pm)}) will be ignored.`);
+      return spec;
     }
-    if (Array.isArray(packageManager)) {
+    if (Array.isArray(pm)) {
       console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
-      return pm;
+      return spec;
     }
 
-    const {name, version, onFail} = packageManager;
+    const {name, version, onFail} = pm;
     if (typeof name !== `string` || name.includes(`@`)) {
       warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
-      return pm;
+      return spec;
     }
     if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
       warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
-      return pm;
+      return spec;
     }
 
     debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
-    if (pm) {
-      if (!pm.startsWith?.(`${name}@`))
-        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
-
-      else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
-        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
-
-      return pm;
+    if (packageManager) {
+      if (!packageManager.startsWith?.(`${name}@`))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(packageManager)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
+      else if (version != null && !semverSatisfies(packageManager.slice(pm.name.length + 1), version))
+        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(packageManager)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
+      return spec;
     }
 
-
-    return `${name}@${version ?? `*`}`;
+    return {
+      enforceExactVersion: semverValid(version),
+      packageManager: `${name}@${version ?? `*`}`,
+    };
   }
 
-  return pm;
+  return spec;
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
@@ -233,11 +237,11 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     process.env = selection.localEnv;
   }
 
-  const rawPmSpec = parsePackageJSON(selection.data);
-  if (typeof rawPmSpec === `undefined`)
+  const {enforceExactVersion, packageManager} = parsePackageJSON(selection.data);
+  if (typeof packageManager === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath};
 
-  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
+  debugUtils.log(`${selection.manifestPath} defines ${packageManager} as local package manager`);
 
   return {
     type: `Found`,
@@ -249,6 +253,6 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       onFail: selection.data.devEngines.packageManager.onFail,
     },
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
-    getSpec: () => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
+    getSpec: () => parseSpec(packageManager, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
   };
 }
