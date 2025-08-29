@@ -102,7 +102,7 @@
         "package": "yarn"
       },
       "transparent": {
-        "default": "4.9.3+sha224.0e3cfd092a0e468a291060d6772f6de6c6b74a936186c88899b7973e",
+        "default": "4.9.4+sha224.41d4e24a2d3a815e1cf4e08e077f19039cb5679baafc376a06246333",
         "commands": [
           [
             "yarn",
