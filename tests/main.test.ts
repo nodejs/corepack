@@ -1315,6 +1315,30 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+it(`should download from npm registry url by default`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.npm_config_registry = `https://registry.npmmirror.com`;
+    process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `pnpm@10.1.0`,
+    });
+
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `10.1.0\n`,
+      stderr: `! Corepack is about to download https://registry.npmmirror.com/pnpm/-/pnpm-10.1.0.tgz\n`,
+    });
+
+    // Should keep working with cache
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `10.1.0\n`,
+      stderr: ``,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`

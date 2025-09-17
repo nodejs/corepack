@@ -1329,6 +1329,7 @@ __metadata:
     esbuild: "npm:^0.25.0"
     eslint: "npm:^9.22.0"
     proxy-from-env: "npm:^1.1.0"
+    registry-url: "npm:^7.2.0"
     semver: "npm:^7.6.3"
     supports-color: "npm:^10.0.0"
     tar: "npm:^7.4.0"
@@ -2029,6 +2030,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"find-up-simple@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "find-up-simple@npm:1.0.1"
+  checksum: 10c0/ad34de157b7db925d50ff78302fefb28e309f3bc947c93ffca0f9b0bccf9cf1a2dc57d805d5c94ec9fc60f4838f5dbdfd2a48ecd77c23015fa44c6dd5f60bc40
+  languageName: node
+  linkType: hard
+
 "find-up@npm:^5.0.0":
   version: 5.0.0
   resolution: "find-up@npm:5.0.0"
@@ -2400,6 +2408,13 @@ __metadata:
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 10c0/4e531f648b29039fb7426fb94075e6545faa1eb9fe83c29f0b6d9e7263aceb4289d2d4557db0d428188eeb449cc7c5e77b0a0b2c4e248ff2a65933a0dee49ef2
+  languageName: node
+  linkType: hard
+
+"ini@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "ini@npm:5.0.0"
+  checksum: 10c0/657491ce766cbb4b335ab221ee8f72b9654d9f0e35c32fe5ff2eb7ab8c5ce72237ff6456555b50cde88e6507a719a70e28e327b450782b4fc20c90326ec8c1a8
   languageName: node
   linkType: hard
 
@@ -3466,6 +3481,16 @@ __metadata:
     gopd: "npm:^1.2.0"
     set-function-name: "npm:^2.0.2"
   checksum: 10c0/83b88e6115b4af1c537f8dabf5c3744032cb875d63bc05c288b1b8c0ef37cbe55353f95d8ca817e8843806e3e150b118bc624e4279b24b4776b4198232735a77
+  languageName: node
+  linkType: hard
+
+"registry-url@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "registry-url@npm:7.2.0"
+  dependencies:
+    find-up-simple: "npm:^1.0.1"
+    ini: "npm:^5.0.0"
+  checksum: 10c0/176c4054f6b9f3ad38b9a682f87c44c1ff56046921fdd66b3af9ff81f4a4d512d6cb5f7a8f3213824c9bbb5838334a176321b000488bbf5342bcda7b258a47ec
   languageName: node
   linkType: hard
 

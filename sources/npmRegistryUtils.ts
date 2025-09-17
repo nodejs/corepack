@@ -1,5 +1,6 @@
 import {UsageError}               from 'clipanion';
 import {createVerify}             from 'crypto';
+import registryUrl, {defaultUrl}  from 'registry-url';
 
 import defaultConfig              from '../config.json';
 
@@ -11,10 +12,20 @@ import * as httpUtils             from './httpUtils';
 export const DEFAULT_HEADERS: Record<string, string> = {
   [`Accept`]: `application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8`,
 };
-export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
+
+const normalize = (url: string) => url.endsWith(`/`) ? url.slice(0, -1) : url;
+
+export const DEFAULT_NPM_REGISTRY_URL = normalize(defaultUrl);
+
+export function getRegistryUrl() {
+  if (process.env.COREPACK_NPM_REGISTRY)
+    return process.env.COREPACK_NPM_REGISTRY;
+
+  return normalize(registryUrl());
+}
 
 export async function fetchAsJson(packageName: string, version?: string) {
-  const npmRegistryUrl = process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL;
+  const npmRegistryUrl = getRegistryUrl();
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach npm repository ${npmRegistryUrl}`);
