@@ -20,17 +20,18 @@ async function fetch(input: string | URL, init?: RequestInit) {
   const username: string | undefined = input.username || process.env.COREPACK_NPM_USERNAME;
   const password: string | undefined = input.password || process.env.COREPACK_NPM_PASSWORD;
 
-  if (username || password) {
-    headers =  {
+  if (username && password) {
+    const encodedCreds = Buffer.from(`${username}:${password}`, `utf8`).toString(`base64`);
+    headers = {
       ...headers,
-      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+      authorization: `Basic ${encodedCreds}`,
     };
 
     input.username = input.password = ``;
   }
 
-  if ((process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).includes(input.origin) && process.env.COREPACK_NPM_TOKEN) {
-    headers =  {
+  if (input.origin === new URL(process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).origin && process.env.COREPACK_NPM_TOKEN) {
+    headers = {
       ...headers,
       authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
     };
