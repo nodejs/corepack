@@ -66,7 +66,7 @@ describe(`npm registry utils fetchAsJson`, () => {
     expect(fetchMock).lastCalledWith(new URL(`${DEFAULT_NPM_REGISTRY_URL}/package-name`), expect.objectContaining({
       headers: {
         ...DEFAULT_HEADERS,
-        authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+        authorization: `Bearer foo`,
       },
     }));
   });
@@ -110,7 +110,7 @@ describe(`npm registry utils fetchAsJson`, () => {
     expect(fetchMock).lastCalledWith(new URL(`https://registry.example.org/some/path/package-name`), expect.objectContaining({
       headers: {
         ...DEFAULT_HEADERS,
-        authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
+        authorization: `Bearer foo`,
       },
     }));
   });
