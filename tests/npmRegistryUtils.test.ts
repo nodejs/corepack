@@ -90,14 +90,36 @@ describe(`npm registry utils fetchAsJson`, () => {
     }));
   });
 
-  it(`does not add authorization header if COREPACK_NPM_USERNAME is set and COREPACK_NPM_PASSWORD is not.`, async () => {
+  it(`adds authorization header if COREPACK_NPM_USERNAME is set and COREPACK_NPM_PASSWORD is not.`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_USERNAME = `foo`;
+
+    const encodedCreds = Buffer.from(`${process.env.COREPACK_NPM_USERNAME}:`, `utf8`).toString(`base64`);
 
     await fetchAsJson(`package-name`);
 
     expect(fetchMock).toBeCalled();
-    expect(fetchMock).lastCalledWith(new URL(`${DEFAULT_NPM_REGISTRY_URL}/package-name`), expect.objectContaining({headers: DEFAULT_HEADERS}));
+    expect(fetchMock).lastCalledWith(new URL(`${DEFAULT_NPM_REGISTRY_URL}/package-name`), expect.objectContaining({
+      headers: {
+        ...DEFAULT_HEADERS,
+        authorization: `Basic ${encodedCreds}`
+    }));
+  });
+
+  it(`adds authorization header if COREPACK_NPM_PASSWORD is set and COREPACK_NPM_USERNAME is not.`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.COREPACK_NPM_PASSWORD = `foo`;
+
+    const encodedCreds = Buffer.from(`:${process.env.COREPACK_NPM_PASSWORD}`, `utf8`).toString(`base64`);
+
+    await fetchAsJson(`package-name`);
+
+    expect(fetchMock).toBeCalled();
+    expect(fetchMock).lastCalledWith(new URL(`${DEFAULT_NPM_REGISTRY_URL}/package-name`), expect.objectContaining({
+      headers: {
+        ...DEFAULT_HEADERS,
+        authorization: `Basic ${encodedCreds}`
+    }));
   });
 
   it(`does add authorization header if registry url contains a path`, async () => {
