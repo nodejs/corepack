@@ -103,7 +103,7 @@ describe(`npm registry utils fetchAsJson`, () => {
       headers: {
         ...DEFAULT_HEADERS,
         authorization: `Basic ${encodedCreds}`
-    }));
+    });
   });
 
   it(`adds authorization header if COREPACK_NPM_PASSWORD is set and COREPACK_NPM_USERNAME is not.`, async () => {
