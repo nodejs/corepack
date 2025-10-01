@@ -29,7 +29,9 @@ async function fetch(input: string | URL, init?: RequestInit) {
     input.username = input.password = ``;
   }
 
-  if (input.origin === (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL) && process.env.COREPACK_NPM_TOKEN) {
+  const registry = process.env.COREPACK_NPM_TOKEN && new URL(process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL);
+
+  if (registry && input.origin === registry.origin) {
     headers =  {
       ...headers,
       authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
