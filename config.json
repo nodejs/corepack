@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "11.6.1+sha1.b800511c147c365406d750e21062fa12fe1bb063",
+      "default": "11.6.2+sha1.2af8ff1f23b279df1e5289db7c70cfedd0fe18c5",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "npm"
@@ -38,7 +38,7 @@
       }
     },
     "pnpm": {
-      "default": "10.18.0+sha1.9bf781ccacb6fab13fcb77404ffc79dc1371b375",
+      "default": "10.18.2+sha1.48588a2735db5f19ffe699240b59891cfac5f316",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "pnpm"
