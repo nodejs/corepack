@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
         with:
           node-version: lts/*
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Get the Yarn cache directory path
         id: yarn-cache-dir-path
@@ -67,13 +67,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: "Use Node.js ${{matrix.node}}.x"
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
         with:
           node-version: ${{matrix.node}}.x
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Get the Yarn cache directory path
         id: yarn-cache-dir-path
