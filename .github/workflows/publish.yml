@@ -57,8 +57,6 @@ jobs:
 
       - name: Publish to the npm registry
         run: corepack yarn npm publish --provenance
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - run: corepack yarn pack --out corepack.tgz
       - name: Add Corepack package archive to GitHub release
