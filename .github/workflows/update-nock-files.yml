@@ -57,7 +57,6 @@ jobs:
       - name: Get the Yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(corepack yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
-        shell: bash
 
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
