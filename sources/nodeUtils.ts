@@ -4,6 +4,10 @@ export interface NodeError extends Error {
   code: string;
 }
 
+export function isExistError(err: NodeError) {
+  return err.code === `EEXIST` || err.code === `ENOTEMPTY`;
+}
+
 function getEndOfLine(content: string) {
   const matches = content.match(/\r?\n/g);
   if (matches === null)

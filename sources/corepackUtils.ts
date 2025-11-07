@@ -184,7 +184,12 @@ async function download(installTarget: string, url: string, algo: string, binPat
       if ((err as nodeUtils.NodeError)?.code === `ENOENT`)
         throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, {cause: err});
 
-      throw err;
+      // It's alright if another process downloaded the same binary in parallel
+      if (nodeUtils.isExistError(err as nodeUtils.NodeError)) {
+        await fs.promises.rm(downloadedBin);
+      } else {
+        throw err;
+      }
     }
 
     // Calculate the hash of the bin file
@@ -316,7 +321,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     await renameSafe(tmpFolder, installFolder);
   } catch (err) {
     if (
-      (err as nodeUtils.NodeError).code === `ENOTEMPTY` ||
+      nodeUtils.isExistError(err as nodeUtils.NodeError) ||
       // On Windows the error code is EPERM so we check if it is a directory
       ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
     ) {
