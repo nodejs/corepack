@@ -84,7 +84,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   try {
     cacheDirectory = await fs.promises.opendir(installFolder);
   } catch (error) {
-    if ((error as nodeUtils.NodeError).code === `ENOENT`) {
+    if (nodeUtils.isNodeError(error) && error.code === `ENOENT`) {
       return null;
     } else {
       throw error;
@@ -181,11 +181,11 @@ async function download(installTarget: string, url: string, algo: string, binPat
     try {
       await renameSafe(downloadedBin, outputFile);
     } catch (err) {
-      if ((err as nodeUtils.NodeError)?.code === `ENOENT`)
+      if (nodeUtils.isNodeError(err) && err.code === `ENOENT`)
         throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, {cause: err});
 
       // It's alright if another process downloaded the same binary in parallel
-      if (nodeUtils.isExistError(err as nodeUtils.NodeError)) {
+      if (nodeUtils.isNodeError(err) && nodeUtils.isExistError(err)) {
         await fs.promises.rm(downloadedBin);
       } else {
         throw err;
@@ -226,7 +226,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       bin: corepackData.bin,
     };
   } catch (err) {
-    if ((err as nodeUtils.NodeError)?.code !== `ENOENT`) {
+    if (nodeUtils.isNodeError(err) && err.code !== `ENOENT`) {
       throw err;
     }
   }
@@ -321,9 +321,10 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     await renameSafe(tmpFolder, installFolder);
   } catch (err) {
     if (
-      nodeUtils.isExistError(err as nodeUtils.NodeError) ||
+      nodeUtils.isNodeError(err) && (
+        nodeUtils.isExistError(err) ||
       // On Windows the error code is EPERM so we check if it is a directory
-      ((err as nodeUtils.NodeError).code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory())
+      (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory()))
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
       await fs.promises.rm(tmpFolder, {recursive: true, force: true});
@@ -370,10 +371,7 @@ async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
       break;
     } catch (err) {
       if (
-        (
-          (err as nodeUtils.NodeError).code === `ENOENT` ||
-          (err as nodeUtils.NodeError).code === `EPERM`
-        ) &&
+        nodeUtils.isNodeError(err) && (err.code === `ENOENT` || err.code === `EPERM`) &&
         i < (retries - 1)
       ) {
         await setTimeoutPromise(100 * 2 ** i);

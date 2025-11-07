@@ -4,6 +4,10 @@ export interface NodeError extends Error {
   code: string;
 }
 
+export function isNodeError(err: any): err is NodeError {
+  return `code` in err;
+}
+
 export function isExistError(err: NodeError) {
   return err.code === `EEXIST` || err.code === `ENOTEMPTY`;
 }
