@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.34.3](https://github.com/nodejs/corepack/compare/v0.34.2...v0.34.3) (2025-11-07)
+
+
+### Bug Fixes
+
+* update package manager versions ([#765](https://github.com/nodejs/corepack/issues/765)) ([13a2e98](https://github.com/nodejs/corepack/commit/13a2e989ee37694a7ec1b1d60acdaa28f90642d1))
+* Yarn switch install support and tests ([#761](https://github.com/nodejs/corepack/issues/761)) ([d04d483](https://github.com/nodejs/corepack/commit/d04d4839aeecaf4fca989c577f6c000dc90be933))
+
 ## [0.34.2](https://github.com/nodejs/corepack/compare/v0.34.1...v0.34.2) (2025-10-31)
 
 
