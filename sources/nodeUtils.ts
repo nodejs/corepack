@@ -5,7 +5,7 @@ export interface NodeError extends Error {
 }
 
 export function isNodeError(err: any): err is NodeError {
-  return `code` in err;
+  return !!err?.code;
 }
 
 export function isExistError(err: NodeError) {
