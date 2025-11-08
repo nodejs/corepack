@@ -150,7 +150,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 interface FoundSpecResult {
   type: `Found`;
   target: string;
-  getSpec: (options: {enforceExactVersion?: boolean}) => Descriptor;
+  getSpec: (options?: {enforceExactVersion?: boolean}) => Descriptor;
   range?: Descriptor & {onFail?: DevEngineDependency[`onFail`]};
   envFilePath?: string;
 }
