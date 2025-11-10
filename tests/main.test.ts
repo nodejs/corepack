@@ -1724,10 +1724,10 @@ it(`should allow range versions in devEngines.packageManager.version when user s
     });
 
     // When user specifies exact version, it should work despite range version in devEngines
-    await expect(runCli(cwd, [`npm@10.8.0`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`npm@6.14.2`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
-      stdout: `10.8.0\n`,
+      stdout: `6.14.2\n`,
     });
 
     // Test with other package managers too
@@ -1735,15 +1735,15 @@ it(`should allow range versions in devEngines.packageManager.version when user s
       devEngines: {
         packageManager: {
           name: `yarn`,
-          version: `^1.22.0`,
+          version: `^2.2.0`,
         },
       },
     });
 
-    await expect(runCli(cwd, [`yarn@1.22.4`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`yarn@2.2.2`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
-      stdout: `1.22.4\n`,
+      stdout: `2.2.2\n`,
     });
 
     // Test with pnpm
@@ -1751,15 +1751,15 @@ it(`should allow range versions in devEngines.packageManager.version when user s
       devEngines: {
         packageManager: {
           name: `pnpm`,
-          version: `^6.0.0`,
+          version: `^5.8.0`,
         },
       },
     });
 
-    await expect(runCli(cwd, [`pnpm@6.6.2`, `--version`])).resolves.toMatchObject({
+    await expect(runCli(cwd, [`pnpm@5.8.0`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
-      stdout: `6.6.2\n`,
+      stdout: `5.8.0\n`,
     });
   });
 });
@@ -1771,7 +1771,7 @@ it(`should still validate devEngines.packageManager.version format when no user 
       devEngines: {
         packageManager: {
           name: `npm`,
-          version: `^10.7.0`,
+          version: `^6.14.2`,
         },
       },
     });
@@ -1779,7 +1779,7 @@ it(`should still validate devEngines.packageManager.version format when no user 
     // Without user-specified version, should still fail due to range version in devEngines
     await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
       exitCode: 1,
-      stderr: expect.stringContaining(`Invalid package manager specification in package.json (npm@^10.7.0); expected a semver version`),
+      stderr: expect.stringContaining(`Invalid package manager specification in package.json (npm@^6.14.2); expected a semver version`),
       stdout: ``,
     });
   });
