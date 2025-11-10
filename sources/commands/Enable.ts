@@ -83,17 +83,23 @@ export class EnableCommand extends Command<Context> {
     const symlink = path.relative(installDirectory, path.join(distFolder, `${binName}.js`));
 
     if (fs.existsSync(file)) {
-      const currentSymlink = await fs.promises.readlink(file);
+      const stats = await fs.promises.lstat(file);
 
-      if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
-        console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
-        return;
-      }
+      if (stats.isSymbolicLink()) {
+        const currentSymlink = await fs.promises.readlink(file);
 
-      if (currentSymlink !== symlink) {
-        await fs.promises.unlink(file);
+        if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
+          console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
+          return;
+        }
+
+        if (currentSymlink !== symlink) {
+          await fs.promises.unlink(file);
+        } else {
+          return;
+        }
       } else {
-        return;
+        await fs.promises.unlink(file);
       }
     }
 
