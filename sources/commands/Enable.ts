@@ -81,10 +81,9 @@ export class EnableCommand extends Command<Context> {
   async generatePosixLink(installDirectory: string, distFolder: string, binName: string) {
     const file = path.join(installDirectory, binName);
     const symlink = path.relative(installDirectory, path.join(distFolder, `${binName}.js`));
+    const stats = fs.lstatSync(file, {throwIfNoEntry: false});
 
-    if (fs.existsSync(file)) {
-      const stats = await fs.promises.lstat(file);
-
+    if (stats) {
       if (stats.isSymbolicLink()) {
         const currentSymlink = await fs.promises.readlink(file);
 
@@ -93,14 +92,11 @@ export class EnableCommand extends Command<Context> {
           return;
         }
 
-        if (currentSymlink !== symlink) {
-          await fs.promises.unlink(file);
-        } else {
+        if (currentSymlink === symlink) {
           return;
         }
-      } else {
-        await fs.promises.unlink(file);
       }
+      await fs.promises.unlink(file);
     }
 
     await fs.promises.symlink(symlink, file);
