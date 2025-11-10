@@ -125,4 +125,44 @@ describe(`EnableCommand`, () => {
       expect(file).toBe(`hello`);
     });
   });
+
+  test.skipIf(process.platform === `win32`)(`should not re-link if binaries are already correct`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await makeBin(cwd, `corepack` as Filename);
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+      const yarnStat1 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+      const yarnStat2 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
+
+      expect(yarnStat2.mtimeMs).toBe(yarnStat1.mtimeMs);
+    });
+  });
+
+  test.skipIf(process.platform === `win32`)(`should overwrite existing symlinks if they are incorrect`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await makeBin(cwd, `corepack` as Filename);
+
+      await xfs.writeFilePromise(ppath.join(cwd, `dummy-target`), `hello`);
+      await xfs.symlinkPromise(ppath.join(cwd, `dummy-target`), ppath.join(cwd, `yarn`));
+
+      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
+
+      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+
+      const newLink = await xfs.readlinkPromise(ppath.join(cwd, `yarn`));
+      expect(newLink).toContain(`yarn.js`);
+    });
+  });
 });
