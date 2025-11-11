@@ -1710,10 +1710,8 @@ describe(`handle integrity checks`, () => {
   });
 });
 
-it(`should allow range versions in devEngines.packageManager.version when user specifies exact version`, async () => {
+it(`should allow range versions in devEngines.packageManager.version when user specifies exact npm version`, async () => {
   await xfs.mktempPromise(async cwd => {
-    // Test case: devEngines.packageManager.version uses range version (^10.7.0)
-    // but user specifies exact version (npm@10.8.0), should work without error
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       devEngines: {
         packageManager: {
@@ -1723,14 +1721,16 @@ it(`should allow range versions in devEngines.packageManager.version when user s
       },
     });
 
-    // When user specifies exact version, it should work despite range version in devEngines
     await expect(runCli(cwd, [`npm@6.14.2`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stderr: ``,
       stdout: `6.14.2\n`,
     });
+  });
+});
 
-    // Test with other package managers too
+it(`should allow range versions in devEngines.packageManager.version when user specifies exact yarn version`, async () => {
+  await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       devEngines: {
         packageManager: {
@@ -1745,8 +1745,11 @@ it(`should allow range versions in devEngines.packageManager.version when user s
       stderr: ``,
       stdout: `2.2.2\n`,
     });
+  });
+});
 
-    // Test with pnpm
+it(`should allow range versions in devEngines.packageManager.version when user specifies exact pnpm version`, async () => {
+  await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
       devEngines: {
         packageManager: {
