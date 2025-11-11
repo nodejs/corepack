@@ -1,6 +1,7 @@
 import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
 import {delimiter}                                                      from 'node:path';
 import process                                                          from 'node:process';
+import {setTimeout}                                                     from 'node:timers/promises';
 import {describe, beforeEach, it, expect, test}                         from 'vitest';
 
 import {Engine}                                                         from '../sources/Engine';
@@ -132,14 +133,18 @@ describe(`EnableCommand`, () => {
 
       process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
 
-      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
         exitCode: 0,
       });
       const yarnStat1 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await setTimeout(10);
 
-      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
         exitCode: 0,
       });
       const yarnStat2 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
@@ -157,7 +162,9 @@ describe(`EnableCommand`, () => {
 
       process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
 
-      await expect(runCli(cwd, [`enable`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
         exitCode: 0,
       });
 
