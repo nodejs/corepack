@@ -1710,61 +1710,31 @@ describe(`handle integrity checks`, () => {
   });
 });
 
-it(`should allow range versions in devEngines.packageManager.version when user specifies exact npm version`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      devEngines: {
-        packageManager: {
-          name: `npm`,
-          version: `^10.7.0`,
-        },
-      },
-    });
+describe(`allow range versions in devEngines.packageManager.version when user specifies exact version`, () => {
+  for (const {name, versionRange, userProvidedVersion} of [
+    {name: `npm`, versionRange: `^10.7.0`, userProvidedVersion: `6.14.2`},
+    {name: `yarn`, versionRange: `^2.2.0`, userProvidedVersion: `2.2.2`},
+    {name: `pnpm`, versionRange: `^5.8.0`, userProvidedVersion: `5.8.0`},
+  ]) {
+    it(`should work with ${name}`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+          devEngines: {
+            packageManager: {
+              name,
+              version: versionRange,
+            },
+          },
+        });
 
-    await expect(runCli(cwd, [`npm@6.14.2`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
-      stdout: `6.14.2\n`,
+        await expect(runCli(cwd, [`${name}@${userProvidedVersion}`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: `${userProvidedVersion}\n`,
+        });
+      });
     });
-  });
-});
-
-it(`should allow range versions in devEngines.packageManager.version when user specifies exact yarn version`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      devEngines: {
-        packageManager: {
-          name: `yarn`,
-          version: `^2.2.0`,
-        },
-      },
-    });
-
-    await expect(runCli(cwd, [`yarn@2.2.2`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
-      stdout: `2.2.2\n`,
-    });
-  });
-});
-
-it(`should allow range versions in devEngines.packageManager.version when user specifies exact pnpm version`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      devEngines: {
-        packageManager: {
-          name: `pnpm`,
-          version: `^5.8.0`,
-        },
-      },
-    });
-
-    await expect(runCli(cwd, [`pnpm@5.8.0`, `--version`])).resolves.toMatchObject({
-      exitCode: 0,
-      stderr: ``,
-      stdout: `5.8.0\n`,
-    });
-  });
+  }
 });
 
 it(`should still validate devEngines.packageManager.version format when no user version specified`, async () => {
