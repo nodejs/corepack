@@ -1709,3 +1709,51 @@ describe(`handle integrity checks`, () => {
     });
   });
 });
+
+describe(`allow range versions in devEngines.packageManager.version when user specifies exact version`, () => {
+  for (const {name, versionRange, userProvidedVersion} of [
+    {name: `npm`, versionRange: `^10.7.0`, userProvidedVersion: `6.14.2`},
+    {name: `yarn`, versionRange: `^2.2.0`, userProvidedVersion: `2.2.2`},
+    {name: `pnpm`, versionRange: `^5.8.0`, userProvidedVersion: `5.8.0`},
+  ]) {
+    it(`should work with ${name}`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+          devEngines: {
+            packageManager: {
+              name,
+              version: versionRange,
+            },
+          },
+        });
+
+        await expect(runCli(cwd, [`${name}@${userProvidedVersion}`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: `${userProvidedVersion}\n`,
+        });
+      });
+    });
+  }
+});
+
+it(`should still validate devEngines.packageManager.version format when no user version specified`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    // When no user version is specified, range versions in devEngines should still cause error
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `^6.14.2`,
+        },
+      },
+    });
+
+    // Without user-specified version, should still fail due to range version in devEngines
+    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
+      exitCode: 1,
+      stderr: expect.stringContaining(`Invalid package manager specification in package.json (npm@^6.14.2); expected a semver version`),
+      stdout: ``,
+    });
+  });
+});
