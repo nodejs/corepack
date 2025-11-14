@@ -1,6 +1,7 @@
 import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
 import {delimiter}                                                      from 'node:path';
 import process                                                          from 'node:process';
+import {setTimeout}                                                     from 'node:timers/promises';
 import {describe, beforeEach, it, expect, test}                         from 'vitest';
 
 import {Engine}                                                         from '../sources/Engine';
@@ -92,7 +93,6 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeFilePromise(ppath.join(cwd, `yarn`), `hello`);
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
         stderr: ``,
@@ -114,7 +114,6 @@ describe(`EnableCommand`, () => {
         ppath.join(cwd, `yarn`),
       );
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
         stderr: expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
@@ -123,6 +122,48 @@ describe(`EnableCommand`, () => {
 
       const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
       expect(file).toBe(`hello`);
+    });
+  });
+
+  test.skipIf(process.platform === `win32`)(`should not re-link if binaries are already correct`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await makeBin(cwd, `corepack` as Filename);
+
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+      const yarnStat1 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
+
+      await setTimeout(10);
+
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+      const yarnStat2 = await xfs.lstatPromise(ppath.join(cwd, `yarn`));
+
+      expect(yarnStat2.mtimeMs).toBe(yarnStat1.mtimeMs);
+    });
+  });
+
+  test.skipIf(process.platform === `win32`)(`should overwrite existing symlinks if they are incorrect`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await makeBin(cwd, `corepack` as Filename);
+
+      await xfs.writeFilePromise(ppath.join(cwd, `dummy-target`), `hello`);
+      await xfs.symlinkPromise(ppath.join(cwd, `dummy-target`), ppath.join(cwd, `yarn`));
+
+      await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const newLink = await xfs.readlinkPromise(ppath.join(cwd, `yarn`));
+      expect(newLink).toContain(`yarn.js`);
     });
   });
 });
