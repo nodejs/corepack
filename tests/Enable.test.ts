@@ -93,7 +93,6 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeFilePromise(ppath.join(cwd, `yarn`), `hello`);
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
         stderr: ``,
@@ -115,7 +114,6 @@ describe(`EnableCommand`, () => {
         ppath.join(cwd, `yarn`),
       );
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
         stderr: expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
@@ -130,8 +128,6 @@ describe(`EnableCommand`, () => {
   test.skipIf(process.platform === `win32`)(`should not re-link if binaries are already correct`, async () => {
     await xfs.mktempPromise(async cwd => {
       await makeBin(cwd, `corepack` as Filename);
-
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
@@ -159,8 +155,6 @@ describe(`EnableCommand`, () => {
 
       await xfs.writeFilePromise(ppath.join(cwd, `dummy-target`), `hello`);
       await xfs.symlinkPromise(ppath.join(cwd, `dummy-target`), ppath.join(cwd, `yarn`));
-
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
 
       await expect(runCli(cwd, [`enable`, `--install-directory`, npath.fromPortablePath(cwd)])).resolves.toMatchObject({
         stdout: ``,
