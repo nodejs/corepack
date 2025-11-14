@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.34.4](https://github.com/nodejs/corepack/compare/v0.34.3...v0.34.4) (2025-11-14)
+
+
+### Bug Fixes
+
+* bump pnpm version in `config.json` ([#768](https://github.com/nodejs/corepack/issues/768)) ([99a9a6e](https://github.com/nodejs/corepack/commit/99a9a6eb1b6e918ceb896b3d558bb5ed583bdc70))
+* ignore devEngines version range when CLI provides a version ([#762](https://github.com/nodejs/corepack/issues/762)) ([ac518c4](https://github.com/nodejs/corepack/commit/ac518c4106f8d9ceb4e85e6c3614b1eba5d03fcb))
+* use `lstatSync` in `generatePosixLink` ([#767](https://github.com/nodejs/corepack/issues/767)) ([a02bea0](https://github.com/nodejs/corepack/commit/a02bea078eb584ed7492ec561626987e35386bae))
+
 ## [0.34.3](https://github.com/nodejs/corepack/compare/v0.34.2...v0.34.3) (2025-11-07)
 
 
