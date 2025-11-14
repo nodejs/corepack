@@ -150,7 +150,7 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
 interface FoundSpecResult {
   type: `Found`;
   target: string;
-  getSpec: () => Descriptor;
+  getSpec: (options?: {enforceExactVersion?: boolean}) => Descriptor;
   range?: Descriptor & {onFail?: DevEngineDependency[`onFail`]};
   envFilePath?: string;
 }
@@ -249,6 +249,6 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
       onFail: selection.data.devEngines.packageManager.onFail,
     },
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
-    getSpec: () => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath)),
+    getSpec: ({enforceExactVersion = true} = {}) => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
   };
 }

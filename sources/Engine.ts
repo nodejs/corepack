@@ -244,7 +244,7 @@ export class Engine {
    * project using the default package managers, and configure it so that we
    * don't need to ask again in the future.
    */
-  async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false}: {transparent?: boolean} = {}): Promise<Descriptor> {
+  async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false, binaryVersion}: {transparent?: boolean, binaryVersion?: string | null} = {}): Promise<Descriptor> {
     // A locator is a valid descriptor (but not the other way around)
     const fallbackDescriptor = {name: locator.name, range: `${locator.reference}`};
 
@@ -293,7 +293,7 @@ export class Engine {
         }
 
         case `Found`: {
-          const spec = result.getSpec();
+          const spec = result.getSpec({enforceExactVersion: !binaryVersion});
           if (spec.name !== locator.name) {
             if (transparent) {
               if (typeof locator.reference === `function`)
@@ -344,7 +344,7 @@ export class Engine {
       };
     }
 
-    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand});
+    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand, binaryVersion});
 
     if (binaryVersion)
       descriptor.range = binaryVersion;
