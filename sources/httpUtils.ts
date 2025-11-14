@@ -21,18 +21,17 @@ async function fetch(input: string | URL, init?: RequestInit) {
   const password: string | undefined = input.password || process.env.COREPACK_NPM_PASSWORD;
 
   if (username || password) {
-    headers =  {
+    const encodedCreds = Buffer.from(`${username ?? ''}:${password ?? ''}`, `utf8`).toString(`base64`);
+    headers = {
       ...headers,
-      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
+      authorization: `Basic ${encodedCreds}`,
     };
 
     input.username = input.password = ``;
   }
 
-  const registry = process.env.COREPACK_NPM_TOKEN && new URL(process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL);
-
-  if (registry && input.origin === registry.origin) {
-    headers =  {
+  if (input.origin === new URL(process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).origin && process.env.COREPACK_NPM_TOKEN) {
+    headers = {
       ...headers,
       authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
     };
