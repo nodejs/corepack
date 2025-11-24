@@ -149,6 +149,8 @@ const testedPackageManagers: Array<[string, string] | [string, string, string]> 
   [`pnpm`, `6.6.2`],
   [`pnpm`, `6.6.2+sha1.7b4d6b176c1b93b5670ed94c24babb7d80c13854`],
   [`pnpm`, `6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`],
+  [`pnpm`, `11.0.0-dev.1005`],
+  [`pnpm`, `11.0.0-dev.1005+sha1.17cdd7ae1baf19f24440422f946130fccbb4257a`],
   [`npm`, `6.14.2`],
   [`npm`, `6.14.2+sha1.f057d35cd4792c4c511bb1fa332edb43143d07b0`],
   [`npm`, `6.14.2+sha224.50512c1eb404900ee78586faa6d756b8d867ff46a328e6fb4cdf3a87`],
