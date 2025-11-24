@@ -76,11 +76,28 @@
             ]
           }
         },
-        ">=6.0.0": {
+        ">=6.0.0 && <11.0.0": {
           "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
           "bin": {
             "pnpm": "./bin/pnpm.cjs",
             "pnpx": "./bin/pnpx.cjs"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "pnpm"
+          },
+          "commands": {
+            "use": [
+              "pnpm",
+              "install"
+            ]
+          }
+        },
+        ">=11.0.0": {
+          "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+          "bin": {
+            "pnpm": "./bin/pnpm.mjs",
+            "pnpx": "./bin/pnpx.mjs"
           },
           "registry": {
             "type": "npm",
