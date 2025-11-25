@@ -1,4 +1,4 @@
-name: Update Nock files
+name: Update Nock file
 
 on:
   workflow_dispatch:
@@ -11,14 +11,22 @@ on:
         description: Commit SHA of the head of the PR branch (only required for PRs from forks)
         type: string
         required: false
+      merge_base:
+        description: Merge base branch (any conflicts will be forced resolved)
+        type: boolean
+        required: false
 
 env:
   YARN_ENABLE_GLOBAL_CACHE: false
+
+permissions:
+  contents: read
 
 jobs:
   build-and-update-nock-files:
     permissions:
       contents: write
+      pull-requests: read
     runs-on: ubuntu-latest
 
     steps:
@@ -29,16 +37,19 @@ jobs:
             echo 'DATA<<""EOF""'
             gh api \
               -H "Accept: application/vnd.github+json" \
-              /repos/${{ github.repository }}/pulls/${{ inputs.pr_id }} \
-              --jq '{ repo: .head.repo.full_name, clone_url: .head.repo.clone_url, head_sha: .head.sha, head_ref: .head.ref }'
+              "/repos/$GITHUB_REPOSITORY/pulls/$PR_ID" \
+              --jq '{ repo: .head.repo.full_name, clone_url: .head.repo.clone_url, head_sha: .head.sha, head_ref: .head.ref, base_ref: .base.ref }'
             echo '""EOF""'
           } >> "$GITHUB_OUTPUT"
         env:
+          PR_ID: ${{ inputs.pr_id }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Validate HEAD SHA
         if: ${{ fromJson(steps.pr_info.outputs.DATA).repo != github.repository || inputs.head_sha }}
-        run: >
-          [[ "$EXPECTED" == "$ACTUAL" ]] || exit 1
+        run: |
+          set -x
+          [ "$EXPECTED" = "$ACTUAL" ]
         env:
           ACTUAL: ${{ fromJson(steps.pr_info.outputs.DATA).head_sha }}
           EXPECTED: ${{ inputs.head_sha }}
@@ -46,6 +57,21 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ fromJson(steps.pr_info.outputs.DATA).head_sha }}
+          fetch-depth: ${{ !inputs.merge_base && 1 || 0 }}
+
+      - name: Setup git author
+        run: |
+          git config --local user.email "github-bot@iojs.org"
+          git config --local user.name "Node.js GitHub Bot"
+
+      - name: Merge base branch
+        if: ${{ inputs.merge_base }}
+        run: |
+          git merge "origin/$BASE_BRANCH" --no-ff --no-verify --no-edit -X ours
+          git checkout HEAD^ -- tests/nocks.db
+          git commit --amend --no-verify --no-edit
+        env:
+          BASE_BRANCH: ${{ fromJson(steps.pr_info.outputs.DATA).base_ref }}
 
       - name: Install Node
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
@@ -78,10 +104,10 @@ jobs:
       - name: Check if anything has changed
         id: contains-changes
         run: |
-          sqlite3 tests/nocks.db .dump > /tmp/before.sql
+          sqlite3 tests/nocks.db .dump > /tmp/after.sql
           cp tests/nocks.db tests/nocks.db.new
           git checkout HEAD -- tests/nocks.db
-          sqlite3 tests/nocks.db .dump > /tmp/after.sql
+          sqlite3 tests/nocks.db .dump > /tmp/before.sql
           echo "result=$(git --no-pager diff --quiet --no-index /tmp/before.sql /tmp/after.sql || echo "yes")" >> "$GITHUB_OUTPUT"
           mv tests/nocks.db.new tests/nocks.db
         shell: bash
@@ -90,12 +116,10 @@ jobs:
         if: ${{ steps.contains-changes.outputs.result == 'yes' }}
         run: |
           git add tests/nocks.db
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
           git commit -m "update Nock files"
 
       - name: Push changes
-        if: ${{ steps.contains-changes.outputs.result == 'yes' }}
+        if: ${{ steps.contains-changes.outputs.result == 'yes' || inputs.merge_base }}
         run: git push "$REMOTE" "HEAD:refs/heads/$REMOTE_REF"
         env:
           REMOTE: ${{ fromJson(steps.pr_info.outputs.DATA).clone_url }}
