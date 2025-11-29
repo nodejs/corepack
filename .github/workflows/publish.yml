@@ -20,7 +20,7 @@ jobs:
       release_created:  ${{ steps.release.outputs.release_created }}
       release_tag:  ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v3
+      - uses: googleapis/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01  # v3.7.13
         id: release
         with:
           release-type: node
@@ -35,18 +35,19 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
         with:
           node-version: lts/*
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Get the Yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "dir=$(corepack yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-        shell: bash
+        run: echo "dir=$(corepack yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: ${{steps.yarn-cache-dir-path.outputs.dir}}
           key: ${{runner.os}}-yarn-${{hashFiles('**/yarn.lock')}}
@@ -57,8 +58,6 @@ jobs:
 
       - name: Publish to the npm registry
         run: corepack yarn npm publish --provenance
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - run: corepack yarn pack --out corepack.tgz
       - name: Add Corepack package archive to GitHub release

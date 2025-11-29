@@ -81,20 +81,22 @@ export class EnableCommand extends Command<Context> {
   async generatePosixLink(installDirectory: string, distFolder: string, binName: string) {
     const file = path.join(installDirectory, binName);
     const symlink = path.relative(installDirectory, path.join(distFolder, `${binName}.js`));
+    const stats = fs.lstatSync(file, {throwIfNoEntry: false});
 
-    if (fs.existsSync(file)) {
-      const currentSymlink = await fs.promises.readlink(file);
+    if (stats) {
+      if (stats.isSymbolicLink()) {
+        const currentSymlink = await fs.promises.readlink(file);
 
-      if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
-        console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
-        return;
+        if (binName.includes(`yarn`) && corepackUtils.isYarnSwitchPath(await fs.promises.realpath(file))) {
+          console.warn(`${binName} is already installed in ${file} and points to a Yarn Switch install - skipping`);
+          return;
+        }
+
+        if (currentSymlink === symlink) {
+          return;
+        }
       }
-
-      if (currentSymlink !== symlink) {
-        await fs.promises.unlink(file);
-      } else {
-        return;
-      }
+      await fs.promises.unlink(file);
     }
 
     await fs.promises.symlink(symlink, file);

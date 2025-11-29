@@ -1,7 +1,7 @@
 {
   "definitions": {
     "npm": {
-      "default": "11.4.2+sha1.6f1519a03f7e04023a957a22b812832d0c4a4b33",
+      "default": "11.6.3+sha1.3f581bca37cbdadf2be04346c0e5b0be96cdd54b",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "npm"
@@ -38,7 +38,7 @@
       }
     },
     "pnpm": {
-      "default": "10.13.1+sha1.aa8c167c4509c97519542ef77a09e4b8ab59fb6a",
+      "default": "10.23.0+sha1.b4a44ab0dc2adf2e36371d11d8eb0dc78ffc976c",
       "fetchLatestFrom": {
         "type": "npm",
         "package": "pnpm"
@@ -76,11 +76,28 @@
             ]
           }
         },
-        ">=6.0.0": {
+        "6.x || 7.x || 8.x || 9.x || 10.x": {
           "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
           "bin": {
             "pnpm": "./bin/pnpm.cjs",
             "pnpx": "./bin/pnpx.cjs"
+          },
+          "registry": {
+            "type": "npm",
+            "package": "pnpm"
+          },
+          "commands": {
+            "use": [
+              "pnpm",
+              "install"
+            ]
+          }
+        },
+        ">=11.0.0": {
+          "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+          "bin": {
+            "pnpm": "./bin/pnpm.mjs",
+            "pnpx": "./bin/pnpx.mjs"
           },
           "registry": {
             "type": "npm",
@@ -102,7 +119,7 @@
         "package": "yarn"
       },
       "transparent": {
-        "default": "4.9.2+sha224.b8e0b161ae590950fbda696e6f3ca071362768e5280c5fbfdadf064b",
+        "default": "4.11.0+sha224.209a3e277c6bbc03df6e4206fbfcb0c1621c27ecf0688f79a0c619f0",
         "commands": [
           [
             "yarn",
