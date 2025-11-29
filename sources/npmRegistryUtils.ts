@@ -21,14 +21,6 @@ export async function fetchAsJson(packageName: string, version?: string) {
 
   const headers = {...DEFAULT_HEADERS};
 
-  if (`COREPACK_NPM_TOKEN` in process.env) {
-    headers.authorization = `Bearer ${process.env.COREPACK_NPM_TOKEN}`;
-  } else if (`COREPACK_NPM_USERNAME` in process.env
-          && `COREPACK_NPM_PASSWORD` in process.env) {
-    const encodedCreds = Buffer.from(`${process.env.COREPACK_NPM_USERNAME}:${process.env.COREPACK_NPM_PASSWORD}`, `utf8`).toString(`base64`);
-    headers.authorization = `Basic ${encodedCreds}`;
-  }
-
   return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
