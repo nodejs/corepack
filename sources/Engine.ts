@@ -93,6 +93,31 @@ export async function activatePackageManager(lastKnownGood: Record<string, strin
   await createLastKnownGoodFile(lastKnownGood);
 }
 
+/**
+ * Checks if the command is a global operation.
+ * Global operations should be transparent since they operate outside
+ * of the project scope.
+ */
+function isGlobalCommand(packageManager: SupportedPackageManagers, args: Array<string>): boolean {
+  switch (packageManager) {
+    // npm/pnpm: any command with -g or --global flag
+    case SupportedPackageManagers.Npm:
+    case SupportedPackageManagers.Pnpm:
+      return args.includes(`-g`) || args.includes(`--global`);
+
+    // yarn: yarn global <command>
+    // Note: `yarn global` is only available in Yarn 1.x. If a newer version is used,
+    // Yarn itself will report an appropriate error.
+    case SupportedPackageManagers.Yarn:
+      return args[0] === `global`;
+
+    default:
+      // If a new package manager is added, TypeScript will error here
+      // reminding us to handle it
+      throw new Error(`Unhandled package manager: ${packageManager satisfies never}`);
+  }
+}
+
 export class Engine {
   constructor(public config: Config = defaultConfig as Config) {
   }
@@ -332,6 +357,12 @@ export class Engine {
           isTransparentCommand = true;
           break;
         }
+      }
+
+      // Global operations (install -g, uninstall -g) should be transparent
+      // since they operate outside of the project scope
+      if (!isTransparentCommand) {
+        isTransparentCommand = isGlobalCommand(packageManager, args);
       }
 
       const fallbackReference = isTransparentCommand

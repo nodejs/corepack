@@ -621,6 +621,95 @@ it(`should allow using transparent commands on npm-configured projects`, async (
   });
 });
 
+describe(`should allow global install/uninstall commands in projects configured for a different package manager`, () => {
+  it(`npm install -g in yarn project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.22`,
+      });
+
+      // npm install -g --help should work (we use --help to avoid actual installation)
+      await expect(runCli(cwd, [`npm`, `install`, `-g`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`npm uninstall --global in yarn project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.22`,
+      });
+
+      await expect(runCli(cwd, [`npm`, `uninstall`, `--global`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`npm i -g in pnpm project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `pnpm@9.0.0`,
+      });
+
+      await expect(runCli(cwd, [`npm`, `i`, `-g`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`pnpm add -g in yarn project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.22`,
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `add`, `-g`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`pnpm remove --global in npm project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `npm@9.0.0`,
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `remove`, `--global`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`yarn global add in npm project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `npm@9.0.0`,
+      });
+
+      // yarn global add should not be blocked by project packageManager
+      // Note: If a Yarn version that doesn't support `global` is used,
+      // Yarn itself will report an appropriate error.
+      const result = await runCli(cwd, [`yarn`, `global`, `add`, `does-not-exist-pkg-12345`]);
+      expect(result.stderr).not.toContain(`This project is configured to use`);
+    });
+  });
+
+  it(`yarn global remove in pnpm project`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `pnpm@9.0.0`,
+      });
+
+      // yarn global remove should not be blocked by project packageManager
+      const result = await runCli(cwd, [`yarn`, `global`, `remove`, `does-not-exist-pkg-12345`]);
+      expect(result.stderr).not.toContain(`This project is configured to use`);
+    });
+  });
+});
+
 it(`should transparently use the preconfigured version when there is no local project`, async () => {
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
