@@ -361,9 +361,8 @@ export class Engine {
 
       // Global operations (install -g, uninstall -g) should be transparent
       // since they operate outside of the project scope
-      if (!isTransparentCommand) {
-        isTransparentCommand = isGlobalCommand(packageManager, args);
-      }
+      if (!isTransparentCommand) isTransparentCommand = isGlobalCommand(packageManager, args);
+
 
       const fallbackReference = isTransparentCommand
         ? definition.transparent.default ?? defaultVersion
