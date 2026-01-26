@@ -1317,6 +1317,28 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+it(`should use COREPACK_NPM_REGISTRY from .corepack.env for "corepack use" command`, async t => {
+  // Skip that test on Node.js 18.x as it lacks support for .env files.
+  if (process.version.startsWith(`v18.`)) t.skip();
+
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://custom-registry.example.com\n`);
+
+    // "corepack use pnpm" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(cwd, [`use`, `pnpm`])).resolves.toMatchObject({
+      stdout: ``,
+      stdout: expect.stringContaining(`custom-registry.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`

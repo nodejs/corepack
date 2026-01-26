@@ -9,8 +9,10 @@ export abstract class BaseCommand extends Command<Context> {
   async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
+    // Always load spec to ensure .corepack.env is read before any registry calls
+    const lookup = await specUtils.loadSpec(this.context.cwd);
+
     if (resolvedSpecs.length === 0) {
-      const lookup = await specUtils.loadSpec(this.context.cwd);
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
