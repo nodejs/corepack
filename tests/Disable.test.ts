@@ -80,8 +80,7 @@ describe(`DisableCommand`, () => {
       const dontRemoveBin = await makeBin(cwd, `dont-remove` as Filename);
       binNames.add(ppath.basename(dontRemoveBin));
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
-      await expect(runCli(cwd, [`disable`, `yarn`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`, `yarn`])).resolves.toMatchObject({
         exitCode: 0,
       });
 
