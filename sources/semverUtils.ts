@@ -47,3 +47,22 @@ export function satisfiesWithPrereleases(version: string | null, range: string, 
     });
   });
 }
+
+/**
+ * Returns whether the given range contains any prerelease versions.
+ *
+ * This is used to decide whether we should prefer stable versions or
+ * consider prereleases when resolving a range.
+ */
+export function isPrereleaseRange(range: string): boolean {
+  try {
+    const semverRange = new Range(range);
+    return semverRange.set.some(comparatorSet => {
+      return comparatorSet.some(comparator => {
+        return comparator.semver.prerelease.length > 0;
+      });
+    });
+  } catch (err) {
+    return false;
+  }
+}
