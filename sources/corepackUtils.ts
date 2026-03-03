@@ -1,23 +1,23 @@
-import { createHash } from 'crypto';
-import { once } from 'events';
-import fs from 'fs';
-import type { Dir } from 'fs';
-import Module from 'module';
-import path from 'path';
-import Range from 'semver/classes/range';
-import SemVer from 'semver/classes/semver';
-import semverLt from 'semver/functions/lt';
-import semverParse from 'semver/functions/parse';
-import { setTimeout as setTimeoutPromise } from 'timers/promises';
+import {createHash}                                            from 'crypto';
+import {once}                                                  from 'events';
+import fs                                                      from 'fs';
+import type {Dir}                                              from 'fs';
+import Module                                                  from 'module';
+import path                                                    from 'path';
+import Range                                                   from 'semver/classes/range';
+import SemVer                                                  from 'semver/classes/semver';
+import semverLt                                                from 'semver/functions/lt';
+import semverParse                                             from 'semver/functions/parse';
+import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
 
-import * as engine from './Engine';
-import * as debugUtils from './debugUtils';
-import * as folderUtils from './folderUtils';
-import * as httpUtils from './httpUtils';
-import * as nodeUtils from './nodeUtils';
-import * as npmRegistryUtils from './npmRegistryUtils';
-import { RegistrySpec, Descriptor, Locator, PackageManagerSpec } from './types';
-import { BinList, BinSpec, InstallSpec, DownloadSpec } from './types';
+import * as engine                                             from './Engine';
+import * as debugUtils                                         from './debugUtils';
+import * as folderUtils                                        from './folderUtils';
+import * as httpUtils                                          from './httpUtils';
+import * as nodeUtils                                          from './nodeUtils';
+import * as npmRegistryUtils                                   from './npmRegistryUtils';
+import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
+import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
 
 const YARN_SWITCH_REGEX = /[/\\]switch[/\\]bin[/\\]/;
 
@@ -95,7 +95,7 @@ export async function findInstalledVersion(installTarget: string, descriptor: De
   let bestMatch: string | null = null;
   let maxSV: SemVer | undefined = undefined;
 
-  for await (const { name } of cacheDirectory) {
+  for await (const {name} of cacheDirectory) {
     // Some dot-folders tend to pop inside directories, especially on OSX
     if (name.startsWith(`.`))
       continue;
@@ -122,14 +122,14 @@ export function isSupportedPackageManagerLocator(locator: Locator) {
 }
 
 function parseURLReference(locator: Locator) {
-  const { hash, href } = new URL(locator.reference);
+  const {hash, href} = new URL(locator.reference);
   if (hash) {
     return {
       version: encodeURIComponent(href.slice(0, -hash.length)),
       build: hash.slice(1).split(`.`),
     };
   }
-  return { version: encodeURIComponent(href), build: [] };
+  return {version: encodeURIComponent(href), build: []};
 }
 
 function isValidBinList(x: unknown): x is BinList {
@@ -157,7 +157,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
   let sendTo: any;
 
   if (ext === `.tgz`) {
-    const { extract: tarX } = await import(`tar/extract`);
+    const {extract: tarX} = await import(`tar/extract`);
     sendTo = tarX({
       strip: 1,
       cwd: tmpFolder,
@@ -182,7 +182,7 @@ async function download(installTarget: string, url: string, algo: string, binPat
       await renameSafe(downloadedBin, outputFile);
     } catch (err) {
       if (nodeUtils.isNodeError(err) && err.code === `ENOENT`)
-        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, { cause: err });
+        throw new Error(`Cannot locate '${binPath}' in downloaded tarball`, {cause: err});
 
       // It's alright if another process downloaded the same binary in parallel
       if (nodeUtils.isNodeError(err) && nodeUtils.isExistError(err)) {
@@ -205,10 +205,10 @@ async function download(installTarget: string, url: string, algo: string, binPat
   };
 }
 
-export async function installVersion(installTarget: string, locator: Locator, { spec }: { spec: PackageManagerSpec }): Promise<InstallSpec> {
+export async function installVersion(installTarget: string, locator: Locator, {spec}: {spec: PackageManagerSpec}): Promise<InstallSpec> {
   const locatorIsASupportedPackageManager = isSupportedPackageManagerLocator(locator);
   const locatorReference = locatorIsASupportedPackageManager ? semverParse(locator.reference)! : parseURLReference(locator);
-  const { version, build } = locatorReference;
+  const {version, build} = locatorReference;
 
   const installFolder = path.join(installTarget, locator.name, version);
 
@@ -232,7 +232,7 @@ export async function installVersion(installTarget: string, locator: Locator, { 
   }
 
   let url: string;
-  let signatures: Array<{ keyid: string, sig: string }>;
+  let signatures: Array<{keyid: string, sig: string}>;
   let integrity: string;
   let binPath: string | null = null;
   if (locatorIsASupportedPackageManager) {
@@ -240,7 +240,7 @@ export async function installVersion(installTarget: string, locator: Locator, { 
     if (process.env.COREPACK_NPM_REGISTRY) {
       const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
-        ({ tarball: url, signatures, integrity } = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
+        ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
         if (registry.bin) {
           binPath = registry.bin;
         }
@@ -262,7 +262,7 @@ export async function installVersion(installTarget: string, locator: Locator, { 
 
   debugUtils.log(`Installing ${locator.name}@${version} from ${url}`);
   const algo = build[0] ?? `sha512`;
-  const { tmpFolder, outputFile, hash: actualHash } = await download(installTarget, url, algo, binPath);
+  const {tmpFolder, outputFile, hash: actualHash} = await download(installTarget, url, algo, binPath);
 
   let bin: BinSpec | BinList;
   const isSingleFile = outputFile !== null;
@@ -282,10 +282,10 @@ export async function installVersion(installTarget: string, locator: Locator, { 
     if (locatorIsASupportedPackageManager && isValidBinSpec(spec.bin)) {
       bin = spec.bin;
     } else {
-      const { name: packageName, bin: packageBin } = require(path.join(tmpFolder, `package.json`));
+      const {name: packageName, bin: packageBin} = require(path.join(tmpFolder, `package.json`));
       if (typeof packageBin === `string`) {
         // When `bin` is a string, the name of the executable is the name of the package.
-        bin = { [packageName]: packageBin };
+        bin = {[packageName]: packageBin};
       } else if (isValidBinSpec(packageBin)) {
         bin = packageBin;
       } else {
@@ -298,9 +298,9 @@ export async function installVersion(installTarget: string, locator: Locator, { 
     const registry = getRegistryFromPackageManagerSpec(spec);
     if (registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck()) {
       if (signatures! == null || integrity! == null)
-        ({ signatures, integrity } = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-      npmRegistryUtils.verifySignature({ signatures, integrity, packageName: registry.package, version });
+      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
       // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }
@@ -316,7 +316,7 @@ export async function installVersion(installTarget: string, locator: Locator, { 
     hash: serializedHash,
   }));
 
-  await fs.promises.mkdir(path.dirname(installFolder), { recursive: true });
+  await fs.promises.mkdir(path.dirname(installFolder), {recursive: true});
   try {
     await renameSafe(tmpFolder, installFolder);
   } catch (err) {
@@ -327,7 +327,7 @@ export async function installVersion(installTarget: string, locator: Locator, { 
         (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory()))
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
-      await fs.promises.rm(tmpFolder, { recursive: true, force: true });
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     } else {
       throw err;
     }
@@ -386,7 +386,7 @@ async function renameUnderWindows(oldPath: fs.PathLike, newPath: fs.PathLike) {
 /**
  * Loads the binary, taking control of the current process.
  */
-export async function runVersion(locator: Locator, installSpec: InstallSpec & { spec: PackageManagerSpec }, binName: string, args: Array<string>): Promise<void> {
+export async function runVersion(locator: Locator, installSpec: InstallSpec & {spec: PackageManagerSpec}, binName: string, args: Array<string>): Promise<void> {
   let binPath: string | null = null;
   const bin = installSpec.bin ?? installSpec.spec.bin;
   if (Array.isArray(bin)) {
