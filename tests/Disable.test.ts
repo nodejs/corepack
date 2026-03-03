@@ -107,7 +107,7 @@ describe(`DisableCommand`, () => {
         ppath.join(cwd, `yarn`),
       );
 
-      await expect(runCli(cwd, [`disable`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`])).resolves.toMatchObject({
         exitCode: 0,
       });
 
