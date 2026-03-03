@@ -102,12 +102,14 @@ describe(`DisableCommand`, () => {
       await xfs.mkdirPromise(ppath.join(cwd, `switch/bin`), {recursive: true});
       await xfs.writeFilePromise(ppath.join(cwd, `switch/bin/yarn`), `hello`);
 
-      await xfs.linkPromise(
+      await xfs.symlinkPromise(
         ppath.join(cwd, `switch/bin/yarn`),
         ppath.join(cwd, `yarn`),
       );
 
       await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
         exitCode: 0,
       });
 
