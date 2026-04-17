@@ -302,7 +302,7 @@ export class Engine {
               debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
               return fallbackDescriptor;
             } else {
-              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "packageManager" field`);
+              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "${result.sourceField}" field`);
             }
           } else {
             debugUtils.log(`Using ${spec.name}@${spec.range} as defined in project manifest ${result.target}`);

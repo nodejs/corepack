@@ -753,6 +753,29 @@ it(`should ignore a parent packageManager when a closer devEngines.packageManage
   });
 });
 
+it(`should mention devEngines.packageManager when Engine.findProjectSpec rejects a mismatched package manager`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `yarn`,
+      reference: `1.22.4`,
+    })).rejects.toThrow(`This project is configured to use npm because ${npath.fromPortablePath(ppath.join(projectCwd, `package.json` as Filename))} has a "devEngines.packageManager" field`);
+  });
+});
+
 it(`should expose its root to spawned processes`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
