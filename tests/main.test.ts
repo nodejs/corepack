@@ -776,6 +776,96 @@ it(`should mention devEngines.packageManager when Engine.findProjectSpec rejects
   });
 });
 
+it(`should treat packageManager empty string as an invalid selected value in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      packageManager: ``,
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `npm`,
+      reference: `9.9.9`,
+    })).rejects.toThrow(`No version specified for  in "packageManager" of package.json`);
+  });
+});
+
+it(`should stop at a child packageManager empty string instead of falling back to a parent manifest in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4`,
+    });
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      packageManager: ``,
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `yarn`,
+      reference: `1.22.4`,
+    })).rejects.toThrow(`No version specified for  in "packageManager" of package.json`);
+  });
+});
+
+it(`should treat packageManager null as an invalid selected value in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      packageManager: null,
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `npm`,
+      reference: `9.9.9`,
+    })).rejects.toThrow(`Invalid package manager specification in "packageManager" of package.json; expected a string`);
+  });
+});
+
+it(`should stop at a child packageManager null instead of falling back to a parent manifest in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4`,
+    });
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      packageManager: null,
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `yarn`,
+      reference: `1.22.4`,
+    })).rejects.toThrow(`Invalid package manager specification in "packageManager" of package.json; expected a string`);
+  });
+});
+
 it(`should expose its root to spawned processes`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {

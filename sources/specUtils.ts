@@ -106,11 +106,15 @@ function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency[`onFail`
 }
 function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackageManager | undefined {
   const {packageManager: pm} = packageJSONContent;
-  const resultFromPackageManager = pm
+
+  const resultFromPackageManager = pm !== undefined
     ? {sourceField: `packageManager`, rawPmSpec: pm} satisfies ParsedPackageManager
     : undefined;
 
-  if (packageJSONContent.devEngines?.packageManager) {
+  if (pm === `` || pm === null)
+    return resultFromPackageManager; // short-circuit with defined, but invalid "packageManager" values
+
+  if (packageJSONContent.devEngines?.packageManager !== undefined) {
     const {packageManager} = packageJSONContent.devEngines;
 
     if (typeof packageManager !== `object`) {
@@ -134,7 +138,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackag
 
     debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
-    if (pm) {
+    if (pm !== undefined) {
       if (!pm.startsWith?.(`${name}@`))
         warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
 
@@ -196,6 +200,13 @@ export type LoadSpecResult =
     | {type: `NoSpec`, target: string}
     | FoundSpecResult;
 
+// We walk up the directory tree to support workspace-style projects whose
+// package manager may be declared in a higher-level manifest. The search
+// stops at the nearest package.json that defines either package manager
+// field, even if that value is invalid. The tradeoff is that if the nearest
+// package.json does not define any package manager field, then an upper-level
+// package.json can dictate which package manager gets used even when that
+// higher-level manifest is unrelated to the current project.
 export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
   let currCwd = ``;
@@ -208,7 +219,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
   } | null = null;
 
   const selectionHasPmSpecified = (selection: {data: CorepackPackageJSON} | null) => {
-    return selection !== null && (selection.data.packageManager || selection.data.devEngines?.packageManager);
+    return selection !== null && (selection.data.packageManager !== undefined || selection.data.devEngines?.packageManager !== undefined);
   };
 
   while (nextCwd !== currCwd && !selectionHasPmSpecified(selection)) {
