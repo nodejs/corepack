@@ -37,7 +37,7 @@
     "tar": "^7.5.4",
     "tsx": "^4.16.2",
     "typescript": "^5.7.3",
-    "undici": "^6.21.2",
+    "undici": "^6.24.0",
     "v8-compile-cache": "^2.3.0",
     "vitest": "^3.0.5",
     "which": "^5.0.0"
