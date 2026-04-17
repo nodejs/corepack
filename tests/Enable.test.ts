@@ -70,8 +70,7 @@ describe(`EnableCommand`, () => {
     await xfs.mktempPromise(async cwd => {
       const corepackBin = await makeBin(cwd, `corepack` as Filename);
 
-      process.env.PATH = `${npath.fromPortablePath(cwd)}${delimiter}${process.env.PATH}`;
-      await expect(runCli(cwd, [`enable`, `yarn`])).resolves.toMatchObject({
+      await expect(runCli(cwd, [`enable`, `--install-directory=${npath.fromPortablePath(cwd)}`, `yarn`])).resolves.toMatchObject({
         stdout: ``,
         stderr: ``,
         exitCode: 0,
