@@ -582,6 +582,88 @@ it(`should use the closest matching packageManager field`, async () => {
   });
 });
 
+it(`should use the closest matching devEngines.packageManager field when parent has no spec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      // empty package.json file
+    });
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as PortablePath), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    await expect(runCli(projectCwd, [`npm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `6.14.2\n`,
+    });
+  });
+});
+
+it(`should use the closest matching devEngines.packageManager field over a parent packageManager field`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      packageManager: `yarn@1.22.4`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as PortablePath), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    await expect(runCli(projectCwd, [`npm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `6.14.2\n`,
+    });
+  });
+});
+
+it(`should ignore a parent packageManager when a closer devEngines.packageManager is invalid but non-fatal`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      packageManager: `yarn@1.22.4`,
+    });
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as PortablePath), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `bad`,
+          onFail: `warn`,
+        },
+      },
+    });
+
+    await expect(runCli(projectCwd, [`npm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: expect.stringContaining(`The value of devEngines.packageManager.version "bad" is not a valid semver range`),
+      stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+    });
+  });
+});
+
 it(`should expose its root to spawned processes`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
