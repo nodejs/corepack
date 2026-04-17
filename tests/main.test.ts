@@ -4,6 +4,7 @@ import process                                       from 'node:process';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import config                                        from '../config.json';
+import {Engine}                                      from '../sources/Engine';
 import * as folderUtils                              from '../sources/folderUtils';
 import {SupportedPackageManagerSet}                  from '../sources/types';
 
@@ -660,6 +661,94 @@ it(`should ignore a parent packageManager when a closer devEngines.packageManage
       exitCode: 0,
       stderr: expect.stringContaining(`The value of devEngines.packageManager.version "bad" is not a valid semver range`),
       stdout: `${config.definitions.npm.default.split(`+`, 1)[0]}\n`,
+    });
+  });
+});
+
+it(`should use the closest devEngines.packageManager field when parent has no spec in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      // empty package.json file
+    });
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `npm`,
+      reference: `9.9.9`,
+    })).resolves.toMatchObject({
+      name: `npm`,
+      range: `6.14.2`,
+    });
+  });
+});
+
+it(`should use the closest devEngines.packageManager field over a parent packageManager in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4`,
+    });
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `npm`,
+      reference: `9.9.9`,
+    })).resolves.toMatchObject({
+      name: `npm`,
+      range: `6.14.2`,
+    });
+  });
+});
+
+it(`should ignore a parent packageManager when a closer devEngines.packageManager is invalid with onFail set to "warn" in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4`,
+    });
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `bad`,
+          onFail: `warn`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `npm`,
+      reference: `9.9.9`,
+    })).resolves.toMatchObject({
+      name: `npm`,
+      range: `9.9.9`,
     });
   });
 });
