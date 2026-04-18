@@ -240,10 +240,9 @@ export class Engine {
    * we just assume that whatever the user uses is exactly what they want to use.
    * Since the version isn't specified, we fallback on known good versions.
    *
-   * Finally, if the package.json doesn't exist at all, we ask the user whether they
-   * want to create one in the current working directory. If they do, we initialize a new
-   * package.json using the default package managers, and configure it so that we
-   * don't need to ask again in the future.
+   * Finally, if the package.json doesn't exist at all,
+   * we just assume that whatever the user uses is exactly what they want to use.
+   * Since the version isn't specified, we fallback on known good versions.
    */
   async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false, binaryVersion}: {transparent?: boolean, binaryVersion?: string | null} = {}): Promise<Descriptor> {
     // A locator is a valid descriptor (but not the other way around)
