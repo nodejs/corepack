@@ -127,18 +127,18 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackag
   if (packageJSONContent.devEngines?.packageManager === undefined)
     return resultFromPackageManager;
 
-  const {packageManager: packageManager} = packageJSONContent.devEngines;
+  const {packageManager: devEnginesPackageManager} = packageJSONContent.devEngines;
 
-  if (typeof packageManager !== `object`) {
-    console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
+  if (typeof devEnginesPackageManager !== `object`) {
+    console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(devEnginesPackageManager)}) will be ignored.`);
     return resultFromPackageManager;
   }
-  if (Array.isArray(packageManager)) {
+  if (Array.isArray(devEnginesPackageManager)) {
     console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
     return resultFromPackageManager;
   }
 
-  const {name, version, onFail} = packageManager;
+  const {name, version, onFail} = devEnginesPackageManager;
   if (typeof name !== `string` || name.includes(`@`)) {
     warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
     return resultFromPackageManager;
@@ -154,19 +154,19 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackag
     if (!pm.startsWith?.(`${name}@`))
       warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
 
-    else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
+    else if (version != null && !semverSatisfies(pm.slice(devEnginesPackageManager.name.length + 1), version))
       warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
 
     return {
       ...resultFromPackageManager!,
-      devEnginesValues: packageManager,
+      devEnginesValues: devEnginesPackageManager,
     };
   }
 
   return {
     sourceField: `devEngines.packageManager`,
     rawPmSpec: `${name}@${version ?? `*`}`,
-    devEnginesValues: packageManager,
+    devEnginesValues: devEnginesPackageManager,
   };
 }
 
