@@ -229,19 +229,20 @@ export class Engine {
   }
 
   /**
-   * Locates the active project's package manager specification.
+   * Locates the package manager specification from nearest package.json having one.
    *
    * If the specification exists but doesn't match the active package manager,
    * an error is thrown to prevent users from using the wrong package manager,
    * which would lead to inconsistent project layouts.
    *
-   * If the project doesn't include a specification file, we just assume that
-   * whatever the user uses is exactly what they want to use. Since the version
-   * isn't specified, we fallback on known good versions.
+   * If none of the package.json files have specification,
+   * or a package.json had specification which was invalid but allowed failure,
+   * we just assume that whatever the user uses is exactly what they want to use.
+   * Since the version isn't specified, we fallback on known good versions.
    *
-   * Finally, if the project doesn't exist at all, we ask the user whether they
-   * want to create one in the current project. If they do, we initialize a new
-   * project using the default package managers, and configure it so that we
+   * Finally, if the package.json doesn't exist at all, we ask the user whether they
+   * want to create one in the current working directory. If they do, we initialize a new
+   * package.json using the default package managers, and configure it so that we
    * don't need to ask again in the future.
    */
   async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false, binaryVersion}: {transparent?: boolean, binaryVersion?: string | null} = {}): Promise<Descriptor> {
