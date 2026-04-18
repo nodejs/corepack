@@ -124,50 +124,50 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackag
   if (pm === `` || pm === null)
     return resultFromPackageManager; // short-circuit with defined, but invalid "packageManager" values
 
-  if (packageJSONContent.devEngines?.packageManager !== undefined) {
-    const {packageManager} = packageJSONContent.devEngines;
+  if (packageJSONContent.devEngines?.packageManager === undefined)
+    return resultFromPackageManager;
 
-    if (typeof packageManager !== `object`) {
-      console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
-      return resultFromPackageManager;
-    }
-    if (Array.isArray(packageManager)) {
-      console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
-      return resultFromPackageManager;
-    }
+  const {packageManager: packageManager} = packageJSONContent.devEngines;
 
-    const {name, version, onFail} = packageManager;
-    if (typeof name !== `string` || name.includes(`@`)) {
-      warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
-      return resultFromPackageManager;
-    }
-    if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
-      warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
-      return resultFromPackageManager;
-    }
+  if (typeof packageManager !== `object`) {
+    console.warn(`! Corepack only supports objects as valid value for devEngines.packageManager. The current value (${JSON.stringify(packageManager)}) will be ignored.`);
+    return resultFromPackageManager;
+  }
+  if (Array.isArray(packageManager)) {
+    console.warn(`! Corepack does not currently support array values for devEngines.packageManager`);
+    return resultFromPackageManager;
+  }
 
-    debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
+  const {name, version, onFail} = packageManager;
+  if (typeof name !== `string` || name.includes(`@`)) {
+    warnOrThrow(`The value of devEngines.packageManager.name ${JSON.stringify(name)} is not a supported string value`, onFail);
+    return resultFromPackageManager;
+  }
+  if (version != null && (typeof version !== `string` || !semverValidRange(version))) {
+    warnOrThrow(`The value of devEngines.packageManager.version ${JSON.stringify(version)} is not a valid semver range`, onFail);
+    return resultFromPackageManager;
+  }
 
-    if (pm !== undefined) {
-      if (!pm.startsWith?.(`${name}@`))
-        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
+  debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
 
-      else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
-        warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
+  if (pm !== undefined) {
+    if (!pm.startsWith?.(`${name}@`))
+      warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the "devEngines.packageManager" field set to ${JSON.stringify(name)}`, onFail);
 
-      return {
-        ...resultFromPackageManager!,
-        devEnginesValues: packageManager,
-      };
-    }
+    else if (version != null && !semverSatisfies(pm.slice(packageManager.name.length + 1), version))
+      warnOrThrow(`"packageManager" field is set to ${JSON.stringify(pm)} which does not match the value defined in "devEngines.packageManager" for ${JSON.stringify(name)} of ${JSON.stringify(version)}`, onFail);
+
     return {
-      sourceField: `devEngines.packageManager`,
-      rawPmSpec: `${name}@${version ?? `*`}`,
+      ...resultFromPackageManager!,
       devEnginesValues: packageManager,
     };
   }
 
-  return resultFromPackageManager;
+  return {
+    sourceField: `devEngines.packageManager`,
+    rawPmSpec: `${name}@${version ?? `*`}`,
+    devEnginesValues: packageManager,
+  };
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
