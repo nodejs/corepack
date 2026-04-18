@@ -1,14 +1,14 @@
-import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
-import os                                            from 'node:os';
-import process                                       from 'node:process';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {Filename, ppath, xfs, npath, PortablePath}       from '@yarnpkg/fslib';
+import os                                                from 'node:os';
+import process                                           from 'node:process';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import config                                        from '../config.json';
-import {Engine}                                      from '../sources/Engine';
-import * as folderUtils                              from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                  from '../sources/types';
+import config                                            from '../config.json';
+import {Engine}                                          from '../sources/Engine';
+import * as folderUtils                                  from '../sources/folderUtils';
+import {SupportedPackageManagerSet}                      from '../sources/types';
 
-import {runCli}                                      from './_runCli';
+import {runCli}                                          from './_runCli';
 
 
 beforeEach(async () => {
@@ -709,6 +709,92 @@ it(`should mention devEngines.packageManager when Engine.findProjectSpec rejects
         packageManager: {
           name: `npm`,
           version: `6.14.2`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `yarn`,
+      reference: `1.22.4`,
+    })).rejects.toThrow(`This project is configured to use npm because ${npath.fromPortablePath(ppath.join(projectCwd, `package.json` as Filename))} has a "devEngines.packageManager" field`);
+  });
+});
+
+it(`should fall back to the requested package manager when only devEngines.packageManager mismatches with onFail set to "ignore" in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+          onFail: `ignore`,
+        },
+      },
+    });
+
+    const engine = new Engine();
+    await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+      name: `yarn`,
+      reference: `1.22.4`,
+    })).resolves.toMatchObject({
+      name: `yarn`,
+      range: `1.22.4`,
+    });
+  });
+});
+
+it(`should fall back to the requested package manager and warn when only devEngines.packageManager mismatches with onFail set to "warn" in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+          onFail: `warn`,
+        },
+      },
+    });
+
+    const warn = vi.spyOn(console, `warn`).mockImplementation(() => {});
+
+    try {
+      const engine = new Engine();
+      await expect(engine.findProjectSpec(npath.fromPortablePath(projectCwd), {
+        name: `yarn`,
+        reference: `1.22.4`,
+      })).resolves.toMatchObject({
+        name: `yarn`,
+        range: `1.22.4`,
+      });
+
+      expect(warn).toHaveBeenCalledWith(`! Corepack validation warning: Using yarn as requested (@1.22.4) because ${npath.fromPortablePath(ppath.join(projectCwd, `package.json` as Filename))} defines "devEngines.packageManager" with mismatched npm@6.14.2 and onFail: warn.`);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+it(`should reject when only devEngines.packageManager mismatches with onFail set to "download" in Engine.findProjectSpec`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    const projectCwd = ppath.join(cwd, `foo` as PortablePath);
+
+    await xfs.mkdirPromise(projectCwd, {recursive: true});
+
+    await xfs.writeJsonPromise(ppath.join(projectCwd, `package.json` as Filename), {
+      devEngines: {
+        packageManager: {
+          name: `npm`,
+          version: `6.14.2`,
+          onFail: `download`,
         },
       },
     });

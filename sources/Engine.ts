@@ -295,9 +295,16 @@ export class Engine {
         case `Found`: {
           const spec = result.getSpec({enforceExactVersion: !binaryVersion});
           if (spec.name !== locator.name) {
-            if (transparent) {
+            const devEnginesSayMismatchIsNotError = result.sourceField === `devEngines.packageManager`
+              && result.devEnginesRange !== undefined
+              && result.devEnginesRange.onFail !== `error`;
+
+            if (transparent || devEnginesSayMismatchIsNotError) {
               if (typeof locator.reference === `function`)
                 fallbackDescriptor.range = await locator.reference();
+
+              if (devEnginesSayMismatchIsNotError && result.devEnginesRange!.onFail === `warn`)
+                console.warn(`! Corepack validation warning: Using ${fallbackDescriptor.name} as requested (@${fallbackDescriptor.range}) because ${result.target} defines "devEngines.packageManager" with mismatched ${spec.name}@${spec.range} and onFail: warn.`);
 
               debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
               return fallbackDescriptor;

@@ -91,14 +91,24 @@ type ParsedPackageManager = {
 interface DevEngineDependency {
   name: string;
   version: string;
-  onFail?: `ignore` | `warn` | `error`;
+  onFail?: `ignore` | `warn` | `error` | `download`;
 }
-function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency[`onFail`]) {
+
+function normalizeOnFail(onFail?: DevEngineDependency[`onFail`]) {
   switch (onFail) {
+    case undefined:
+    case `download`:
+      return `error`;
+    default:
+      return onFail;
+  }
+}
+
+function warnOrThrow(errorMessage: string, onFail?: DevEngineDependency[`onFail`]) {
+  switch (normalizeOnFail(onFail)) {
     case `ignore`:
       break;
     case `error`:
-    case undefined:
       throw new UsageError(errorMessage);
     default:
       console.warn(`! Corepack validation warning: ${errorMessage}`);
@@ -193,7 +203,7 @@ interface FoundSpecResult {
   getSpec: (options?: {enforceExactVersion?: boolean}) => Descriptor;
   envFilePath?: string;
   sourceField: PackageManagerSourceField; // source of the spec
-  devEnginesRange?: Descriptor & {onFail: Required<DevEngineDependency>[`onFail`]};
+  devEnginesRange?: Descriptor & {onFail: `ignore` | `warn` | `error`};
 }
 export type LoadSpecResult =
     | {type: `NoProject`, target: string}
@@ -299,7 +309,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     devEnginesRange: parsedPackageManager.devEnginesValues && {
       name: parsedPackageManager.devEnginesValues.name,
       range: parsedPackageManager.devEnginesValues.version,
-      onFail: parsedPackageManager.devEnginesValues.onFail ?? `error`,
+      onFail: normalizeOnFail(parsedPackageManager.devEnginesValues.onFail),
     },
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
     getSpec: ({enforceExactVersion = true} = {}) => parseSpec(parsedPackageManager, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
