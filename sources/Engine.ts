@@ -1,22 +1,22 @@
-import {UsageError}                                           from 'clipanion';
-import fs                                                     from 'fs';
-import path                                                   from 'path';
-import process                                                from 'process';
-import semverRcompare                                         from 'semver/functions/rcompare';
-import semverValid                                            from 'semver/functions/valid';
-import semverValidRange                                       from 'semver/ranges/valid';
+import { UsageError } from 'clipanion';
+import fs from 'fs';
+import path from 'path';
+import process from 'process';
+import semverRcompare from 'semver/functions/rcompare';
+import semverValid from 'semver/functions/valid';
+import semverValidRange from 'semver/ranges/valid';
 
-import defaultConfig                                          from '../config.json';
+import defaultConfig from '../config.json';
 
-import * as corepackUtils                                     from './corepackUtils';
-import * as debugUtils                                        from './debugUtils';
-import * as folderUtils                                       from './folderUtils';
-import type {NodeError}                                       from './nodeUtils';
-import * as semverUtils                                       from './semverUtils';
-import * as specUtils                                         from './specUtils';
-import {Config, Descriptor, LazyLocator, Locator}             from './types';
-import {SupportedPackageManagers, SupportedPackageManagerSet} from './types';
-import {isSupportedPackageManager, PackageManagerSpec}        from './types';
+import * as corepackUtils from './corepackUtils';
+import * as debugUtils from './debugUtils';
+import * as folderUtils from './folderUtils';
+import type { NodeError } from './nodeUtils';
+import * as semverUtils from './semverUtils';
+import * as specUtils from './specUtils';
+import { Config, Descriptor, LazyLocator, Locator } from './types';
+import { SupportedPackageManagers, SupportedPackageManagerSet } from './types';
+import { isSupportedPackageManager, PackageManagerSpec } from './types';
 
 export type PreparedPackageManagerInfo = Awaited<ReturnType<Engine[`ensurePackageManager`]>>;
 
@@ -71,7 +71,7 @@ export async function getLastKnownGood(): Promise<Record<string, string>> {
 
 async function createLastKnownGoodFile(lastKnownGood: Record<string, string>) {
   const content = `${JSON.stringify(lastKnownGood, null, 2)}\n`;
-  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), {recursive: true});
+  await fs.promises.mkdir(folderUtils.getCorepackHomeFolder(), { recursive: true });
   await fs.promises.writeFile(getLastKnownGoodFilePath(), content, `utf8`);
 }
 
@@ -162,7 +162,7 @@ export class Engine {
     const locators: Array<Descriptor> = [];
 
     for (const name of SupportedPackageManagerSet as Set<SupportedPackageManagers>)
-      locators.push({name, range: await this.getDefaultVersion(name)});
+      locators.push({ name, range: await this.getDefaultVersion(name) });
 
     return locators;
   }
@@ -244,9 +244,9 @@ export class Engine {
    * project using the default package managers, and configure it so that we
    * don't need to ask again in the future.
    */
-  async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, {transparent = false, binaryVersion}: {transparent?: boolean, binaryVersion?: string | null} = {}): Promise<Descriptor> {
+  async findProjectSpec(initialCwd: string, locator: Locator | LazyLocator, { transparent = false, binaryVersion }: { transparent?: boolean, binaryVersion?: string | null } = {}): Promise<Descriptor> {
     // A locator is a valid descriptor (but not the other way around)
-    const fallbackDescriptor = {name: locator.name, range: `${locator.reference}`};
+    const fallbackDescriptor = { name: locator.name, range: `${locator.reference}` };
 
     if (process.env.COREPACK_ENABLE_PROJECT_SPEC === `0`) {
       if (typeof locator.reference === `function`)
@@ -275,7 +275,7 @@ export class Engine {
             fallbackDescriptor.range = await locator.reference();
 
           if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
-            const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
+            const resolved = await this.resolveDescriptor(fallbackDescriptor, { allowTags: true });
             if (resolved === null)
               throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
 
@@ -293,7 +293,7 @@ export class Engine {
         }
 
         case `Found`: {
-          const spec = result.getSpec({enforceExactVersion: !binaryVersion});
+          const spec = result.getSpec({ enforceExactVersion: !binaryVersion });
           if (spec.name !== locator.name) {
             if (transparent) {
               if (typeof locator.reference === `function`)
@@ -313,8 +313,19 @@ export class Engine {
     }
   }
 
-  async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
-    let fallbackLocator: Locator | LazyLocator = {
+  async executePackageManagerRequest(cwd: string, binaryName: string, args: Array<string>, { packageManager, binaryVersion }: { packageManager: SupportedPackageManagers | null, binaryVersion: string | null }) {
+    // If COREPACK_PACKAGE_MANAGER_LOCATOR is set, it means we're running a shim
+    // that has already resolved the package manager to use. We just need to
+    // run it.
+    if (process.env.COREPACK_PACKAGE_MANAGER_LOCATOR?.startsWith(`${binaryName}@`)) {
+      const descriptor = specUtils.parseSpec(process.env.COREPACK_PACKAGE_MANAGER_LOCATOR, `COREPACK_PACKAGE_MANAGER_LOCATOR`);
+      const locator: Locator = { name: descriptor.name, reference: descriptor.range };
+      const installSpec = await this.ensurePackageManager(locator);
+      process.env.COREPACK_PACKAGE_MANAGER_LOCATOR = `${locator.name}@${locator.reference}`;
+      return await corepackUtils.runVersion(locator, installSpec, binaryName, args);
+    }
+
+    let fallbackLocator: Locator = {
       name: binaryName as SupportedPackageManagers,
       reference: undefined as any,
     };
@@ -344,12 +355,12 @@ export class Engine {
       };
     }
 
-    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, {transparent: isTransparentCommand, binaryVersion});
+    const descriptor = await this.findProjectSpec(cwd, fallbackLocator, { transparent: isTransparentCommand, binaryVersion });
 
     if (binaryVersion)
       descriptor.range = binaryVersion;
 
-    const resolved = await this.resolveDescriptor(descriptor, {allowTags: true});
+    const resolved = await this.resolveDescriptor(descriptor, { allowTags: true });
     if (resolved === null)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
@@ -358,7 +369,7 @@ export class Engine {
     return await corepackUtils.runVersion(resolved, installSpec, binaryName, args);
   }
 
-  async resolveDescriptor(descriptor: Descriptor, {allowTags = false, useCache = true}: {allowTags?: boolean, useCache?: boolean} = {}): Promise<Locator | null> {
+  async resolveDescriptor(descriptor: Descriptor, { allowTags = false, useCache = true }: { allowTags?: boolean, useCache?: boolean } = {}): Promise<Locator | null> {
     if (!corepackUtils.isSupportedPackageManagerDescriptor(descriptor)) {
       if (process.env.COREPACK_ENABLE_UNSAFE_CUSTOM_URLS !== `1` && isSupportedPackageManager(descriptor.name))
         throw new UsageError(`Illegal use of URL for known package manager. Instead, select a specific version, or set COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1 in your environment (${descriptor.name}@${descriptor.range})`);
@@ -399,12 +410,12 @@ export class Engine {
     // from the remote listings
     const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
     if (cachedVersion !== null && useCache)
-      return {name: finalDescriptor.name, reference: cachedVersion};
+      return { name: finalDescriptor.name, reference: cachedVersion };
 
     // If the user asked for a specific version, no need to request the list of
     // available versions from the registry.
     if (semverValid(finalDescriptor.range))
-      return {name: finalDescriptor.name, reference: finalDescriptor.range};
+      return { name: finalDescriptor.name, reference: finalDescriptor.range };
 
     const versions = await Promise.all(Object.keys(definition.ranges).map(async range => {
       const packageManagerSpec = definition.ranges[range];
@@ -418,6 +429,6 @@ export class Engine {
     if (highestVersion.length === 0)
       return null;
 
-    return {name: finalDescriptor.name, reference: highestVersion[0]};
+    return { name: finalDescriptor.name, reference: highestVersion[0] };
   }
 }

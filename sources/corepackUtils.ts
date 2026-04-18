@@ -323,8 +323,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     if (
       nodeUtils.isNodeError(err) && (
         nodeUtils.isExistError(err) ||
-      // On Windows the error code is EPERM so we check if it is a directory
-      (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory()))
+        // On Windows the error code is EPERM so we check if it is a directory
+        (err.code === `EPERM` && (await fs.promises.stat(installFolder)).isDirectory()))
     ) {
       debugUtils.log(`Another instance of corepack installed ${locator.name}@${locator.reference}`);
       await fs.promises.rm(tmpFolder, {recursive: true, force: true});
@@ -428,6 +428,7 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   // - pnpm uses `require.main == null` to determine its own version: https://github.com/pnpm/pnpm/blob/e2866dee92991e979b2b0e960ddf5a74f6845d90/packages/cli-meta/src/index.ts#L14
 
   process.env.COREPACK_ROOT = path.dirname(require.resolve(`corepack/package.json`));
+  process.env.COREPACK_PACKAGE_MANAGER_LOCATOR = `${locator.name}@${locator.reference}`;
 
   process.argv = [
     process.execPath,
