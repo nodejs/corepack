@@ -258,66 +258,66 @@ export class Engine {
     if (process.env.COREPACK_ENABLE_STRICT === `0`)
       transparent = true;
 
-    while (true) {
-      const result = await specUtils.loadSpec(initialCwd);
+    const result = await specUtils.loadSpec(initialCwd);
 
-      switch (result.type) {
-        case `NoProject`: {
-          if (typeof locator.reference === `function`)
-            fallbackDescriptor.range = await locator.reference();
+    switch (result.type) {
+      case `NoProject`: {
+        if (typeof locator.reference === `function`)
+          fallbackDescriptor.range = await locator.reference();
 
-          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} as no project manifest were found`);
-          return fallbackDescriptor;
+        debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} as no project manifest were found`);
+        return fallbackDescriptor;
+      }
+
+      case `NoSpec`: {
+        if (typeof locator.reference === `function`)
+          fallbackDescriptor.range = await locator.reference();
+
+        if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
+          const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
+          if (resolved === null)
+            throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
+
+          const installSpec = await this.ensurePackageManager(resolved);
+
+          console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
+          console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
+          console.error();
+
+          await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
         }
 
-        case `NoSpec`: {
-          if (typeof locator.reference === `function`)
-            fallbackDescriptor.range = await locator.reference();
+        debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManager" field in ${result.target}`);
+        return fallbackDescriptor;
+      }
 
-          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
-            const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
-            if (resolved === null)
-              throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);
+      case `Found`: {
+        const spec = result.getSpec({enforceExactVersion: !binaryVersion});
+        if (spec.name !== locator.name) {
+          const devEnginesSayMismatchIsNotError = result.sourceField === `devEngines.packageManager`
+            && result.devEnginesRange !== undefined
+            && result.devEnginesRange.onFail !== `error`;
 
-            const installSpec = await this.ensurePackageManager(resolved);
+          if (transparent || devEnginesSayMismatchIsNotError) {
+            if (typeof locator.reference === `function`)
+              fallbackDescriptor.range = await locator.reference();
 
-            console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
-            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
-            console.error();
+            if (devEnginesSayMismatchIsNotError && result.devEnginesRange!.onFail === `warn`)
+              console.warn(`! Corepack validation warning: Using ${fallbackDescriptor.name} as requested (@${fallbackDescriptor.range}) because ${result.target} defines "devEngines.packageManager" with mismatched ${spec.name}@${spec.range} and onFail: warn.`);
 
-            await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
-          }
-
-          debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManager" field in ${result.target}`);
-          return fallbackDescriptor;
-        }
-
-        case `Found`: {
-          const spec = result.getSpec({enforceExactVersion: !binaryVersion});
-          if (spec.name !== locator.name) {
-            const devEnginesSayMismatchIsNotError = result.sourceField === `devEngines.packageManager`
-              && result.devEnginesRange !== undefined
-              && result.devEnginesRange.onFail !== `error`;
-
-            if (transparent || devEnginesSayMismatchIsNotError) {
-              if (typeof locator.reference === `function`)
-                fallbackDescriptor.range = await locator.reference();
-
-              if (devEnginesSayMismatchIsNotError && result.devEnginesRange!.onFail === `warn`)
-                console.warn(`! Corepack validation warning: Using ${fallbackDescriptor.name} as requested (@${fallbackDescriptor.range}) because ${result.target} defines "devEngines.packageManager" with mismatched ${spec.name}@${spec.range} and onFail: warn.`);
-
-              debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
-              return fallbackDescriptor;
-            } else {
-              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "${result.sourceField}" field`);
-            }
+            debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
+            return fallbackDescriptor;
           } else {
-            debugUtils.log(`Using ${spec.name}@${spec.range} as defined in project manifest ${result.target}`);
-            return spec;
+            throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "${result.sourceField}" field`);
           }
+        } else {
+          debugUtils.log(`Using ${spec.name}@${spec.range} as defined in project manifest ${result.target}`);
+          return spec;
         }
       }
     }
+
+    throw new Error(`Assertion failed: Unsupported loadSpec result type`);
   }
 
   async executePackageManagerRequest({packageManager, binaryName, binaryVersion}: PackageManagerRequest, {cwd, args}: {cwd: string, args: Array<string>}): Promise<void> {
