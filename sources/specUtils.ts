@@ -255,7 +255,7 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     } catch {}
 
     if (typeof data !== `object` || data === null)
-      throw new UsageError(`Invalid package.json in ${path.relative(initialCwd, manifestPath)}`);
+      throw new UsageError(`Could not parse ${path.relative(initialCwd, manifestPath)} as JSON.`);
 
     let localEnv: LocalEnvFile;
     const envFilePath = path.resolve(currCwd, process.env.COREPACK_ENV_FILE ?? `.corepack.env`);
