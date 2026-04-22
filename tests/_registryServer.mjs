@@ -187,7 +187,15 @@ if (process.env.AUTH_TYPE === `PROXY`) {
     });
   });
   proxy.listen(0, `localhost`);
-  await once(proxy, `listening`);
+  await once(proxy, `listening`).catch(e => {
+    if (e?.code === `ENOTFOUND`) {
+      // localhost is not found
+      proxy.close();
+      proxy.listen(); // Fallback to unspecified address
+      return once(proxy, `listening`);
+    }
+    throw e;
+  });
   const {address, port} = proxy.address();
   process.env.ALL_PROXY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
 
@@ -195,7 +203,15 @@ if (process.env.AUTH_TYPE === `PROXY`) {
 }
 
 server.listen(0, `localhost`);
-await once(server, `listening`);
+await once(server, `listening`).catch(e => {
+  if (e?.code === `ENOTFOUND`) {
+    // localhost is not found
+    server.close();
+    server.listen(); // Fallback to unspecified address
+    return once(server, `listening`);
+  }
+  throw e;
+});
 
 const {address, port} = server.address();
 switch (process.env.AUTH_TYPE) {
