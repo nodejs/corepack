@@ -10,7 +10,7 @@
     "url": "https://github.com/nodejs/corepack.git"
   },
   "engines": {
-    "node": "^22.22.0 || ^24.15.0 || >=26.0.0"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "exports": {
     "./package.json": "./package.json"
@@ -37,7 +37,7 @@
     "typescript": "^5.7.3",
     "v8-compile-cache": "^2.3.0",
     "vitest": "^4.0.5",
-    "which": "^5.0.0"
+    "which": "^7.0.0"
   },
   "dependenciesMeta": {
     "esbuild": {
