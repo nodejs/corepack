@@ -636,7 +636,7 @@ it(`should transparently use the preconfigured version when there is no local pr
 
 for (const name of SupportedPackageManagerSet) {
   it(`should use the pinned version when local projects don't list any spec (${name})`, async () => {
-    process.env.pnpm_config_pm_on_fail= `ignore`;
+    process.env.pnpm_config_pm_on_fail = `ignore`;
 
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
@@ -813,7 +813,7 @@ it(`should refuse to run a different package manager within a configured project
 
     // Disable strict checking to workaround the UsageError.
     process.env.COREPACK_ENABLE_STRICT = `0`;
-    process.env.pnpm_config_pm_on_fail= `ignore`;
+    process.env.pnpm_config_pm_on_fail = `ignore`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `1.0.0\n`,
@@ -835,7 +835,7 @@ it(`should always use fallback version when project spec env is disabled`, async
       packageManager: `yarn@1.0.0`,
     });
     process.env.COREPACK_ENABLE_PROJECT_SPEC = `0`;
-    process.env.pnpm_config_pm_on_fail= `ignore`;
+    process.env.pnpm_config_pm_on_fail = `ignore`;
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
