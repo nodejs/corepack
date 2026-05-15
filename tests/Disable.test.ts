@@ -82,6 +82,8 @@ describe(`DisableCommand`, () => {
 
       await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`, `yarn`])).resolves.toMatchObject({
         exitCode: 0,
+        stdout: ``,
+        stderr: ``,
       });
 
       for (const variant of getBinaryNames(`yarn`))
@@ -109,7 +111,7 @@ describe(`DisableCommand`, () => {
 
       await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`])).resolves.toMatchObject({
         stdout: ``,
-        stderr: expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
+        stderr: process.platform === `win32` ? `` : expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
         exitCode: 0,
       });
 
