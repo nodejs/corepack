@@ -5,9 +5,9 @@
 
 ### ⚠ BREAKING CHANGES
 
-* **deps:** drop support for Node.js 20 and 25
-* **deps:** Switching to built-in proxy support, meaning that setting `NODE_USE_ENV_PROXY` in the env is now required.
-* **deps:** drop support for Node.js 20 and 25
+* Drop support for Node.js 20 and Node.js 25.
+* Switching to Node.js built-in proxy support, meaning that proxy support is now
+  gated by having `NODE_USE_ENV_PROXY` set as an environment variable.
 
 ### Features
 
@@ -22,7 +22,6 @@
 ### Miscellaneous Chores
 
 * **deps:** bump engine support matrix ([88c602a](https://github.com/nodejs/corepack/commit/88c602a6ea3f75bf30dc1d071bdb488fae2c8276))
-* **deps:** bump engine support matrix ([#831](https://github.com/nodejs/corepack/issues/831)) ([c344b88](https://github.com/nodejs/corepack/commit/c344b887f4b710edbcb9575b72e858d04d57999f))
 * **deps:** drop Undici and `proxy-from-env` ([8167b0d](https://github.com/nodejs/corepack/commit/8167b0d65acc091af464ead019f7485cb512082f))
 
 ## [0.34.7](https://github.com/nodejs/corepack/compare/v0.34.6...v0.34.7) (2026-04-17)
