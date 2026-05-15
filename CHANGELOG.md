@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.35.0](https://github.com/nodejs/corepack/compare/v0.34.7...v0.35.0) (2026-05-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** drop support for Node.js 20 and 25
+* **deps:** Switching to built-in proxy support, meaning that setting `NODE_USE_ENV_PROXY` in the env is now required.
+* **deps:** drop support for Node.js 20 and 25
+
+### Features
+
+* update package manager versions ([#820](https://github.com/nodejs/corepack/issues/820)) ([fdbd751](https://github.com/nodejs/corepack/commit/fdbd751d9851a50730925de053e9722963c2e135))
+
+
+### Bug Fixes
+
+* target node 22.22.2 in esbuild ([#845](https://github.com/nodejs/corepack/issues/845)) ([0f01502](https://github.com/nodejs/corepack/commit/0f01502fd8832649a573bc68e1851128f547646d))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump engine support matrix ([88c602a](https://github.com/nodejs/corepack/commit/88c602a6ea3f75bf30dc1d071bdb488fae2c8276))
+* **deps:** bump engine support matrix ([#831](https://github.com/nodejs/corepack/issues/831)) ([c344b88](https://github.com/nodejs/corepack/commit/c344b887f4b710edbcb9575b72e858d04d57999f))
+* **deps:** drop Undici and `proxy-from-env` ([8167b0d](https://github.com/nodejs/corepack/commit/8167b0d65acc091af464ead019f7485cb512082f))
+
 ## [0.34.7](https://github.com/nodejs/corepack/compare/v0.34.6...v0.34.7) (2026-04-17)
 
 
