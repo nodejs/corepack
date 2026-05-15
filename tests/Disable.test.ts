@@ -109,14 +109,18 @@ describe(`DisableCommand`, () => {
         ppath.join(cwd, `yarn`),
       );
 
+      const isWindows = process.platform === `win32`; // Yarn Switch support is Posix-only
       await expect(runCli(cwd, [`disable`, `--install-directory=${npath.fromPortablePath(cwd)}`])).resolves.toMatchObject({
         stdout: ``,
-        stderr: process.platform === `win32` ? `` : expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
+        stderr: isWindows ? `` : expect.stringMatching(/^yarn is already installed in .+ and points to a Yarn Switch install - skipping\n$/),
         exitCode: 0,
       });
 
-      const file = await xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`);
-      expect(file).toBe(`hello`);
+      if (isWindows) {
+        expect(xfs.existsSync(ppath.join(cwd, `yarn`))).toBe(false);
+      } else {
+        await expect(xfs.readFilePromise(ppath.join(cwd, `yarn`), `utf8`)).resolves.toBe(`hello`);
+      }
     });
   });
 });
