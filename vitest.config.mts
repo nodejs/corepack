@@ -7,7 +7,4 @@ export default defineConfig({
     testTimeout: 120000,
     retry: 2,
   },
-  esbuild: {
-    target: `node${process.versions.node}`,
-  },
 });
