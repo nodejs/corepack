@@ -10,8 +10,6 @@ async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
-  const agent = await getProxyAgent(input);
-
   if (typeof input === `string`)
     input = new URL(input);
 
@@ -42,7 +40,6 @@ async function fetch(input: string | URL, init?: RequestInit) {
   try {
     response = await globalThis.fetch(input, {
       ...init,
-      dispatcher: agent,
       headers,
     });
   } catch (error) {
@@ -90,32 +87,4 @@ export async function fetchUrlStream(input: string | URL, init?: RequestInit) {
   assert(webStream, `Expected stream to be set`);
   const stream = Readable.fromWeb(webStream);
   return stream;
-}
-
-let ProxyAgent: typeof import('undici').ProxyAgent;
-
-async function getProxyAgent(input: string | URL) {
-  const {getProxyForUrl} = await import(`proxy-from-env`);
-
-  // @ts-expect-error - The internal implementation is compatible with a WHATWG URL instance
-  const proxy = getProxyForUrl(input);
-
-  if (!proxy) return undefined;
-
-  if (ProxyAgent == null) {
-    // Doing a deep import here since undici isn't tree-shakeable
-    const [api, Dispatcher, _ProxyAgent] = await Promise.all([
-      // @ts-expect-error internal module is untyped
-      import(`undici/lib/api/index.js`),
-      // @ts-expect-error internal module is untyped
-      import(`undici/lib/dispatcher/dispatcher.js`),
-      // @ts-expect-error internal module is untyped
-      import(`undici/lib/dispatcher/proxy-agent.js`),
-    ]);
-
-    Object.assign(Dispatcher.default.prototype, api.default);
-    ProxyAgent = _ProxyAgent.default;
-  }
-
-  return new ProxyAgent(proxy);
 }

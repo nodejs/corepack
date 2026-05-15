@@ -186,10 +186,8 @@ if (process.env.AUTH_TYPE === `PROXY`) {
       clientSocket.pipe(serverSocket);
     });
   });
-  proxy.listen(0, `localhost`);
+  proxy.listen(new URL(process.env.HTTP_PROXY).port, `localhost`);
   await once(proxy, `listening`);
-  const {address, port} = proxy.address();
-  process.env.ALL_PROXY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}`;
 
   proxy.unref();
 }
