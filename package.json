@@ -64,7 +64,9 @@
   "publishConfig": {
     "bin": {
       "corepack": "./dist/corepack.js",
+      "pn": "./dist/pn.js",
       "pnpm": "./dist/pnpm.js",
+      "pnx": "./dist/pnx.js",
       "pnpx": "./dist/pnpx.js",
       "yarn": "./dist/yarn.js",
       "yarnpkg": "./dist/yarnpkg.js"
@@ -72,7 +74,9 @@
     "executableFiles": [
       "./dist/npm.js",
       "./dist/npx.js",
+      "./dist/pn.js",
       "./dist/pnpm.js",
+      "./dist/pnx.js",
       "./dist/pnpx.js",
       "./dist/yarn.js",
       "./dist/yarnpkg.js",
@@ -81,8 +85,12 @@
       "./shims/npm.ps1",
       "./shims/npx",
       "./shims/npx.ps1",
+      "./shims/pn",
+      "./shims/pn.ps1",
       "./shims/pnpm",
       "./shims/pnpm.ps1",
+      "./shims/pnx",
+      "./shims/pnx.ps1",
       "./shims/pnpx",
       "./shims/pnpx.ps1",
       "./shims/yarn",
