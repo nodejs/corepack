@@ -315,8 +315,9 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       case `WARN`:
         console.warn(`Integrity of ${locator.name}@${version} could not be verified. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.`);
     }
-  } else if (actualHash !== build[1])
+  } else if (actualHash !== build[1]) {
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+  }
 
   const serializedHash = `${algo}.${actualHash}`;
 
