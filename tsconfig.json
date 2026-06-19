@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "esModuleInterop": true,
-    "experimentalDecorators": true,
+    "erasableSyntaxOnly": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2023"],
     "module": "preserve",

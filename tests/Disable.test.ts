@@ -1,13 +1,14 @@
-import {Filename, ppath, xfs, npath}          from '@yarnpkg/fslib';
+import type {Filename}                        from '@yarnpkg/fslib';
+import {ppath, xfs, npath}                    from '@yarnpkg/fslib';
 import {delimiter}                            from 'node:path';
 import process                                from 'node:process';
 import {describe, beforeEach, it, expect}     from 'vitest';
 
-import {Engine}                               from '../sources/Engine';
-import {SupportedPackageManagerSetWithoutNpm} from '../sources/types';
+import {Engine}                               from '../sources/Engine.ts';
+import {SupportedPackageManagerSetWithoutNpm} from '../sources/types.ts';
 
-import {makeBin, getBinaryNames}              from './_binHelpers';
-import {runCli}                               from './_runCli';
+import {makeBin, getBinaryNames}              from './_binHelpers.ts';
+import {runCli}                               from './_runCli.ts';
 
 const engine = new Engine();
 

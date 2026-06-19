@@ -2,8 +2,8 @@ import cmdShim                      from '@zkochan/cmd-shim';
 import fs                           from 'fs';
 import path                         from 'path';
 
-import {Engine}                     from './sources/Engine';
-import {SupportedPackageManagerSet} from './sources/types';
+import {Engine}                     from './sources/Engine.ts';
+import {SupportedPackageManagerSet} from './sources/types.ts';
 
 const engine = new Engine();
 
