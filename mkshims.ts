@@ -7,8 +7,8 @@ import {SupportedPackageManagerSet} from './sources/types.ts';
 
 const engine = new Engine();
 
-const distDir = path.join(__dirname, `dist`);
-const shimsDir = path.join(__dirname, `shims`);
+const distDir = path.join(import.meta.dirname, `dist`);
+const shimsDir = path.join(import.meta.dirname, `shims`);
 
 const physicalNodewinDir = path.join(shimsDir, `nodewin`);
 const virtualNodewinDir = path.join(physicalNodewinDir, `node_modules/corepack`);
@@ -59,7 +59,7 @@ async function main() {
 
   // Last note: cmdShim generates shims with relative paths, so it doesn't matter
   // that the target files don't truly exist, as long as we mock the `stat` function.
-  const remapPath = (p: string) => path.resolve(__dirname, path.relative(virtualNodewinDir, p));
+  const remapPath = (p: string) => path.resolve(import.meta.dirname, path.relative(virtualNodewinDir, p));
 
   const easyStatFs = Object.assign(Object.create(fs), {
     readFile: (p: string, encoding: BufferEncoding, cb: (err: any, str: string) => void) => fs.readFile(remapPath(p), encoding, cb),
