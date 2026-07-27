@@ -77,6 +77,37 @@ describe(`UseCommand`, () => {
       });
     });
 
+    it(`with an exact version in 'devEngines.packageManager' and no 'packageManager' field`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        process.env.NO_COLOR = `1`;
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          devEngines: {packageManager: {name: `yarn`, version: `2.1.0`}},
+          license: `MIT`,
+        });
+
+        // Should update the pinned devEngines version rather than error out
+        // when the requested version doesn't match the current one (#874):
+        await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+          stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
+        });
+
+        const data = await xfs.readJsonPromise(ppath.join(cwd, `package.json`));
+        expect(data).toMatchObject({
+          devEngines: {packageManager: {name: `yarn`, version: `2.4.3+sha512.8dd9fedc5451829619e526c56f42609ad88ae4776d9d3f9456d578ac085115c0c2f0fb02bb7d57fd2e1b6e1ac96efba35e80a20a056668f61c96934f67694fd0`}},
+        });
+        // The `packageManager` field should not be added:
+        expect(data).not.toHaveProperty(`packageManager`);
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `2.4.3\n`,
+          stderr: ``,
+        });
+      });
+    });
+
     it(`with 'devEngines.packageManager' and 'packageManager' fields`, async () => {
       await xfs.mktempPromise(async cwd => {
         process.env.NO_COLOR = `1`;
