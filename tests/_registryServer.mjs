@@ -167,15 +167,9 @@ const server = createServer((req, res) => {
 
 if (process.env.AUTH_TYPE === `PROXY`) {
   const proxy = createServer((req, res) => {
-    let url;
-    try {
-      url = new URL(req.url);
-    } catch {
-      res.writeHead(404).end(`Not Found`);
-      return;
-    }
+    const url = URL.parse(req.url);
 
-    if (url.protocol !== `http:` || url.host !== `example.com`) {
+    if (url?.protocol !== `http:` || url.host !== `example.com`) {
       res.writeHead(404).end(`Not Found`);
       return;
     }
