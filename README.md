@@ -354,7 +354,11 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 - `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
   instruct Corepack to skip integrity checks, or to a JSON string containing
-  custom keys.
+  custom keys. When it is not set and `COREPACK_NPM_REGISTRY` points to a
+  registry other than the default one, Corepack additionally trusts the signing
+  keys that registry publishes at `/-/npm/v1/keys`, so registries which re-sign
+  the packages they serve can still be verified. Those keys are only requested
+  when the bundled npm keys don't already cover the signature.
 
 ## Troubleshooting
 
