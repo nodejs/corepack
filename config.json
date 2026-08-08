@@ -109,6 +109,57 @@
               "install"
             ]
           }
+        },
+        ">=12.0.0": {
+          "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
+          "bin": {
+            "pnpm": "pnpm",
+            "pnpx": "pnpx"
+          },
+          "nativePackages": {
+            "win32-x64": {
+              "package": "@pnpm/exe.win32-x64",
+              "bin": "pnpm.exe"
+            },
+            "win32-arm64": {
+              "package": "@pnpm/exe.win32-arm64",
+              "bin": "pnpm.exe"
+            },
+            "darwin-x64": {
+              "package": "@pnpm/exe.darwin-x64",
+              "bin": "pnpm"
+            },
+            "darwin-arm64": {
+              "package": "@pnpm/exe.darwin-arm64",
+              "bin": "pnpm"
+            },
+            "linux-x64": {
+              "package": "@pnpm/exe.linux-x64",
+              "bin": "pnpm"
+            },
+            "linux-arm64": {
+              "package": "@pnpm/exe.linux-arm64",
+              "bin": "pnpm"
+            },
+            "linux-x64-musl": {
+              "package": "@pnpm/exe.linux-x64-musl",
+              "bin": "pnpm"
+            },
+            "linux-arm64-musl": {
+              "package": "@pnpm/exe.linux-arm64-musl",
+              "bin": "pnpm"
+            }
+          },
+          "registry": {
+            "type": "npm",
+            "package": "pnpm"
+          },
+          "commands": {
+            "use": [
+              "pnpm",
+              "install"
+            ]
+          }
         }
       }
     },

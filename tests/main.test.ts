@@ -1322,6 +1322,43 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+it(`should install the native executable of pnpm v12 from its platform-specific package`, async t => {
+  // The fake native executable served by the custom registry is a shell
+  // script, which Windows cannot spawn.
+  if (process.platform === `win32`) t.skip();
+
+  await xfs.mktempPromise(async cwd => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+    process.env.TEST_PNPM_V12 = `1`; // See `_registryServer.mjs`
+
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `pnpm@12.9998.9999`,
+    });
+
+    await expect(runCli(cwd, [`pnpm`, `install`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm v12 native: pnpm install\n`,
+      stderr: ``,
+    });
+
+    // The aliases are hardlinked onto the same executable, which adapts its
+    // behavior to the name it was invoked under.
+    await expect(runCli(cwd, [`pnpx`, `create-foo`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm v12 native: pnpx create-foo\n`,
+      stderr: ``,
+    });
+
+    // Should keep working with cache
+    await expect(runCli(cwd, [`pnpm`, `run`, `build`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm v12 native: pnpm run build\n`,
+      stderr: ``,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`

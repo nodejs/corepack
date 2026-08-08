@@ -61,19 +61,71 @@ function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   ]);
 }
 
-const mockPackageTarGz = gzipSync(Buffer.concat([
-  createSimpleTarArchive(`package/bin/customPkgManager.js`, `#!/usr/bin/env node\nconsole.log("customPkgManager: Hello from custom registry");\n`, 0o755),
-  createSimpleTarArchive(`package/bin/pnpm.js`, `#!/usr/bin/env node\nconsole.log("pnpm: Hello from custom registry");\n`, 0o755),
-  createSimpleTarArchive(`package/bin/yarn.js`, `#!/usr/bin/env node\nconsole.log("yarn: Hello from custom registry");\n`, 0o755),
-  createSimpleTarArchive(`package/package.json`, JSON.stringify({bin: {yarn: `bin/yarn.js`, pnpm: `bin/pnpm.js`, customPkgManager: `bin/customPkgManager.js`}})),
-  Buffer.alloc(1024),
-]));
-const shasum = createHash(`sha1`).update(mockPackageTarGz).digest(`hex`);
-const integrity = `sha512-${createHash(`sha512`).update(
-  process.env.TEST_INTEGRITY === `invalid_integrity` ?
-    mockPackageTarGz.subarray(1) :
-    mockPackageTarGz,
-).digest(`base64`)}`;
+function createPackageArchive(entries) {
+  const tarGz = gzipSync(Buffer.concat([
+    ...entries.map(([fileName, fileContent, mode]) => createSimpleTarArchive(fileName, fileContent, mode)),
+    Buffer.alloc(1024),
+  ]));
+  return {
+    tarGz,
+    shasum: createHash(`sha1`).update(tarGz).digest(`hex`),
+    integrity: `sha512-${createHash(`sha512`).update(
+      process.env.TEST_INTEGRITY === `invalid_integrity` ?
+        tarGz.subarray(1) :
+        tarGz,
+    ).digest(`base64`)}`,
+  };
+}
+
+const defaultPackageArchive = createPackageArchive([
+  [`package/bin/customPkgManager.js`, `#!/usr/bin/env node\nconsole.log("customPkgManager: Hello from custom registry");\n`, 0o755],
+  [`package/bin/pnpm.js`, `#!/usr/bin/env node\nconsole.log("pnpm: Hello from custom registry");\n`, 0o755],
+  [`package/bin/yarn.js`, `#!/usr/bin/env node\nconsole.log("yarn: Hello from custom registry");\n`, 0o755],
+  [`package/package.json`, JSON.stringify({bin: {yarn: `bin/yarn.js`, pnpm: `bin/pnpm.js`, customPkgManager: `bin/customPkgManager.js`}})],
+]);
+
+// pnpm v12 is distributed as a native executable: the `pnpm` package only
+// ships placeholders, and the real executable lives in a platform-specific
+// companion package pinned in its `optionalDependencies`.
+let nativePlatformKey = `${process.platform}-${process.arch}`;
+if (process.platform === `linux`) {
+  try {
+    const report = process.report?.getReport();
+    if (report != null && !report.header?.glibcVersionRuntime) {
+      nativePlatformKey += `-musl`;
+    }
+  } catch {}
+}
+const PNPM_V12_VERSION = `12.9998.9999`;
+const pnpmExePackageName = `@pnpm/exe.${nativePlatformKey}`;
+const pnpmExeBinName = process.platform === `win32` ? `pnpm.exe` : `pnpm`;
+
+const pnpmV12Archive = createPackageArchive([
+  [`package/pnpm`, `This is a placeholder replaced by the native executable at install time.\n`],
+  [`package/pnpx`, `#!/bin/sh\nexec pnpm dlx "$@"\n`, 0o755],
+  [`package/package.json`, JSON.stringify({
+    name: `pnpm`,
+    version: PNPM_V12_VERSION,
+    bin: {pnpm: `pnpm`, pnpx: `pnpx`},
+    optionalDependencies: {[pnpmExePackageName]: PNPM_V12_VERSION},
+  })],
+]);
+// Stands in for the native executable; prints the name it was invoked under
+// so tests can check that the aliases are hardlinked onto it.
+const pnpmExeArchive = createPackageArchive([
+  [`package/${pnpmExeBinName}`, `#!/bin/sh\necho "pnpm v12 native: $(basename "$0") $@"\n`, 0o755],
+  [`package/package.json`, JSON.stringify({name: pnpmExePackageName, version: PNPM_V12_VERSION})],
+]);
+
+const packageArchives = {
+  __proto__: null,
+  [`pnpm@${PNPM_V12_VERSION}`]: pnpmV12Archive,
+  [`${pnpmExePackageName}@${PNPM_V12_VERSION}`]: pnpmExeArchive,
+};
+
+function getPackageArchive(packageName, version) {
+  return packageArchives[`${packageName}@${version}`] ?? defaultPackageArchive;
+}
 
 const registry = {
   __proto__: null,
@@ -84,8 +136,15 @@ const registry = {
   customPkgManager: [`1.0.0`],
 };
 
+if (process.env.TEST_PNPM_V12 === `1`) {
+  // `latest` is the last item of each list, so the v12 pre-release must come first.
+  registry.pnpm.unshift(PNPM_V12_VERSION);
+  registry[pnpmExePackageName] = [PNPM_V12_VERSION];
+}
+
 function generateSignature(packageName, version) {
   if (privateKey == null) return undefined;
+  const {integrity} = getPackageArchive(packageName, version);
   const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
   return {integrity, signatures: [{
     keyid,
@@ -93,6 +152,7 @@ function generateSignature(packageName, version) {
   }]};
 }
 function generateVersionMetadata(packageName, version) {
+  const archive = getPackageArchive(packageName, version);
   return {
     name: packageName,
     version,
@@ -100,8 +160,8 @@ function generateVersionMetadata(packageName, version) {
       [packageName]: `./bin/${packageName}.js`,
     },
     dist: {
-      shasum,
-      size: mockPackageTarGz.length,
+      shasum: archive.shasum,
+      size: archive.tarGz.length,
       tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`,
       ...generateSignature(packageName, version),
     },
@@ -152,7 +212,7 @@ const server = createServer((req, res) => {
     if (registry[packageName].includes(version)) {
       res.end(
         isDownloadingRequest ?
-          mockPackageTarGz :
+          getPackageArchive(packageName, version).tarGz :
           JSON.stringify(generateVersionMetadata(packageName, version)),
       );
     } else {
