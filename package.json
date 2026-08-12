@@ -33,7 +33,6 @@
     "semver": "^7.6.3",
     "supports-color": "^10.0.0",
     "tar": "^7.5.11",
-    "tsx": "^4.16.2",
     "typescript": "^5.7.3",
     "v8-compile-cache": "^2.3.0",
     "vitest": "^4.0.5",
@@ -45,10 +44,10 @@
     }
   },
   "scripts": {
-    "build": "run clean && run build:bundle && tsx ./mkshims.ts",
+    "build": "run clean && run build:bundle && node ./mkshims.ts",
     "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node22.22.2 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
     "clean": "run rimraf dist shims",
-    "corepack": "tsx ./sources/_cli.ts",
+    "corepack": "node ./sources/_cli.ts",
     "lint": "eslint .",
     "prepack": "yarn build",
     "postpack": "run clean",

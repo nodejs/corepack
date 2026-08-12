@@ -2,10 +2,10 @@ import {Buffer}                                                 from 'node:buffe
 import process                                                  from 'node:process';
 import {describe, beforeEach, it, expect, vi}                   from 'vitest';
 
-import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
-import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources/npmRegistryUtils';
+import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils.ts';
+import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources/npmRegistryUtils.ts';
 
-vi.mock(`../sources/httpUtils`);
+vi.mock(`../sources/httpUtils.ts`);
 
 describe(`npm registry utils fetchAsJson`, () => {
   beforeEach(() => {
