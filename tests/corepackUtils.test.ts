@@ -1,6 +1,6 @@
 import {describe, it, expect}     from 'vitest';
 
-import {shouldSkipIntegrityCheck} from '../sources/corepackUtils';
+import {shouldSkipIntegrityCheck} from '../sources/corepackUtils.ts';
 
 describe(`corepack utils shouldSkipIntegrityCheck`, () => {
   it(`should return false if COREPACK_INTEGRITY_KEYS env is not set`, () => {

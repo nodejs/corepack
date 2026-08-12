@@ -1,4 +1,5 @@
-import {Filename, ppath, xfs, PortablePath} from '@yarnpkg/fslib';
+import type {Filename, PortablePath} from '@yarnpkg/fslib';
+import {ppath, xfs}                  from '@yarnpkg/fslib';
 
 export async function makeBin(cwd: PortablePath, name: Filename, {ignorePlatform = false}: {ignorePlatform?: boolean} = {}) {
   let path = ppath.join(cwd, name);
