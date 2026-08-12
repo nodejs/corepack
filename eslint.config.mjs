@@ -17,6 +17,7 @@ export default [
         name: `fetch`,
         message: `Use fetch from sources/httpUtils.ts`,
       }],
+      '@typescript-eslint/consistent-type-imports': `error`,
       '@typescript-eslint/no-unused-vars': [`error`, {
         caughtErrors: `none`,
       }],

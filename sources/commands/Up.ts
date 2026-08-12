@@ -1,11 +1,11 @@
 import {Command, UsageError}           from 'clipanion';
-import semverMajor                     from 'semver/functions/major';
-import semverValid                     from 'semver/functions/valid';
-import semverValidRange                from 'semver/ranges/valid';
+import semverMajor                     from 'semver/functions/major.js';
+import semverValid                     from 'semver/functions/valid.js';
+import semverValidRange                from 'semver/ranges/valid.js';
 
-import type {SupportedPackageManagers} from '../types';
+import type {SupportedPackageManagers} from '../types.ts';
 
-import {BaseCommand}                   from './Base';
+import {BaseCommand}                   from './Base.ts';
 
 export class UpCommand extends BaseCommand {
   static paths = [
