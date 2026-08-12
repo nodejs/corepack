@@ -1,6 +1,6 @@
 import {Command, UsageError} from 'clipanion';
 
-import {BaseCommand}         from './Base';
+import {BaseCommand}         from './Base.ts';
 
 export class InstallLocalCommand extends BaseCommand {
   static paths = [

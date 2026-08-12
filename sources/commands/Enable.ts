@@ -4,9 +4,9 @@ import fs                                                                from 'f
 import path                                                              from 'path';
 import which                                                             from 'which';
 
-import * as corepackUtils                                                from '../corepackUtils';
-import {Context}                                                         from '../main';
-import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types';
+import * as corepackUtils                                                from '../corepackUtils.ts';
+import type {Context}                                                    from '../main.ts';
+import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types.ts';
 
 export class EnableCommand extends Command<Context> {
   static paths = [

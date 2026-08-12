@@ -1,9 +1,9 @@
-import {Command, UsageError}        from 'clipanion';
+import {Command, UsageError}             from 'clipanion';
 
-import {PreparedPackageManagerInfo} from '../Engine';
-import * as corepackUtils           from '../corepackUtils';
-import {Context}                    from '../main';
-import * as specUtils               from '../specUtils';
+import type {PreparedPackageManagerInfo} from '../Engine.ts';
+import * as corepackUtils                from '../corepackUtils.ts';
+import type {Context}                    from '../main.ts';
+import * as specUtils                    from '../specUtils.ts';
 
 export abstract class BaseCommand extends Command<Context> {
   async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {

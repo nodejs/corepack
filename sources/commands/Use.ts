@@ -1,6 +1,6 @@
 import {Command, Option, UsageError} from 'clipanion';
 
-import {BaseCommand}                 from './Base';
+import {BaseCommand}                 from './Base.ts';
 
 export class UseCommand extends BaseCommand {
   static paths = [
