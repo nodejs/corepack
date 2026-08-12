@@ -1,5 +1,5 @@
-import Range  from 'semver/classes/range';
-import SemVer from 'semver/classes/semver';
+import Range  from 'semver/classes/range.js';
+import SemVer from 'semver/classes/semver.js';
 
 /**
  * Returns whether the given semver version satisfies the given range. Notably

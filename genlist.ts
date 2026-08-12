@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import semverCompare  from 'semver/functions/compare';
+import semverCompare  from 'semver/functions/compare.js';
 
 const lines = readFileSync(0, `utf8`).split(/\n/).filter(line => line);
 

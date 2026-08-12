@@ -1,8 +1,8 @@
 import {Command}          from 'clipanion';
 import fs                 from 'fs';
 
-import {getInstallFolder} from '../folderUtils';
-import type {Context}     from '../main';
+import {getInstallFolder} from '../folderUtils.ts';
+import type {Context}     from '../main.ts';
 
 export class CacheCommand extends Command<Context> {
   static paths = [

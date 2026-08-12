@@ -4,7 +4,7 @@ import {once}                     from 'events';
 import {stderr, stdin}            from 'process';
 import {Readable}                 from 'stream';
 
-import {DEFAULT_NPM_REGISTRY_URL} from './npmRegistryUtils';
+import {DEFAULT_NPM_REGISTRY_URL} from './npmRegistryUtils.ts';
 
 async function fetch(input: string | URL, init?: RequestInit) {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
