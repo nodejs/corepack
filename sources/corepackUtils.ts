@@ -213,30 +213,24 @@ interface DiagnosticReport {
   };
 }
 
-// `excludeNetwork` is supported by every Node.js version Corepack runs on
-// (it landed in v22.0.0), but is missing from the `@types/node` release we
-// currently depend on.
+// `excludeNetwork` is missing from the `@types/node` release we depend on.
 type ProcessReport = NodeJS.ProcessReport & {excludeNetwork: boolean};
 
 function detectLinuxLibcFamily(): `glibc` | `musl` | null {
   if (process.platform !== `linux`)
     return null;
 
-  // `process.report` may be unavailable, in which case we don't know and the
-  // caller defaults to glibc.
   const processReport = process.report as ProcessReport | undefined;
   if (processReport == null)
     return null;
 
-  // Gathering the network interfaces is the slowest part of generating a
-  // report, and we only care about the header.
-  // Ref: https://github.com/lovell/detect-libc/pull/21
+  // Gathering the network interfaces is the slowest part of generating a report,
+  // and we only care about the header: https://github.com/lovell/detect-libc/pull/21
   const {excludeNetwork} = processReport;
   processReport.excludeNetwork = true;
 
   try {
-    // glibc builds expose `glibcVersionRuntime` in the report header; musl
-    // builds leave it unset.
+    // glibc builds expose `glibcVersionRuntime`; musl builds leave it unset.
     const report = processReport.getReport() as DiagnosticReport;
     return report.header?.glibcVersionRuntime ? `glibc` : `musl`;
   } catch {
@@ -252,11 +246,6 @@ function getBinNames(bin: BinSpec | BinList): Array<string> {
 
 /**
  * Whether all the binaries recorded for an install are present on disk.
- *
- * Installs of package managers distributed as native executables performed by
- * older Corepack releases (which were unaware that the executable must be
- * fetched separately) record binary paths that don't exist; such installs
- * must be discarded and done anew.
  */
 async function isNativeInstallIntact(installFolder: string, bin: BinSpec | BinList): Promise<boolean> {
   if (!isValidBinSpec(bin))
@@ -271,13 +260,8 @@ async function isNativeInstallIntact(installFolder: string, bin: BinSpec | BinLi
 }
 
 /**
- * Downloads the platform-specific package containing the package manager's
- * native executable, then copies said executable over each of the
- * placeholders shipped in `tmpFolder`. This replicates what the package
- * manager's own install lifecycle script would have done, since Corepack
- * never runs lifecycle scripts.
- *
- * Returns the bin spec to record for the install.
+ * Puts the native executable in place of the placeholders shipped in `tmpFolder`,
+ * like the install lifecycle script of the package manager would have done.
  */
 async function installNativeBinaries(installTarget: string, tmpFolder: string, locator: Locator, version: string, spec: PackageManagerSpec): Promise<BinSpec> {
   let platformKey = `${process.platform}-${process.arch}`;
@@ -288,15 +272,13 @@ async function installNativeBinaries(installTarget: string, tmpFolder: string, l
   if (nativePackage == null)
     throw new UsageError(`${locator.name}@${version} does not ship a prebuilt executable for ${platformKey}`);
 
-  // The main package pins the exact version of its platform-specific
-  // companion packages in its `optionalDependencies`.
+  // The main package pins the exact version of its companion packages in its
+  // `optionalDependencies`; if we can't read it, assume they share its version.
   let nativeVersion = version;
   try {
     const manifest = JSON.parse(await fs.promises.readFile(path.join(tmpFolder, `package.json`), `utf8`));
     nativeVersion = manifest?.optionalDependencies?.[nativePackage.package] ?? version;
-  } catch {
-    // Fall back to assuming the companion package shares the main package version.
-  }
+  } catch {}
 
   const {tarball, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(nativePackage.package, nativeVersion);
 
@@ -329,10 +311,8 @@ async function installNativeBinaries(installTarget: string, tmpFolder: string, l
       const target = `${binName}${ext}`;
       const destPath = path.join(tmpFolder, target);
 
-      // The main package ships placeholders (or shell scripts) under the same
-      // names; get rid of them so the executable can take their place. The
-      // executable detects the name it was invoked under, which is how the
-      // aliases keep working.
+      // The executable adapts to the name it was invoked under, so the same file
+      // can replace the placeholder of each bin (e.g. `pnpx` = `pnpm dlx`).
       await fs.promises.rm(destPath, {force: true});
       try {
         await fs.promises.link(nativeBinPath, destPath);
@@ -364,9 +344,8 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     const corepackData = JSON.parse(corepackContent);
 
     if (locatorIsASupportedPackageManager && spec.nativePackages != null && !await isNativeInstallIntact(installFolder, corepackData.bin)) {
-      // The install folder was populated by an older Corepack release that
-      // didn't know this package manager version requires its native
-      // executable to be fetched separately; discard it and install anew.
+      // Older Corepack releases didn't fetch the native executable, and recorded
+      // bins that don't exist; such installs have to be done anew.
       debugUtils.log(`Discarding incomplete install of ${locator.name}@${locator.reference} found in ${installFolder}`);
       await fs.promises.rm(installFolder, {recursive: true, force: true});
     } else {
@@ -565,6 +544,8 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   if (!binPath)
     throw new Error(`Assertion failed: Unable to locate path for bin '${binName}'`);
 
+  process.env.COREPACK_ROOT = path.dirname(require.resolve(`corepack/package.json`));
+
   if (installSpec.spec.nativePackages != null) {
     await runNativeVersion(binPath, args);
     return;
@@ -587,8 +568,6 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
   // - Yarn uses process.argv[1] to determine its own path: https://github.com/yarnpkg/berry/blob/0da258120fc266b06f42aed67e4227e81a2a900f/packages/yarnpkg-cli/sources/main.ts#L80
   // - pnpm uses `require.main == null` to determine its own version: https://github.com/pnpm/pnpm/blob/e2866dee92991e979b2b0e960ddf5a74f6845d90/packages/cli-meta/src/index.ts#L14
 
-  process.env.COREPACK_ROOT = path.dirname(require.resolve(`corepack/package.json`));
-
   process.argv = [
     process.execPath,
     binPath,
@@ -609,19 +588,14 @@ export async function runVersion(locator: Locator, installSpec: InstallSpec & {s
 }
 
 /**
- * Runs a package manager distributed as a native executable, by spawning it
- * as a child process (it cannot be loaded into the current Node.js process
- * like the JavaScript-based package managers).
+ * Spawns a native executable, which cannot be loaded into the current process.
  */
 async function runNativeVersion(binPath: string, args: Array<string>): Promise<void> {
-  process.env.COREPACK_ROOT = path.dirname(require.resolve(`corepack/package.json`));
-
   const child = spawn(binPath, args, {stdio: `inherit`});
 
-  // Terminal-generated signals (e.g. Ctrl+C) are delivered to the whole
-  // foreground process group, so the child receives them on its own; Corepack
-  // just has to avoid dying from them before the child had a chance to handle
-  // them. Signals sent to Corepack itself are forwarded to the child.
+  // Ctrl+C is delivered to the whole foreground process group, so the child gets
+  // it on its own; we only have to stay alive until it's done handling it. Other
+  // signals sent to Corepack are forwarded.
   const onSigint = () => {};
   const forwardSignal = (signal: NodeJS.Signals) => {
     child.kill(signal);

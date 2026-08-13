@@ -37,14 +37,7 @@ export type RegistrySpec =
     | UrlRegistrySpec;
 
 export interface NativePackageSpec {
-  /**
-   * Name of the npm package containing the native executable for one
-   * specific platform.
-   */
   package: string;
-  /**
-   * Path of the native executable inside the platform-specific package.
-   */
   bin: string;
 }
 
@@ -57,16 +50,9 @@ export interface PackageManagerSpec {
   registry: RegistrySpec;
   npmRegistry?: NpmRegistrySpec;
   /**
-   * Some package managers are distributed as native executables: the package
-   * referenced by `url` only ships placeholders for its binaries, and the
-   * actual platform-specific executable lives in a companion npm package
-   * (referenced in the `optionalDependencies` of the main package, and put in
-   * place by a lifecycle script when installed by a package manager). Since
-   * Corepack never runs lifecycle scripts, it replicates their effect when
-   * this field is defined: it downloads the companion package for the current
-   * platform and copies its executable over the placeholders.
-   *
-   * Keys are `${process.platform}-${process.arch}`, plus a `-musl` suffix on
+   * Set when the package manager is distributed as a native executable, which
+   * `url` doesn't contain: it must be fetched from a companion package instead.
+   * Keys are `${process.platform}-${process.arch}`, with a `-musl` suffix on
    * Linux systems using musl libc.
    */
   nativePackages?: {[platformKey: string]: NativePackageSpec};

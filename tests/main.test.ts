@@ -1323,8 +1323,7 @@ it(`should download latest pnpm from custom registry`, async () => {
 });
 
 it(`should install the native executable of pnpm v12 from its platform-specific package`, async t => {
-  // The fake native executable served by the custom registry is a shell
-  // script, which Windows cannot spawn.
+  // The fake native executable is a shell script, which Windows cannot spawn.
   if (process.platform === `win32`) t.skip();
 
   await xfs.mktempPromise(async cwd => {
@@ -1342,8 +1341,7 @@ it(`should install the native executable of pnpm v12 from its platform-specific 
       stderr: ``,
     });
 
-    // The aliases are hardlinked onto the same executable, which adapts its
-    // behavior to the name it was invoked under.
+    // The aliases are hardlinked onto the very same executable.
     await expect(runCli(cwd, [`pnpx`, `create-foo`], true)).resolves.toMatchObject({
       exitCode: 0,
       stdout: `pnpm v12 native: pnpx create-foo\n`,

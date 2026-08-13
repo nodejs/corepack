@@ -84,9 +84,8 @@ const defaultPackageArchive = createPackageArchive([
   [`package/package.json`, JSON.stringify({bin: {yarn: `bin/yarn.js`, pnpm: `bin/pnpm.js`, customPkgManager: `bin/customPkgManager.js`}})],
 ]);
 
-// pnpm v12 is distributed as a native executable: the `pnpm` package only
-// ships placeholders, and the real executable lives in a platform-specific
-// companion package pinned in its `optionalDependencies`.
+// pnpm v12 ships placeholders, and its real executable lives in a
+// platform-specific package pinned in its `optionalDependencies`.
 let nativePlatformKey = `${process.platform}-${process.arch}`;
 if (process.platform === `linux`) {
   try {
@@ -110,8 +109,7 @@ const pnpmV12Archive = createPackageArchive([
     optionalDependencies: {[pnpmExePackageName]: PNPM_V12_VERSION},
   })],
 ]);
-// Stands in for the native executable; prints the name it was invoked under
-// so tests can check that the aliases are hardlinked onto it.
+// Stands in for the native executable, printing the name it was invoked under.
 const pnpmExeArchive = createPackageArchive([
   [`package/${pnpmExeBinName}`, `#!/bin/sh\necho "pnpm v12 native: $(basename "$0") $@"\n`, 0o755],
   [`package/package.json`, JSON.stringify({name: pnpmExePackageName, version: PNPM_V12_VERSION})],
