@@ -207,21 +207,42 @@ async function download(installTarget: string, url: string, algo: string, binPat
   };
 }
 
+interface DiagnosticReport {
+  header?: {
+    glibcVersionRuntime?: string;
+  };
+}
+
+// `excludeNetwork` is supported by every Node.js version Corepack runs on
+// (it landed in v22.0.0), but is missing from the `@types/node` release we
+// currently depend on.
+type ProcessReport = NodeJS.ProcessReport & {excludeNetwork: boolean};
+
 function detectLinuxLibcFamily(): `glibc` | `musl` | null {
   if (process.platform !== `linux`)
     return null;
 
-  // glibc builds expose `glibcVersionRuntime` in the process report; musl
-  // builds leave it unset. `process.report` may be unavailable, in which case
-  // we default to glibc.
-  try {
-    const report = process.report?.getReport() as any;
-    if (report == null)
-      return null;
+  // `process.report` may be unavailable, in which case we don't know and the
+  // caller defaults to glibc.
+  const processReport = process.report as ProcessReport | undefined;
+  if (processReport == null)
+    return null;
 
+  // Gathering the network interfaces is the slowest part of generating a
+  // report, and we only care about the header.
+  // Ref: https://github.com/lovell/detect-libc/pull/21
+  const {excludeNetwork} = processReport;
+  processReport.excludeNetwork = true;
+
+  try {
+    // glibc builds expose `glibcVersionRuntime` in the report header; musl
+    // builds leave it unset.
+    const report = processReport.getReport() as DiagnosticReport;
     return report.header?.glibcVersionRuntime ? `glibc` : `musl`;
   } catch {
     return null;
+  } finally {
+    processReport.excludeNetwork = excludeNetwork;
   }
 }
 
