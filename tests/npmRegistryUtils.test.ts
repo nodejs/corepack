@@ -1,9 +1,9 @@
-import {Buffer}                                                 from 'node:buffer';
-import process                                                  from 'node:process';
-import {describe, beforeEach, it, expect, vi}                   from 'vitest';
+import {Buffer}                                                                           from 'node:buffer';
+import process                                                                            from 'node:process';
+import {describe, beforeEach, it, expect, vi}                                             from 'vitest';
 
-import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils.ts';
-import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson} from '../sources/npmRegistryUtils.ts';
+import {fetchAsJson as httpFetchAsJson}                                                   from '../sources/httpUtils.ts';
+import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson, fetchLatestStableVersion} from '../sources/npmRegistryUtils.ts';
 
 vi.mock(`../sources/httpUtils.ts`);
 
@@ -97,5 +97,56 @@ describe(`npm registry utils fetchAsJson`, () => {
 
     expect(httpFetchAsJson).toBeCalled();
     expect(httpFetchAsJson).lastCalledWith(`${DEFAULT_NPM_REGISTRY_URL}/package-name`, {headers: DEFAULT_HEADERS});
+  });
+});
+
+// https://github.com/nodejs/corepack/issues/849
+describe(`fetchLatestStableVersion`, () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it(`raises an error pointing at the real env vars when integrity verification fails`, async () => {
+    vi.mocked(httpFetchAsJson).mockResolvedValueOnce({
+      version: `1.0.0`,
+      dist: {
+        integrity: `sha512-AAAA`,
+        signatures: [],
+        shasum: `abc`,
+      },
+    });
+
+    let caught: Error | undefined;
+    try {
+      await fetchLatestStableVersion(`some-package`);
+    } catch (e) {
+      caught = e as Error;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    // The error must steer users at the real env vars used by the runtime
+    // - COREPACK_INTEGRITY_KEYS is read by shouldSkipIntegrityCheck()
+    // - COREPACK_DEFAULT_TO_LATEST is read by the version-resolution path
+    expect(caught!.message).toContain(`COREPACK_INTEGRITY_KEYS to 0`);
+    expect(caught!.message).toContain(`COREPACK_DEFAULT_TO_LATEST to 0`);
+    // Neither of these names exist anywhere else in the codebase, so the
+    // error must not point users at them.
+    expect(caught!.message).not.toContain(`COREPACK_INTEGRITY_CHECK`);
+    expect(caught!.message).not.toContain(`COREPACK_USE_LATEST`);
+    expect(caught!.message).toContain(`some-package`);
+  });
+
+  it(`skips signature verification and returns when COREPACK_INTEGRITY_KEYS=0`, async () => {
+    process.env.COREPACK_INTEGRITY_KEYS = `0`;
+    vi.mocked(httpFetchAsJson).mockResolvedValueOnce({
+      version: `2.3.4`,
+      dist: {
+        integrity: `sha512-BBBB`,
+        signatures: [],
+        shasum: `def`,
+      },
+    });
+
+    const out = await fetchLatestStableVersion(`some-package`);
+    expect(out).toBe(`2.3.4+sha512.${Buffer.from(`BBBB`, `base64`).toString(`hex`)}`);
   });
 });

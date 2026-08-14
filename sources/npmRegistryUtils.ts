@@ -83,7 +83,7 @@ export async function fetchLatestStableVersion(packageName: string) {
       });
     } catch (cause) {
       // TODO: consider switching to `UsageError` when https://github.com/arcanis/clipanion/issues/157 is fixed
-      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_CHECK to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_USE_LATEST to 0`, {cause});
+      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_KEYS to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_DEFAULT_TO_LATEST to 0`, {cause});
     }
   }
 
