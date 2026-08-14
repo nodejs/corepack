@@ -1,13 +1,14 @@
-import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
+import type {Filename, PortablePath}                 from '@yarnpkg/fslib';
+import {ppath, xfs, npath}                           from '@yarnpkg/fslib';
 import os                                            from 'node:os';
 import process                                       from 'node:process';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import config                                        from '../config.json';
-import * as folderUtils                              from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                  from '../sources/types';
+import config                                        from '../config.json' with {type: 'json'};
+import * as folderUtils                              from '../sources/folderUtils.ts';
+import {SupportedPackageManagerSet}                  from '../sources/types.ts';
 
-import {runCli}                                      from './_runCli';
+import {runCli}                                      from './_runCli.ts';
 
 
 beforeEach(async () => {

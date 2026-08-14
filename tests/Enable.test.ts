@@ -1,14 +1,15 @@
-import {Filename, ppath, xfs, npath}                                    from '@yarnpkg/fslib';
-import {delimiter}                                                      from 'node:path';
-import process                                                          from 'node:process';
-import {setTimeout}                                                     from 'node:timers/promises';
-import {describe, beforeEach, it, expect, test}                         from 'vitest';
+import type {Filename}                          from '@yarnpkg/fslib';
+import {ppath, xfs, npath}                      from '@yarnpkg/fslib';
+import {delimiter}                              from 'node:path';
+import process                                  from 'node:process';
+import {setTimeout}                             from 'node:timers/promises';
+import {describe, beforeEach, it, expect, test} from 'vitest';
 
-import {Engine}                                                         from '../sources/Engine';
-import {SupportedPackageManagers, SupportedPackageManagerSetWithoutNpm} from '../sources/types';
+import {Engine}                                 from '../sources/Engine.ts';
+import {SupportedPackageManagerSetWithoutNpm}   from '../sources/types.ts';
 
-import {makeBin, getBinaryNames}                                        from './_binHelpers';
-import {runCli}                                                         from './_runCli';
+import {makeBin, getBinaryNames}                from './_binHelpers.ts';
+import {runCli}                                 from './_runCli.ts';
 
 const engine = new Engine();
 
@@ -81,7 +82,7 @@ describe(`EnableCommand`, () => {
       });
 
       const expectedEntries: Array<string> = [ppath.basename(corepackBin)];
-      for (const binName of engine.getBinariesFor(SupportedPackageManagers.Yarn))
+      for (const binName of engine.getBinariesFor(`yarn`))
         expectedEntries.push(...getBinaryNames(binName));
 
       await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
