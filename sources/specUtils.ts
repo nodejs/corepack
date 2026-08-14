@@ -1,17 +1,17 @@
-import {UsageError}                            from 'clipanion';
-import fs                                      from 'fs';
-import path                                    from 'path';
-import semverSatisfies                         from 'semver/functions/satisfies';
-import semverValid                             from 'semver/functions/valid';
-import semverValidRange                        from 'semver/ranges/valid';
-import {parseEnv}                              from 'util';
+import {UsageError}                      from 'clipanion';
+import fs                                from 'fs';
+import path                              from 'path';
+import semverSatisfies                   from 'semver/functions/satisfies.js';
+import semverValid                       from 'semver/functions/valid.js';
+import semverValidRange                  from 'semver/ranges/valid.js';
+import {parseEnv}                        from 'util';
 
-import {PreparedPackageManagerInfo}            from './Engine';
-import * as debugUtils                         from './debugUtils';
-import {NodeError}                             from './nodeUtils';
-import * as nodeUtils                          from './nodeUtils';
-import {Descriptor, isSupportedPackageManager} from './types';
-import type {LocalEnvFile}                     from './types';
+import type {PreparedPackageManagerInfo} from './Engine.ts';
+import * as debugUtils                   from './debugUtils.ts';
+import type {NodeError}                  from './nodeUtils.ts';
+import * as nodeUtils                    from './nodeUtils.ts';
+import {isSupportedPackageManager}       from './types.ts';
+import type {LocalEnvFile, Descriptor}   from './types.ts';
 
 const nodeModulesRegExp = /[\\/]node_modules[\\/](@[^\\/]*[\\/])?([^@\\/][^\\/]*)$/;
 
