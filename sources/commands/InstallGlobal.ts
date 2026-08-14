@@ -1,12 +1,13 @@
-import {Command, Option, UsageError}                    from 'clipanion';
-import fs                                               from 'fs';
-import path                                             from 'path';
+import {Command, Option, UsageError} from 'clipanion';
+import fs                            from 'fs';
+import path                          from 'path';
 
-import * as folderUtils                                 from '../folderUtils';
-import * as specUtils                                   from '../specUtils';
-import {Descriptor, Locator, isSupportedPackageManager} from '../types';
+import * as folderUtils              from '../folderUtils.ts';
+import * as specUtils                from '../specUtils.ts';
+import type {Descriptor, Locator}    from '../types.ts';
+import {isSupportedPackageManager}   from '../types.ts';
 
-import {BaseCommand}                                    from './Base';
+import {BaseCommand}                 from './Base.ts';
 
 export class InstallGlobalCommand extends BaseCommand {
   static paths = [
