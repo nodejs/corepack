@@ -14,7 +14,10 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
 export async function fetchAsJson(packageName: string, version?: string) {
-  const npmRegistryUrl = process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL;
+  // Strip any trailing slashes so a `COREPACK_NPM_REGISTRY` with a trailing
+  // slash does not produce a double slash in the request URL (some registries,
+  // e.g. registry.npmmirror.com, reject `//package` with a 404).
+  const npmRegistryUrl = (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).replace(/\/+$/, ``);
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach npm repository ${npmRegistryUrl}`);

@@ -35,6 +35,15 @@ describe(`npm registry utils fetchAsJson`, () => {
     expect(httpFetchAsJson).lastCalledWith(`${process.env.COREPACK_NPM_REGISTRY}/package-name`, {headers: DEFAULT_HEADERS});
   });
 
+  it(`does not produce a double slash when COREPACK_NPM_REGISTRY has a trailing slash`, async () => {
+    // `process.env` is reset after each tests in setupTests.js.
+    process.env.COREPACK_NPM_REGISTRY = `https://registry.example.org/`;
+    await fetchAsJson(`package-name`);
+
+    expect(httpFetchAsJson).toBeCalled();
+    expect(httpFetchAsJson).lastCalledWith(`https://registry.example.org/package-name`, {headers: DEFAULT_HEADERS});
+  });
+
   it(`adds authorization header with bearer token if COREPACK_NPM_TOKEN is set`, async () => {
     // `process.env` is reset after each tests in setupTests.js.
     process.env.COREPACK_NPM_TOKEN = `foo`;
