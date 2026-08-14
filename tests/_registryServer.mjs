@@ -167,8 +167,15 @@ const server = createServer((req, res) => {
 
 if (process.env.AUTH_TYPE === `PROXY`) {
   const proxy = createServer((req, res) => {
-    res.writeHead(200, {[`Content-Type`]: `text/plain`});
-    res.end(`okay`);
+    const url = URL.parse(req.url);
+
+    if (url?.protocol !== `http:` || url.host !== `example.com`) {
+      res.writeHead(404).end(`Not Found`);
+      return;
+    }
+
+    req.url = `${url.pathname}${url.search}`;
+    server.emit(`request`, req, res);
   });
   proxy.on(`connect`, (req, clientSocket, head) => {
     if (req.url !== `example.com:80`) {

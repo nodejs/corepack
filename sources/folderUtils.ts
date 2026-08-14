@@ -4,7 +4,7 @@ import {homedir, tmpdir} from 'os';
 import {join}            from 'path';
 import process           from 'process';
 
-import type {NodeError}  from './nodeUtils';
+import type {NodeError}  from './nodeUtils.ts';
 
 /**
  * If the install folder structure changes then increment this number.
