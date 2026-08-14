@@ -121,7 +121,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 }
 
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
-  const lookup = await loadSpec(cwd);
+  const lookup = await loadSpecAndEnv(cwd);
 
   const range = `range` in lookup && lookup.range;
   if (range) {
@@ -155,20 +155,42 @@ interface FoundSpecResult {
   envFilePath?: string;
 }
 export type LoadSpecResult =
-    | {type: `NoProject`, target: string}
-    | {type: `NoSpec`, target: string}
+    | {type: `NoProject`, target: string, envFilePath?: string}
+    | {type: `NoSpec`, target: string, envFilePath?: string}
     | FoundSpecResult;
 
-export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
+async function loadEnvFileIfExists(cwd: string): Promise<{env: LocalEnvFile, path: string} | void> {
+  const envFilePath = path.resolve(cwd, process.env.COREPACK_ENV_FILE ?? `.corepack.env`);
+  if (process.env.COREPACK_ENV_FILE == `0`) {
+    debugUtils.log(`Skipping env file as configured with COREPACK_ENV_FILE`);
+    return void 0;
+  }
+  debugUtils.log(`Checking ${envFilePath}`);
+  try {
+    const localEnv = {
+      ...Object.fromEntries(Object.entries(parseEnv(await fs.promises.readFile(envFilePath, `utf8`))).filter(e => e[0].startsWith(`COREPACK_`))),
+      ...process.env,
+    };
+    debugUtils.log(`Successfully loaded env file found at ${envFilePath}`);
+    return {env: localEnv, path: envFilePath};
+  } catch (err) {
+    if ((err as NodeError)?.code !== `ENOENT`)
+      throw err;
+
+    debugUtils.log(`No env file found at ${envFilePath}`);
+  }
+  return void 0;
+}
+
+export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: false}): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
   let selection: {
     data: any;
     manifestPath: string;
-    envFilePath?: string;
-    localEnv: LocalEnvFile;
   } | null = null;
+  let localEnv: {env: LocalEnvFile, path: string} | void = void 0;
 
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
     currCwd = nextCwd;
@@ -176,6 +198,11 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
 
     if (nodeModulesRegExp.test(currCwd))
       continue;
+
+    if (process.env.COREPACK_ENV_FILE !== `0` && !localEnv)
+      localEnv = await loadEnvFileIfExists(currCwd);
+
+    if (envOnly) continue;
 
     const manifestPath = path.join(currCwd, `package.json`);
     debugUtils.log(`Checking ${manifestPath}`);
@@ -193,56 +220,27 @@ export async function loadSpec(initialCwd: string): Promise<LoadSpecResult> {
     } catch {}
 
     if (typeof data !== `object` || data === null)
-      throw new UsageError(`Invalid package.json in ${path.relative(initialCwd, manifestPath)}`);
+      throw new UsageError(`Invalid package.json in ${path.relative(currCwd, manifestPath)}`);
 
-    let localEnv: LocalEnvFile;
-    const envFilePath = path.resolve(currCwd, process.env.COREPACK_ENV_FILE ?? `.corepack.env`);
-    if (process.env.COREPACK_ENV_FILE == `0`) {
-      debugUtils.log(`Skipping env file as configured with COREPACK_ENV_FILE`);
-      localEnv = process.env;
-    } else if (typeof parseEnv !== `function`) {
-      // TODO: remove this block when support for Node.js 18.x is dropped.
-      debugUtils.log(`Skipping env file as it is not supported by the current version of Node.js`);
-      localEnv = process.env;
-    } else {
-      debugUtils.log(`Checking ${envFilePath}`);
-      try {
-        localEnv = {
-          ...Object.fromEntries(Object.entries(parseEnv(await fs.promises.readFile(envFilePath, `utf8`))).filter(e => e[0].startsWith(`COREPACK_`))),
-          ...process.env,
-        };
-        debugUtils.log(`Successfully loaded env file found at ${envFilePath}`);
-      } catch (err) {
-        if ((err as NodeError)?.code !== `ENOENT`)
-          throw err;
-
-        debugUtils.log(`No env file found at ${envFilePath}`);
-        localEnv = process.env;
-      }
-    }
-
-    selection = {data, manifestPath, localEnv, envFilePath};
+    selection = {data, manifestPath};
   }
+
+  if (localEnv)
+    process.env = localEnv.env;
 
   if (selection === null)
-    return {type: `NoProject`, target: path.join(initialCwd, `package.json`)};
-
-  let envFilePath: string | undefined;
-  if (selection.localEnv !== process.env) {
-    envFilePath = selection.envFilePath;
-    process.env = selection.localEnv;
-  }
+    return {type: `NoProject`, target: path.join(initialCwd, `package.json`), envFilePath: localEnv?.path};
 
   const rawPmSpec = parsePackageJSON(selection.data);
   if (typeof rawPmSpec === `undefined`)
-    return {type: `NoSpec`, target: selection.manifestPath};
+    return {type: `NoSpec`, target: selection.manifestPath, envFilePath: localEnv?.path};
 
   debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
 
   return {
     type: `Found`,
     target: selection.manifestPath,
-    envFilePath,
+    envFilePath: localEnv?.path,
     range: selection.data.devEngines?.packageManager?.version && {
       name: selection.data.devEngines.packageManager.name,
       range: selection.data.devEngines.packageManager.version,

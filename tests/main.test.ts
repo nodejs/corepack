@@ -1322,6 +1322,49 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+it(`should use COREPACK_NPM_REGISTRY from .corepack.env for "corepack use" command`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://custom-registry.example.com\n`);
+
+    // "corepack use pnpm" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(cwd, [`use`, `pnpm`])).resolves.toMatchObject({
+      stderr: ``,
+      stdout: expect.stringContaining(`custom-registry.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should use closest .corepack.env`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `subdir`));
+    await xfs.writeFilePromise(ppath.join(cwd, `subdir`, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://subdir.example.com\n`);
+
+    // "corepack use pnpm" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `subdir`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.stringContaining(`subdir.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`

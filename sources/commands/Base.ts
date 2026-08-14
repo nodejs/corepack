@@ -10,7 +10,7 @@ export abstract class BaseCommand extends Command<Context> {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
     if (resolvedSpecs.length === 0) {
-      const lookup = await specUtils.loadSpec(this.context.cwd);
+      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd);
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
@@ -22,6 +22,8 @@ export abstract class BaseCommand extends Command<Context> {
           return [lookup.range ?? lookup.getSpec()];
         }
       }
+    } else {
+      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true});
     }
 
     return resolvedSpecs;
