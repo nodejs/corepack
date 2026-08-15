@@ -202,7 +202,10 @@ export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: f
     if (process.env.COREPACK_ENV_FILE !== `0` && !localEnv)
       localEnv = await loadEnvFileIfExists(currCwd);
 
-    if (envOnly) continue;
+    if (envOnly) {
+      if (localEnv) break;
+      continue;
+    }
 
     const manifestPath = path.join(currCwd, `package.json`);
     debugUtils.log(`Checking ${manifestPath}`);
