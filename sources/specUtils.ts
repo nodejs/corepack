@@ -124,11 +124,6 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   const lookup = await loadSpecAndEnv(cwd);
 
   const range = `range` in lookup && lookup.range;
-  if (range) {
-    if (info.locator.name !== range.name || !semverSatisfies(info.locator.reference, range.range)) {
-      warnOrThrow(`The requested version of ${info.locator.name}@${info.locator.reference} does not match the devEngines specification (${range.name}@${range.range})`, range.onFail);
-    }
-  }
 
   const content = lookup.type !== `NoProject`
     ? await fs.promises.readFile(lookup.target, `utf8`)
@@ -137,7 +132,18 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
   const {data, indent} = nodeUtils.readPackageJson(content);
 
   const previousPackageManager = data.packageManager ?? (range ? `${range.name}@${range.range}` : `unknown`);
-  data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+
+  // When the project relies solely on an exact `devEngines.packageManager`
+  // version (i.e. there's no `packageManager` field), update that field in
+  // place rather than adding a conflicting `packageManager` entry (see #874).
+  if (range && data.packageManager == null && range.name === info.locator.name && semverValid(range.range)) {
+    data.devEngines.packageManager.version = info.locator.reference;
+  } else {
+    if (range && (info.locator.name !== range.name || !semverSatisfies(info.locator.reference, range.range)))
+      warnOrThrow(`The requested version of ${info.locator.name}@${info.locator.reference} does not match the devEngines specification (${range.name}@${range.range})`, range.onFail);
+
+    data.packageManager = `${info.locator.name}@${info.locator.reference}`;
+  }
 
   const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
   await fs.promises.writeFile(lookup.target, newContent, `utf8`);
