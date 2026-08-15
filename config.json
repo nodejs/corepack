@@ -50,10 +50,21 @@
             "init"
           ],
           [
+            "pn",
+            "init"
+          ],
+          [
             "pnpx"
           ],
           [
+            "pnx"
+          ],
+          [
             "pnpm",
+            "dlx"
+          ],
+          [
+            "pn",
             "dlx"
           ]
         ]
@@ -96,7 +107,9 @@
         ">=11.0.0": {
           "url": "https://registry.npmjs.org/pnpm/-/pnpm-{}.tgz",
           "bin": {
+            "pn": "./bin/pnpm.mjs",
             "pnpm": "./bin/pnpm.mjs",
+            "pnx": "./bin/pnpx.mjs",
             "pnpx": "./bin/pnpx.mjs"
           },
           "registry": {
