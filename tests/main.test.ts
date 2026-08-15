@@ -272,23 +272,6 @@ it(`should ignore the packageManager field when found within a node_modules vend
 });
 
 describe(`should handle invalid devEngines values`, () => {
-  it(`throw on missing version`, async () => {
-    await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
-        devEngines: {
-          packageManager: {
-            name: `yarn`,
-          },
-        },
-      });
-
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: `Invalid package manager specification in package.json (yarn@*); expected a semver version\n`,
-        stdout: ``,
-      });
-    });
-  });
   it(`throw on invalid version`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
@@ -380,23 +363,9 @@ it(`should use hash from "packageManager" even when "devEngines" defines a diffe
   });
 });
 
-describe(`should accept range in devEngines only if a specific version is provided`, () => {
-  it(`either in package.json#packageManager field`, async () => {
+describe(`should accept range in devEngines`, () => {
+  it(`should accept if package.json#packageManager field matches`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
-        devEngines: {
-          packageManager: {
-            name: `pnpm`,
-            version: `6.x`,
-          },
-        },
-      });
-      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: `Invalid package manager specification in package.json (pnpm@6.x); expected a semver version\n`,
-        stdout: ``,
-      });
-
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
         devEngines: {
           packageManager: {
@@ -425,6 +394,65 @@ describe(`should accept range in devEngines only if a specific version is provid
         exitCode: 0,
         stderr: ``,
         stdout: `6.6.2\n`,
+      });
+    });
+  });
+
+  it(`should accept without a package.json#packageManager field`, async () => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
+    process.env.TEST_INTEGRITY = `valid`;
+
+    await xfs.mktempPromise(async cwd => {
+    // When no user version is specified, range versions in devEngines should still cause error
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
+      });
+
+      // Without user-specified version, should still fail due to range version in devEngines
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `pnpm: Hello from custom registry\n`,
+      });
+    });
+  });
+
+  it(`should pin a specific if COREPACK_ENABLE_AUTO_PIN is set`, async () => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
+    process.env.TEST_INTEGRITY = `valid`;
+    process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+    // When no user version is specified, range versions in devEngines should still cause error
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
+      });
+
+      // Without user-specified version, should still fail due to range version in devEngines
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: expect.stringContaining(`local project doesn't define a 'packageManager' field`),
+        stdout: `pnpm: Hello from custom registry\n`,
+      });
+
+      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
+        packageManager: `pnpm@1.9998.9999+sha512.14fba45289c972afe6d52036e6cf3c03901fecfe0c0b1231b4b4a65e19ded0bc5810405bebebcffc22334df23939e01a7c5b9da6a3e6ad5b8ffa91f49883c593`,
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
       });
     });
   });
@@ -1823,25 +1851,4 @@ describe(`allow range versions in devEngines.packageManager.version when user sp
       });
     });
   }
-});
-
-it(`should still validate devEngines.packageManager.version format when no user version specified`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    // When no user version is specified, range versions in devEngines should still cause error
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      devEngines: {
-        packageManager: {
-          name: `npm`,
-          version: `^6.14.2`,
-        },
-      },
-    });
-
-    // Without user-specified version, should still fail due to range version in devEngines
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: expect.stringContaining(`Invalid package manager specification in package.json (npm@^6.14.2); expected a semver version`),
-      stdout: ``,
-    });
-  });
 });

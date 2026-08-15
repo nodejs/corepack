@@ -101,7 +101,7 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
       return pm;
     }
 
-    debugUtils.log(`devEngines.packageManager defines that ${name}@${version} is the local package manager`);
+    debugUtils.log(`devEngines.packageManager defines that ${name}${version ? `@${version}` : ``} should the local package manager`);
 
     if (pm) {
       if (!pm.startsWith?.(`${name}@`))
@@ -113,8 +113,9 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
       return pm;
     }
 
-
-    return `${name}@${version ?? `*`}`;
+    return {spec: `${name}@${version ?? `*`}`, name, version, toString() {
+      return this.spec;
+    }};
   }
 
   return pm;
@@ -123,14 +124,15 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON) {
 export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
   const lookup = await loadSpecAndEnv(cwd);
 
-  const range = `range` in lookup && lookup.range;
+  const projectFound = lookup.type !== `NoProject`;
+  const range = projectFound && lookup.devEnginesValue;
   if (range) {
     if (info.locator.name !== range.name || !semverSatisfies(info.locator.reference, range.range)) {
       warnOrThrow(`The requested version of ${info.locator.name}@${info.locator.reference} does not match the devEngines specification (${range.name}@${range.range})`, range.onFail);
     }
   }
 
-  const content = lookup.type !== `NoProject`
+  const content = projectFound
     ? await fs.promises.readFile(lookup.target, `utf8`)
     : ``;
 
@@ -151,12 +153,12 @@ interface FoundSpecResult {
   type: `Found`;
   target: string;
   getSpec: (options?: {enforceExactVersion?: boolean}) => Descriptor;
-  range?: Descriptor & {onFail?: DevEngineDependency[`onFail`]};
+  devEnginesValue?: Descriptor & {onFail?: DevEngineDependency[`onFail`]};
   envFilePath?: string;
 }
 export type LoadSpecResult =
     | {type: `NoProject`, target: string, envFilePath?: string}
-    | {type: `NoSpec`, target: string, envFilePath?: string}
+    | {type: `NoSpec`, target: string, envFilePath?: string, devEnginesValue?: FoundSpecResult[`devEnginesValue`]}
     | FoundSpecResult;
 
 async function loadEnvFileIfExists(cwd: string): Promise<{env: LocalEnvFile, path: string} | void> {
@@ -238,18 +240,26 @@ export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: f
   if (typeof rawPmSpec === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath, envFilePath: localEnv?.path};
 
-  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager`);
+  const devEnginesValue = selection.data.devEngines?.packageManager?.version && {
+    name: selection.data.devEngines.packageManager.name,
+    range: selection.data.devEngines.packageManager.version,
+    onFail: selection.data.devEngines.packageManager.onFail,
+  };
+
+  if (typeof rawPmSpec === `object` && !semverValid(rawPmSpec.version)) {
+    debugUtils.log(`${selection.manifestPath} devEngines does not specify a specific version`);
+    return {type: `NoSpec`, target: selection.manifestPath, envFilePath: localEnv?.path, devEnginesValue};
+  }
+
+  const hasPackageManagerField = typeof rawPmSpec === `string`;
+  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager${hasPackageManagerField ? `using packageManager field` : ``}`);
 
   return {
     type: `Found`,
     target: selection.manifestPath,
     envFilePath: localEnv?.path,
-    range: selection.data.devEngines?.packageManager?.version && {
-      name: selection.data.devEngines.packageManager.name,
-      range: selection.data.devEngines.packageManager.version,
-      onFail: selection.data.devEngines.packageManager.onFail,
-    },
+    devEnginesValue,
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
-    getSpec: ({enforceExactVersion = true} = {}) => parseSpec(rawPmSpec, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
+    getSpec: ({enforceExactVersion = true} = {}) => parseSpec(`${rawPmSpec}`, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
   };
 }

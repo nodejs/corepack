@@ -276,8 +276,11 @@ export class Engine {
         }
 
         case `NoSpec`: {
-          if (typeof locator.reference === `function`)
+          if (result.devEnginesValue)
+            fallbackDescriptor.range = result.devEnginesValue.range;
+          else if (typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
+
 
           if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});

@@ -16,10 +16,11 @@ export abstract class BaseCommand extends Command<Context> {
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
 
         case `NoSpec`:
+          if (lookup.devEnginesValue) return [lookup.devEnginesValue];
           throw new UsageError(`The local project doesn't feature a 'packageManager' field nor a 'devEngines.packageManager' field - please specify the package manager to pack, or update the manifest to reference it`);
 
         default: {
-          return [lookup.range ?? lookup.getSpec()];
+          return [lookup.devEnginesValue ?? lookup.getSpec()];
         }
       }
     } else {
