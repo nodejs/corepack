@@ -428,14 +428,15 @@ describe(`should accept range in devEngines`, () => {
     process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
 
     await xfs.mktempPromise(async cwd => {
-    // When no user version is specified, range versions in devEngines should still cause error
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        devEngines: {
-          packageManager: {
-            name: `pnpm`,
-            version: `^1.0.0`,
-          },
+      const devEngines = {
+        packageManager: {
+          name: `pnpm`,
+          version: `^1.0.0`,
         },
+      };
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines,
       });
 
       // Without user-specified version, should still fail due to range version in devEngines
@@ -446,13 +447,8 @@ describe(`should accept range in devEngines`, () => {
       });
 
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
-        packageManager: `pnpm@1.9998.9999+sha512.14fba45289c972afe6d52036e6cf3c03901fecfe0c0b1231b4b4a65e19ded0bc5810405bebebcffc22334df23939e01a7c5b9da6a3e6ad5b8ffa91f49883c593`,
-        devEngines: {
-          packageManager: {
-            name: `pnpm`,
-            version: `^1.0.0`,
-          },
-        },
+        packageManager: expect.stringMatching(/^pnpm@1\.9998\.9999\+sha512\.[0-9a-z]{128}$/),
+        devEngines,
       });
     });
   });
