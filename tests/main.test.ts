@@ -1365,6 +1365,28 @@ it(`should use closest .corepack.env`, async () => {
   });
 });
 
+it(`should ignore .corepack.env outside of the root`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    // Set COREPACK_NPM_REGISTRY in a .corepack.env outside of the repo root
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://above-root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `repo-root`));
+    await xfs.writeJsonPromise(ppath.join(cwd, `repo-root`, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // "corepack use pnpm" should NOT read .corepack.env and NOT use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `repo-root`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.not.stringContaining(`above-root.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
