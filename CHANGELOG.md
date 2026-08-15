@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.36.0](https://github.com/nodejs/corepack/compare/v0.35.0...v0.36.0) (2026-08-15)
+
+
+### Features
+
+* only load closest env file, for every commands ([#891](https://github.com/nodejs/corepack/issues/891)) ([b856c51](https://github.com/nodejs/corepack/commit/b856c516c3d0a92ded6b3f9cbbaa0d3f3eb094f1))
+
+
+### Bug Fixes
+
+* **npmRegistryUtils:** env vars names in integrity check fail error message ([#854](https://github.com/nodejs/corepack/issues/854)) ([8ca01c3](https://github.com/nodejs/corepack/commit/8ca01c3fbeed6c8b5d1bb94df1aacb3fe6cff846))
+* strip trailing slashes from COREPACK_NPM_REGISTRY ([#871](https://github.com/nodejs/corepack/issues/871)) ([b81e92c](https://github.com/nodejs/corepack/commit/b81e92c2338ed6c4c38cfe1239002a261e47e6d5))
+
 ## [0.35.0](https://github.com/nodejs/corepack/compare/v0.34.7...v0.35.0) (2026-05-15)
 
 
