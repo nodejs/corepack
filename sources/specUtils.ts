@@ -240,7 +240,7 @@ export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: f
   if (typeof rawPmSpec === `undefined`)
     return {type: `NoSpec`, target: selection.manifestPath, envFilePath: localEnv?.path};
 
-  const devEnginesValue = selection.data.devEngines?.packageManager?.version && {
+  const devEnginesValue = selection.data.devEngines?.packageManager?.name && {
     name: selection.data.devEngines.packageManager.name,
     range: selection.data.devEngines.packageManager.version,
     onFail: selection.data.devEngines.packageManager.onFail,
@@ -252,13 +252,13 @@ export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: f
   }
 
   const hasPackageManagerField = typeof rawPmSpec === `string`;
-  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager${hasPackageManagerField ? `using packageManager field` : ``}`);
+  debugUtils.log(`${selection.manifestPath} defines ${rawPmSpec} as local package manager${hasPackageManagerField ? ` using packageManager field` : ``}`);
 
   return {
     type: `Found`,
     target: selection.manifestPath,
     envFilePath: localEnv?.path,
-    devEnginesValue,
+    devEnginesValue: devEnginesValue?.range && devEnginesValue,
     // Lazy-loading it so we do not throw errors on commands that do not need valid spec.
     getSpec: ({enforceExactVersion = true} = {}) => parseSpec(`${rawPmSpec}`, path.relative(initialCwd, selection.manifestPath), {enforceExactVersion}),
   };

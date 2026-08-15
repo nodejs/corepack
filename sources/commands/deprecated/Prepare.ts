@@ -39,11 +39,11 @@ export class PrepareCommand extends Command<Context> {
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
 
         case `NoSpec`:
-          if (lookup.devEnginesValue) {
+          if (lookup.devEnginesValue?.range) {
             specs.push(lookup.devEnginesValue);
             break;
           }
-          throw new UsageError(`The local project doesn't feature a 'packageManager' field - please specify the package manager to pack, or update the manifest to reference it`);
+          throw new UsageError(`The local project doesn't feature a 'packageManager' field ${lookup.devEnginesValue ? `` : `nor a 'devEngines.packageManager' field `}- please specify the package manager to pack, or update the manifest to reference it`);
 
         default: {
           specs.push(lookup.getSpec());

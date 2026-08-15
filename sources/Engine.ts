@@ -276,9 +276,18 @@ export class Engine {
         }
 
         case `NoSpec`: {
-          if (result.devEnginesValue)
-            fallbackDescriptor.range = result.devEnginesValue.range;
-          else if (typeof locator.reference === `function`)
+          let rangeWasSet = false;
+          if (result.devEnginesValue) {
+            const {name, range} = result.devEnginesValue;
+            if (name !== fallbackDescriptor.name)
+              throw new UsageError(`This project is configured to use ${name} because ${result.target} has a "packageManager" field`);
+
+            if (range) {
+              fallbackDescriptor.range = range;
+              rangeWasSet = true;
+            }
+          }
+          if (!rangeWasSet && typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
 
 

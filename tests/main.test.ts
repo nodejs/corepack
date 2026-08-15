@@ -413,7 +413,14 @@ describe(`should accept range in devEngines`, () => {
         },
       });
 
-      // Without user-specified version, should still fail due to range version in devEngines
+      // Should fail if trying to use a different package manager than the one defined in devEngines
+      await expect(runCli(cwd, [`yarn`, `install`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringMatching(/This project is configured to use pnpm because .+\/package\.json has a "packageManager" field/),
+        stdout: ``,
+      });
+
+      // Without user-specified version, should resolve to the range in devEngines
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
@@ -449,6 +456,53 @@ describe(`should accept range in devEngines`, () => {
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
         packageManager: expect.stringMatching(/^pnpm@1\.9998\.9999\+sha512\.[0-9a-z]{128}$/),
         devEngines,
+      });
+    });
+  });
+});
+
+describe(`devEngines.packageManager without a version`, () => {
+  it(`should still enforce the package manager name`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      process.env.FORCE_COLOR = `0`;
+
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: expect.stringContaining(`This project is configured to use yarn`),
+        exitCode: 1,
+      });
+
+      // The matching package manager runs, using the default version as no range is given.
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`should not claim the devEngines.packageManager field is missing`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`pack`])).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: expect.stringContaining(`The local project doesn't feature a 'packageManager' field - please specify the package manager to pack, or update the manifest to reference it`),
+        stderr: ``,
       });
     });
   });
