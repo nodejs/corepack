@@ -264,7 +264,7 @@ export class Engine {
       transparent = true;
 
     while (true) {
-      const result = await specUtils.loadSpec(initialCwd);
+      const result = await specUtils.loadSpecAndEnv(initialCwd);
 
       switch (result.type) {
         case `NoProject`: {
