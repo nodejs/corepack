@@ -136,9 +136,11 @@ describe(`UseCommand`, () => {
       const subfolder = ppath.join(cwd, `subfolder`);
       await xfs.mkdirPromise(subfolder);
 
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+
       await expect(runCli(subfolder, [`use`, `yarn@2.2.2`])).resolves.toMatchObject({
         exitCode: 0,
-        stderr: ``,
+        stderr: `Integrity of yarn@2.2.2 could not be verified. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.\n`,
       });
       await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
         exitCode: 0,

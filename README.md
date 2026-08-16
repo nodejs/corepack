@@ -349,6 +349,13 @@ same major line. Should you need to upgrade to a new major, use an explicit
   environment variables are required and as plain text. If you want to send an
   empty password, explicitly set `COREPACK_NPM_PASSWORD` to an empty string.
 
+- `COREPACK_ON_UNVERIFIED_DOWNLOAD` can be set to:
+  - `warn` (case insensitive): attempting to download an unsigned version without
+    providing a hash will emit a warning to stderr.
+  - `error` (case insensitive): attempting to download an unsigned version without
+    providing a hash will emit a warning to stderr.
+  - `ignore` (or any other unsupported value): disables that security feature.
+
 - `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through
   [`NODE_USE_ENV_PROXY=1`](https://nodejs.org/api/cli.html#node_use_env_proxy1).
 

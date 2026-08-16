@@ -24,9 +24,11 @@ describe(`UpCommand`, () => {
           packageManager: `yarn@2.1.0`,
         });
 
+        process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+
         await expect(runCli(cwd, [`up`])).resolves.toMatchObject({
           exitCode: 0,
-          stderr: ``,
+          stderr: `Integrity of yarn@2.4.3 could not be verified. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.\n`,
           stdout: expect.stringMatching(/^Installing yarn@2\.4\.3 in the project\.\.\.\n\n/),
         });
 

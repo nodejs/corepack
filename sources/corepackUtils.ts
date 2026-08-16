@@ -305,8 +305,19 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }
   }
-  if (build[1] && actualHash !== build[1])
+  if (!build[1]) {
+    const {COREPACK_ON_UNVERIFIED_DOWNLOAD} = process.env;
+    debugUtils.log(`No hash provided, and signature was not verified; checking COREPACK_ON_UNVERIFIED_DOWNLOAD, set to: ${COREPACK_ON_UNVERIFIED_DOWNLOAD}`);
+    switch (COREPACK_ON_UNVERIFIED_DOWNLOAD?.toUpperCase()) {
+      case `ERROR`:
+        throw new Error(`Integrity of ${locator.name}@${version} could not be verified. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable. Please provide a hash.`);
+
+      case `WARN`:
+        console.warn(`Integrity of ${locator.name}@${version} could not be verified. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.`);
+    }
+  } else if (actualHash !== build[1]) {
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+  }
 
   const serializedHash = `${algo}.${actualHash}`;
 
