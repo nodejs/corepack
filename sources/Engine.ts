@@ -276,20 +276,16 @@ export class Engine {
         }
 
         case `NoSpec`: {
-          let rangeWasSet = false;
-          if (result.devEnginesValue) {
-            const {name, range} = result.devEnginesValue;
-            if (name !== fallbackDescriptor.name)
-              throw new UsageError(`This project is configured to use ${name} because ${result.target} has a "packageManager" field`);
+          const {devEnginesValue} = result;
+          const nameMatches = devEnginesValue != null && devEnginesValue.name === fallbackDescriptor.name;
 
-            if (range) {
-              fallbackDescriptor.range = range;
-              rangeWasSet = true;
-            }
-          }
-          if (!rangeWasSet && typeof locator.reference === `function`)
+          if (devEnginesValue != null && !nameMatches && !transparent)
+            specUtils.warnOrThrow(`This project is configured to use ${devEnginesValue.name} because ${result.target} has a "devEngines.packageManager" field`, devEnginesValue.onFail);
+
+          if (nameMatches && devEnginesValue.version)
+            fallbackDescriptor.range = devEnginesValue.version;
+          else if (typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
-
 
           if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
@@ -319,7 +315,7 @@ export class Engine {
               debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in a ${spec.name}@${spec.range} project`);
               return fallbackDescriptor;
             } else {
-              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "packageManager" field`);
+              throw new UsageError(`This project is configured to use ${spec.name} because ${result.target} has a "${result.field}" field`);
             }
           } else {
             debugUtils.log(`Using ${spec.name}@${spec.range} as defined in project manifest ${result.target}`);

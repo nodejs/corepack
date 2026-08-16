@@ -127,9 +127,9 @@ Depending on the value of `devEngines.packageManager.onFail`:
   of mismatch.
 
 If the top-level `packageManager` field is missing, Corepack will use the
-package manager defined in `devEngines.packageManager` – in which case you must
-provide a specific version in `devEngines.packageManager.version`, ideally with
-a hash, as explained in the previous section:
+package manager defined in `devEngines.packageManager`. You should provide a
+specific version in `devEngines.packageManager.version`, ideally with a hash, as
+explained in the previous section:
 
 ```json
 {
@@ -141,6 +141,16 @@ a hash, as explained in the previous section:
   }
 }
 ```
+
+When `devEngines.packageManager.version` is a range rather than a specific
+version, Corepack resolves it the same way as when a range is given on the
+command line: the latest version matching the range is looked up on the npm
+registry, which means the resolution requires network access (or a cache
+containing a matching version, see [Offline Workflow](#offline-workflow)), and
+may change over time. Set `COREPACK_ENABLE_AUTO_PIN=1` to have Corepack add the
+resolved version to the `packageManager` field. When
+`devEngines.packageManager.version` is missing, Corepack falls back to its
+[Known Good Release](#known-good-releases) for that package manager.
 
 ## Known Good Releases
 

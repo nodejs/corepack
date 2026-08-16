@@ -366,7 +366,7 @@ it(`should use hash from "packageManager" even when "devEngines" defines a diffe
 describe(`should accept range in devEngines`, () => {
   it(`should accept if package.json#packageManager field matches`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         devEngines: {
           packageManager: {
             name: `pnpm`,
@@ -382,7 +382,7 @@ describe(`should accept range in devEngines`, () => {
       });
 
       // No version should also work
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         devEngines: {
           packageManager: {
             name: `pnpm`,
@@ -403,7 +403,6 @@ describe(`should accept range in devEngines`, () => {
     process.env.TEST_INTEGRITY = `valid`;
 
     await xfs.mktempPromise(async cwd => {
-    // When no user version is specified, range versions in devEngines should still cause error
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         devEngines: {
           packageManager: {
@@ -413,14 +412,7 @@ describe(`should accept range in devEngines`, () => {
         },
       });
 
-      // Should fail if trying to use a different package manager than the one defined in devEngines
-      await expect(runCli(cwd, [`yarn`, `install`], true)).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: expect.stringMatching(/This project is configured to use pnpm because .+\/package\.json has a "packageManager" field/),
-        stdout: ``,
-      });
-
-      // Without user-specified version, should resolve to the range in devEngines
+      // The range is resolved as if it had been provided on the command line.
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stderr: ``,
@@ -429,7 +421,70 @@ describe(`should accept range in devEngines`, () => {
     });
   });
 
-  it(`should pin a specific if COREPACK_ENABLE_AUTO_PIN is set`, async () => {
+  it(`should refuse to run another package manager`, async () => {
+    process.env.FORCE_COLOR = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `install`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`This project is configured to use pnpm because ${
+          npath.fromPortablePath(ppath.join(cwd, `package.json` as Filename))
+        } has a "devEngines.packageManager" field`),
+        stdout: ``,
+      });
+
+      // Transparent commands are still allowed to use the fallback version.
+      await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+      });
+
+      // Disable strict checking to workaround the UsageError.
+      process.env.COREPACK_ENABLE_STRICT = `0`;
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+      });
+    });
+  });
+
+  for (const onFail of [`ignore`, `warn`] as const) {
+    it(`should not refuse to run another package manager when onFail is set to "${onFail}"`, async () => {
+      process.env.FORCE_COLOR = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+          devEngines: {
+            packageManager: {
+              name: `pnpm`,
+              version: `^1.0.0`,
+              onFail,
+            },
+          },
+        });
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: onFail === `warn` ? expect.stringContaining(`! Corepack validation warning: This project is configured to use pnpm`) : ``,
+          stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        });
+      });
+    });
+  }
+
+
+  it(`should pin a specific version if COREPACK_ENABLE_AUTO_PIN is set`, async () => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
     process.env.TEST_INTEGRITY = `valid`;
     process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
@@ -446,13 +501,13 @@ describe(`should accept range in devEngines`, () => {
         devEngines,
       });
 
-      // Without user-specified version, should still fail due to range version in devEngines
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stderr: expect.stringContaining(`local project doesn't define a 'packageManager' field`),
         stdout: `pnpm: Hello from custom registry\n`,
       });
 
+      // The range from devEngines is left untouched.
       await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
         packageManager: expect.stringMatching(/^pnpm@1\.9998\.9999\+sha512\.[0-9a-z]{128}$/),
         devEngines,
