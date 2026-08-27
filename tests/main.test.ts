@@ -1,13 +1,14 @@
-import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
+import type {Filename, PortablePath}                 from '@yarnpkg/fslib';
+import {ppath, xfs, npath}                           from '@yarnpkg/fslib';
 import os                                            from 'node:os';
 import process                                       from 'node:process';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import config                                        from '../config.json';
-import * as folderUtils                              from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                  from '../sources/types';
+import config                                        from '../config.json' with {type: 'json'};
+import * as folderUtils                              from '../sources/folderUtils.ts';
+import {SupportedPackageManagerSet}                  from '../sources/types.ts';
 
-import {runCli}                                      from './_runCli';
+import {runCli}                                      from './_runCli.ts';
 
 
 beforeEach(async () => {
@@ -1317,6 +1318,95 @@ it(`should download latest pnpm from custom registry`, async () => {
       exitCode: 0,
       stdout: `pnpm: Hello from custom registry\n`,
       stderr: ``,
+    });
+  });
+});
+
+it(`should use COREPACK_NPM_REGISTRY from .corepack.env for "corepack use" command`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://custom-registry.example.com\n`);
+
+    // "corepack use pnpm" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(cwd, [`use`, `pnpm`])).resolves.toMatchObject({
+      stderr: ``,
+      stdout: expect.stringContaining(`custom-registry.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should use closest .corepack.env`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `subdir`));
+    await xfs.writeFilePromise(ppath.join(cwd, `subdir`, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://subdir.example.com\n`);
+
+    // "corepack yarn --version" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `subdir`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.stringContaining(`subdir.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should ignore .corepack.env outside of the root`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    // Set COREPACK_NPM_REGISTRY in a .corepack.env outside of the repo root
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://above-root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `repo-root`));
+    await xfs.writeJsonPromise(ppath.join(cwd, `repo-root`, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // "corepack yarn --version" should NOT read .corepack.env and NOT use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `repo-root`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.not.stringContaining(`above-root.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should ignore .corepack.env inside a node_modules folder`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // Set COREPACK_NPM_REGISTRY in a .corepack.env from a node_modules package
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules`));
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules`, `pkg`));
+    await xfs.writeFilePromise(ppath.join(cwd, `node_modules`, `pkg`, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://npm-pkg.example.com\n`);
+
+    // "corepack yarn --version" should NOT read .corepack.env and NOT use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `node_modules`, `pkg`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.not.stringContaining(`npm-pkg.example.com`),
+      exitCode: 1,
     });
   });
 });

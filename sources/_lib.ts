@@ -1,1 +1,1 @@
-export {runMain} from './main';
+export {runMain} from './main.ts';
