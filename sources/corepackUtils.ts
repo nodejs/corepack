@@ -231,6 +231,31 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
+  const registry = getRegistryFromPackageManagerSpec(spec);
+  const canVerifySignature = registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck();
+  if (!build[1]) {
+    const {COREPACK_ON_UNVERIFIED_DOWNLOAD} = process.env;
+    debugUtils.log(`No hash provided${canVerifySignature ? `` : `, and signature cannot be verified`}; checking COREPACK_ON_UNVERIFIED_DOWNLOAD, set to: ${COREPACK_ON_UNVERIFIED_DOWNLOAD}`);
+    const mode = COREPACK_ON_UNVERIFIED_DOWNLOAD?.toUpperCase();
+    // In strict mode, a hash is required even when the signature can be verified.
+    const isStrict = mode === `STRICT-ERROR` || mode === `STRICT-WARN`;
+    if (isStrict || !canVerifySignature) {
+      const reason = canVerifySignature
+        ? `is not pinned by a hash`
+        : `could not be verified`;
+
+      switch (mode) {
+        case `ERROR`:
+        case `STRICT-ERROR`:
+          throw new Error(`Integrity of ${locator.name}@${version} ${reason}. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable. Please provide a hash.`);
+
+        case `WARN`:
+        case `STRICT-WARN`:
+          console.warn(`Integrity of ${locator.name}@${version} ${reason}. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.`);
+      }
+    }
+  }
+
   let url: string;
   let signatures: Array<{keyid: string, sig: string}>;
   let integrity: string;
@@ -238,7 +263,6 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
-      const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
         ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
         if (registry.bin) {
@@ -294,28 +318,16 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  if (!build[1]) {
-    const registry = getRegistryFromPackageManagerSpec(spec);
-    if (registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck()) {
-      if (signatures! == null || integrity! == null)
-        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+  if (!build[1] && canVerifySignature && registry.type === `npm`) {
+    if (signatures! == null || integrity! == null)
+      ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-      await npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
-      // @ts-expect-error ignore readonly
-      build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
-    }
+    npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+    // @ts-expect-error ignore readonly
+    build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
   }
-  if (!build[1]) {
-    const {COREPACK_ON_UNVERIFIED_DOWNLOAD} = process.env;
-    debugUtils.log(`No hash provided, and signature was not verified; checking COREPACK_ON_UNVERIFIED_DOWNLOAD, set to: ${COREPACK_ON_UNVERIFIED_DOWNLOAD}`);
-    switch (COREPACK_ON_UNVERIFIED_DOWNLOAD?.toUpperCase()) {
-      case `ERROR`:
-        throw new Error(`Integrity of ${locator.name}@${version} could not be verified. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable. Please provide a hash.`);
-
-      case `WARN`:
-        console.warn(`Integrity of ${locator.name}@${version} could not be verified. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.`);
-    }
-  } else if (actualHash !== build[1]) {
+  if (build[1] && actualHash !== build[1]) {
+    await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
   }
 

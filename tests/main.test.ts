@@ -1677,6 +1677,68 @@ describe(`unverified downloads`, () => {
   });
 });
 
+describe(`downloads not pinned by a hash`, () => {
+  it(`should not warn in non-strict mode when the signature can be verified`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: ``,
+      });
+    });
+  });
+
+  it(`should warn when COREPACK_ON_UNVERIFIED_DOWNLOAD is set to strict-warn`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `strict-warn`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: `Integrity of yarn@1.22.4 is not pinned by a hash. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.\n`,
+      });
+    });
+  });
+
+  it(`should fail when COREPACK_ON_UNVERIFIED_DOWNLOAD is set to STRICT-ERROR`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `STRICT-ERROR`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Integrity of yarn@1.22.4 is not pinned by a hash. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable.`),
+      });
+    });
+  });
+
+  it(`should not interfere with versions pinned by a hash in strict mode`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `strict-error`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: ``,
+      });
+    });
+  });
+});
+
 for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`]) {
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
@@ -1869,8 +1931,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
-        stderr: ``,
+        stderr: expect.stringContaining(`Signature does not match`),
+        stdout: `Installing pnpm@1.9998.9999 in the project...\n`,
       });
     });
   });
@@ -1885,8 +1947,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
-        stderr: ``,
+        stderr: expect.stringContaining(`Signature does not match`),
+        stdout: `Installing yarn@1.9998.9999 in the project...\n`,
       });
     });
   });
