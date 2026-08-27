@@ -2,7 +2,7 @@ import {ppath, xfs, npath}                from '@yarnpkg/fslib';
 import process                            from 'node:process';
 import {describe, beforeEach, it, expect} from 'vitest';
 
-import {runCli}                           from './_runCli';
+import {runCli}                           from './_runCli.ts';
 
 beforeEach(async () => {
   const home = await xfs.mktempPromise();

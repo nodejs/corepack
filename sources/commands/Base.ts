@@ -1,16 +1,16 @@
-import {Command, UsageError}        from 'clipanion';
+import {Command, UsageError}             from 'clipanion';
 
-import {PreparedPackageManagerInfo} from '../Engine';
-import * as corepackUtils           from '../corepackUtils';
-import {Context}                    from '../main';
-import * as specUtils               from '../specUtils';
+import type {PreparedPackageManagerInfo} from '../Engine.ts';
+import * as corepackUtils                from '../corepackUtils.ts';
+import type {Context}                    from '../main.ts';
+import * as specUtils                    from '../specUtils.ts';
 
 export abstract class BaseCommand extends Command<Context> {
   async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
     if (resolvedSpecs.length === 0) {
-      const lookup = await specUtils.loadSpec(this.context.cwd);
+      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd);
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
@@ -22,6 +22,8 @@ export abstract class BaseCommand extends Command<Context> {
           return [lookup.range ?? lookup.getSpec()];
         }
       }
+    } else {
+      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true});
     }
 
     return resolvedSpecs;

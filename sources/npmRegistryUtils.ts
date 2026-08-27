@@ -1,10 +1,10 @@
 import {UsageError}               from 'clipanion';
 import {createVerify}             from 'crypto';
 
-import defaultConfig              from '../config.json';
+import defaultConfig              from '../config.json' with {type: 'json'};
 
-import {shouldSkipIntegrityCheck} from './corepackUtils';
-import * as httpUtils             from './httpUtils';
+import {shouldSkipIntegrityCheck} from './corepackUtils.ts';
+import * as httpUtils             from './httpUtils.ts';
 
 // load abbreviated metadata as that's all we need for these calls
 // see: https://github.com/npm/registry/blob/cfe04736f34db9274a780184d1cdb2fb3e4ead2a/docs/responses/package-metadata.md
@@ -14,7 +14,10 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
 export async function fetchAsJson(packageName: string, version?: string) {
-  const npmRegistryUrl = process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL;
+  // Strip any trailing slashes so a `COREPACK_NPM_REGISTRY` with a trailing
+  // slash does not produce a double slash in the request URL (some registries,
+  // e.g. registry.npmmirror.com, reject `//package` with a 404).
+  const npmRegistryUrl = (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).replace(/\/+$/, ``);
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach npm repository ${npmRegistryUrl}`);
@@ -32,12 +35,18 @@ export async function fetchAsJson(packageName: string, version?: string) {
   return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
-export function verifySignature({signatures, integrity, packageName, version}: {
+export async function verifySignature({signatures, integrity, packageName, version}: {
   signatures: Array<{keyid: string, sig: string}>;
   integrity: string;
   packageName: string;
   version: string;
 }) {
+  if (!Array.isArray(signatures) || !signatures.length) {
+    // Some registry proxies omit `dist.signatures` on the per-version endpoint but keep it on the package root.
+    const rootMetadata = await fetchAsJson(packageName);
+    signatures = rootMetadata.versions?.[version]?.dist?.signatures;
+  }
+
   if (!Array.isArray(signatures) || !signatures.length) throw new Error(`No compatible signature found in package metadata`);
 
   const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
@@ -74,13 +83,13 @@ export async function fetchLatestStableVersion(packageName: string) {
 
   if (!shouldSkipIntegrityCheck()) {
     try {
-      verifySignature({
+      await verifySignature({
         packageName, version,
         integrity, signatures,
       });
     } catch (cause) {
       // TODO: consider switching to `UsageError` when https://github.com/arcanis/clipanion/issues/157 is fixed
-      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_CHECK to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_USE_LATEST to 0`, {cause});
+      throw new Error(`Corepack cannot download the latest stable version of ${packageName}; you can disable signature verification by setting COREPACK_INTEGRITY_KEYS to 0 in your env, or instruct Corepack to use the latest stable release known by this version of Corepack by setting COREPACK_DEFAULT_TO_LATEST to 0`, {cause});
     }
   }
 

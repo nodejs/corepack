@@ -1,23 +1,23 @@
-import {createHash}                                            from 'crypto';
-import {once}                                                  from 'events';
-import fs                                                      from 'fs';
-import type {Dir}                                              from 'fs';
-import Module                                                  from 'module';
-import path                                                    from 'path';
-import Range                                                   from 'semver/classes/range';
-import SemVer                                                  from 'semver/classes/semver';
-import semverLt                                                from 'semver/functions/lt';
-import semverParse                                             from 'semver/functions/parse';
-import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
+import {createHash}                                                 from 'crypto';
+import {once}                                                       from 'events';
+import fs                                                           from 'fs';
+import type {Dir}                                                   from 'fs';
+import Module                                                       from 'module';
+import path                                                         from 'path';
+import Range                                                        from 'semver/classes/range.js';
+import SemVer                                                       from 'semver/classes/semver.js';
+import semverLt                                                     from 'semver/functions/lt.js';
+import semverParse                                                  from 'semver/functions/parse.js';
+import {setTimeout as setTimeoutPromise}                            from 'timers/promises';
 
-import * as engine                                             from './Engine';
-import * as debugUtils                                         from './debugUtils';
-import * as folderUtils                                        from './folderUtils';
-import * as httpUtils                                          from './httpUtils';
-import * as nodeUtils                                          from './nodeUtils';
-import * as npmRegistryUtils                                   from './npmRegistryUtils';
-import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
+import * as engine                                                  from './Engine.ts';
+import * as debugUtils                                              from './debugUtils.ts';
+import * as folderUtils                                             from './folderUtils.ts';
+import * as httpUtils                                               from './httpUtils.ts';
+import * as nodeUtils                                               from './nodeUtils.ts';
+import * as npmRegistryUtils                                        from './npmRegistryUtils.ts';
+import type {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types.ts';
+import type {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types.ts';
 
 const YARN_SWITCH_REGEX = /[/\\]switch[/\\]bin[/\\]/;
 
@@ -300,7 +300,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       if (signatures! == null || integrity! == null)
         ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+      await npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
       // @ts-expect-error ignore readonly
       build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
     }
