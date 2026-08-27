@@ -1,9 +1,11 @@
-import {Buffer}                                                                           from 'node:buffer';
-import process                                                                            from 'node:process';
-import {describe, beforeEach, it, expect, vi}                                             from 'vitest';
+import {Buffer}                                                 from 'node:buffer';
+import {createSign, generateKeyPairSync}                        from 'node:crypto';
+import process                                                  from 'node:process';
+import {describe, beforeEach, it, expect, vi}                   from 'vitest';
 
-import {fetchAsJson as httpFetchAsJson}                                                   from '../sources/httpUtils.ts';
-import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL, fetchAsJson, fetchLatestStableVersion} from '../sources/npmRegistryUtils.ts';
+import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
+import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL}              from '../sources/npmRegistryUtils';
+import {fetchLatestStableVersion, fetchAsJson, verifySignature} from '../sources/npmRegistryUtils';
 
 vi.mock(`../sources/httpUtils.ts`);
 
@@ -97,6 +99,60 @@ describe(`npm registry utils fetchAsJson`, () => {
 
     expect(httpFetchAsJson).toBeCalled();
     expect(httpFetchAsJson).lastCalledWith(`${DEFAULT_NPM_REGISTRY_URL}/package-name`, {headers: DEFAULT_HEADERS});
+  });
+});
+
+describe(`npm registry utils verifySignature`, () => {
+  const packageName = `package-name`;
+  const version = `1.0.0`;
+  const integrity = `sha512-abcdef`;
+  const keyid = `SHA256:test-key`;
+
+  let signatures: Array<{keyid: string, sig: string}>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    const {publicKey, privateKey} = generateKeyPairSync(`ec`, {
+      namedCurve: `prime256v1`,
+      publicKeyEncoding: {type: `spki`, format: `der`},
+      privateKeyEncoding: {type: `pkcs8`, format: `pem`},
+    });
+
+    const signer = createSign(`SHA256`);
+    signer.end(`${packageName}@${version}:${integrity}`);
+    signatures = [{keyid, sig: signer.sign(privateKey, `base64`)}];
+
+    process.env.COREPACK_INTEGRITY_KEYS = JSON.stringify({npm: [{keyid, key: publicKey.toString(`base64`)}]});
+  });
+
+  it(`verifies using the version endpoint's signatures without a fallback fetch`, async () => {
+    await expect(verifySignature({signatures, integrity, packageName, version})).resolves.toBeUndefined();
+
+    expect(httpFetchAsJson).not.toBeCalled();
+  });
+
+  it(`falls back to the package-root endpoint when signatures are missing on the version endpoint`, async () => {
+    vi.mocked(httpFetchAsJson).mockResolvedValue({
+      versions: {
+        [version]: {dist: {signatures}},
+      },
+    });
+
+    await expect(verifySignature({signatures: [], integrity, packageName, version})).resolves.toBeUndefined();
+
+    expect(httpFetchAsJson).toBeCalledTimes(1);
+    expect(httpFetchAsJson).lastCalledWith(`${DEFAULT_NPM_REGISTRY_URL}/${packageName}`, {headers: DEFAULT_HEADERS});
+  });
+
+  it(`throws when signatures are missing on both the version and package-root endpoints`, async () => {
+    vi.mocked(httpFetchAsJson).mockResolvedValue({
+      versions: {
+        [version]: {dist: {}},
+      },
+    });
+
+    await expect(verifySignature({signatures: [], integrity, packageName, version})).rejects.toThrowError(`No compatible signature found in package metadata`);
   });
 });
 

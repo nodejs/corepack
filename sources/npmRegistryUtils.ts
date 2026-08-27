@@ -35,12 +35,18 @@ export async function fetchAsJson(packageName: string, version?: string) {
   return httpUtils.fetchAsJson(`${npmRegistryUrl}/${packageName}${version ? `/${version}` : ``}`, {headers});
 }
 
-export function verifySignature({signatures, integrity, packageName, version}: {
+export async function verifySignature({signatures, integrity, packageName, version}: {
   signatures: Array<{keyid: string, sig: string}>;
   integrity: string;
   packageName: string;
   version: string;
 }) {
+  if (!Array.isArray(signatures) || !signatures.length) {
+    // Some registry proxies omit `dist.signatures` on the per-version endpoint but keep it on the package root.
+    const rootMetadata = await fetchAsJson(packageName);
+    signatures = rootMetadata.versions?.[version]?.dist?.signatures;
+  }
+
   if (!Array.isArray(signatures) || !signatures.length) throw new Error(`No compatible signature found in package metadata`);
 
   const {npm: trustedKeys} = process.env.COREPACK_INTEGRITY_KEYS ?
@@ -77,7 +83,7 @@ export async function fetchLatestStableVersion(packageName: string) {
 
   if (!shouldSkipIntegrityCheck()) {
     try {
-      verifySignature({
+      await verifySignature({
         packageName, version,
         integrity, signatures,
       });
