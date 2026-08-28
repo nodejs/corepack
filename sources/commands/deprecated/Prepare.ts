@@ -2,10 +2,10 @@ import {Command, Option, UsageError} from 'clipanion';
 import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
 
-import * as folderUtils              from '../../folderUtils';
-import {Context}                     from '../../main';
-import * as specUtils                from '../../specUtils';
-import {Descriptor}                  from '../../types';
+import * as folderUtils              from '../../folderUtils.ts';
+import type {Context}                from '../../main.ts';
+import * as specUtils                from '../../specUtils.ts';
+import type {Descriptor}             from '../../types.ts';
 
 export class PrepareCommand extends Command<Context> {
   static paths = [
@@ -33,18 +33,26 @@ export class PrepareCommand extends Command<Context> {
     const installLocations: Array<string> = [];
 
     if (specs.length === 0) {
-      const lookup = await specUtils.loadSpec(this.context.cwd);
+      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd);
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
 
-        case `NoSpec`:
-          throw new UsageError(`The local project doesn't feature a 'packageManager' field - please specify the package manager to pack, or update the manifest to reference it`);
+        case `NoSpec`: {
+          const {devEnginesValue} = lookup;
+          if (devEnginesValue?.version) {
+            specs.push(specUtils.devEnginesToDescriptor(devEnginesValue));
+            break;
+          }
+          throw new UsageError(`The local project doesn't feature a 'packageManager' field ${devEnginesValue ? `` : `nor a 'devEngines.packageManager' field `}- please specify the package manager to pack, or update the manifest to reference it`);
+        }
 
         default: {
           specs.push(lookup.getSpec());
         }
       }
+    } else {
+      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true});
     }
 
     for (const request of specs) {

@@ -1,27 +1,35 @@
-import {Command, UsageError}        from 'clipanion';
+import {Command, UsageError}             from 'clipanion';
 
-import {PreparedPackageManagerInfo} from '../Engine';
-import * as corepackUtils           from '../corepackUtils';
-import {Context}                    from '../main';
-import * as specUtils               from '../specUtils';
+import type {PreparedPackageManagerInfo} from '../Engine.ts';
+import * as corepackUtils                from '../corepackUtils.ts';
+import type {Context}                    from '../main.ts';
+import * as specUtils                    from '../specUtils.ts';
 
 export abstract class BaseCommand extends Command<Context> {
   async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
     if (resolvedSpecs.length === 0) {
-      const lookup = await specUtils.loadSpec(this.context.cwd);
+      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd);
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
 
-        case `NoSpec`:
-          throw new UsageError(`The local project doesn't feature a 'packageManager' field nor a 'devEngines.packageManager' field - please specify the package manager to pack, or update the manifest to reference it`);
+        case `NoSpec`: {
+          const {devEnginesValue} = lookup;
+          if (devEnginesValue?.version)
+            return [specUtils.devEnginesToDescriptor(devEnginesValue)];
+
+          throw new UsageError(`The local project doesn't feature a 'packageManager' field ${devEnginesValue ? `` : `nor a 'devEngines.packageManager' field `}- please specify the package manager to pack, or update the manifest to reference it`);
+        }
 
         default: {
-          return [lookup.range ?? lookup.getSpec()];
+          const {devEnginesValue} = lookup;
+          return [devEnginesValue?.version ? specUtils.devEnginesToDescriptor(devEnginesValue) : lookup.getSpec()];
         }
       }
+    } else {
+      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true});
     }
 
     return resolvedSpecs;

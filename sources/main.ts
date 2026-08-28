@@ -1,22 +1,25 @@
-import {BaseContext, Builtins, Cli}    from 'clipanion';
-import type {UsageError}               from 'clipanion';
+import {Builtins, Cli}                from 'clipanion';
+import type {UsageError, BaseContext} from 'clipanion';
 
-import {version as corepackVersion}    from '../package.json';
+import pJSON                          from '../package.json' with {type: 'json'};
 
-import {Engine, PackageManagerRequest} from './Engine';
-import {CacheCommand}                  from './commands/Cache';
-import {DisableCommand}                from './commands/Disable';
-import {EnableCommand}                 from './commands/Enable';
-import {InstallGlobalCommand}          from './commands/InstallGlobal';
-import {InstallLocalCommand}           from './commands/InstallLocal';
-import {PackCommand}                   from './commands/Pack';
-import {UpCommand}                     from './commands/Up';
-import {UseCommand}                    from './commands/Use';
-import {HydrateCommand}                from './commands/deprecated/Hydrate';
-import {PrepareCommand}                from './commands/deprecated/Prepare';
+import type {PackageManagerRequest}   from './Engine.ts';
+import {Engine}                       from './Engine.ts';
+import {CacheCommand}                 from './commands/Cache.ts';
+import {DisableCommand}               from './commands/Disable.ts';
+import {EnableCommand}                from './commands/Enable.ts';
+import {InstallGlobalCommand}         from './commands/InstallGlobal.ts';
+import {InstallLocalCommand}          from './commands/InstallLocal.ts';
+import {PackCommand}                  from './commands/Pack.ts';
+import {UpCommand}                    from './commands/Up.ts';
+import {UseCommand}                   from './commands/Use.ts';
+import {HydrateCommand}               from './commands/deprecated/Hydrate.ts';
+import {PrepareCommand}               from './commands/deprecated/Prepare.ts';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
+
+const {version: corepackVersion} = pJSON;
 
 function getPackageManagerRequestFromCli(parameter: string | undefined, engine: Engine): PackageManagerRequest | null {
   if (!parameter)

@@ -1,13 +1,14 @@
-import {Filename, ppath, xfs, npath, PortablePath}   from '@yarnpkg/fslib';
+import type {Filename, PortablePath}                 from '@yarnpkg/fslib';
+import {ppath, xfs, npath}                           from '@yarnpkg/fslib';
 import os                                            from 'node:os';
 import process                                       from 'node:process';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import config                                        from '../config.json';
-import * as folderUtils                              from '../sources/folderUtils';
-import {SupportedPackageManagerSet}                  from '../sources/types';
+import config                                        from '../config.json' with {type: 'json'};
+import * as folderUtils                              from '../sources/folderUtils.ts';
+import {SupportedPackageManagerSet}                  from '../sources/types.ts';
 
-import {runCli}                                      from './_runCli';
+import {runCli}                                      from './_runCli.ts';
 
 
 beforeEach(async () => {
@@ -271,23 +272,6 @@ it(`should ignore the packageManager field when found within a node_modules vend
 });
 
 describe(`should handle invalid devEngines values`, () => {
-  it(`throw on missing version`, async () => {
-    await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
-        devEngines: {
-          packageManager: {
-            name: `yarn`,
-          },
-        },
-      });
-
-      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: `Invalid package manager specification in package.json (yarn@*); expected a semver version\n`,
-        stdout: ``,
-      });
-    });
-  });
   it(`throw on invalid version`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
@@ -379,24 +363,10 @@ it(`should use hash from "packageManager" even when "devEngines" defines a diffe
   });
 });
 
-describe(`should accept range in devEngines only if a specific version is provided`, () => {
-  it(`either in package.json#packageManager field`, async () => {
+describe(`should accept range in devEngines`, () => {
+  it(`should accept if package.json#packageManager field matches`, async () => {
     await xfs.mktempPromise(async cwd => {
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
-        devEngines: {
-          packageManager: {
-            name: `pnpm`,
-            version: `6.x`,
-          },
-        },
-      });
-      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
-        exitCode: 1,
-        stderr: `Invalid package manager specification in package.json (pnpm@6.x); expected a semver version\n`,
-        stdout: ``,
-      });
-
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         devEngines: {
           packageManager: {
             name: `pnpm`,
@@ -412,7 +382,7 @@ describe(`should accept range in devEngines only if a specific version is provid
       });
 
       // No version should also work
-      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as PortablePath), {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
         devEngines: {
           packageManager: {
             name: `pnpm`,
@@ -424,6 +394,170 @@ describe(`should accept range in devEngines only if a specific version is provid
         exitCode: 0,
         stderr: ``,
         stdout: `6.6.2\n`,
+      });
+    });
+  });
+
+  it(`should accept without a package.json#packageManager field`, async () => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
+    process.env.TEST_INTEGRITY = `valid`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
+      });
+
+      // The range is resolved as if it had been provided on the command line.
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `pnpm: Hello from custom registry\n`,
+      });
+    });
+  });
+
+  it(`should refuse to run another package manager`, async () => {
+    process.env.FORCE_COLOR = `0`;
+
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `pnpm`,
+            version: `^1.0.0`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`yarn`, `install`])).resolves.toMatchObject({
+        exitCode: 1,
+        stderr: expect.stringContaining(`This project is configured to use pnpm because ${
+          npath.fromPortablePath(ppath.join(cwd, `package.json` as Filename))
+        } has a "devEngines.packageManager" field`),
+        stdout: ``,
+      });
+
+      // Transparent commands are still allowed to use the fallback version.
+      await expect(runCli(cwd, [`yarn`, `dlx`, `--help`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+      });
+
+      // Disable strict checking to workaround the UsageError.
+      process.env.COREPACK_ENABLE_STRICT = `0`;
+
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: ``,
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+      });
+    });
+  });
+
+  for (const onFail of [`ignore`, `warn`] as const) {
+    it(`should not refuse to run another package manager when onFail is set to "${onFail}"`, async () => {
+      process.env.FORCE_COLOR = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+          devEngines: {
+            packageManager: {
+              name: `pnpm`,
+              version: `^1.0.0`,
+              onFail,
+            },
+          },
+        });
+
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: onFail === `warn` ? expect.stringContaining(`! Corepack validation warning: This project is configured to use pnpm`) : ``,
+          stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        });
+      });
+    });
+  }
+
+
+  it(`should pin a specific version if COREPACK_ENABLE_AUTO_PIN is set`, async () => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
+    process.env.TEST_INTEGRITY = `valid`;
+    process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+      const devEngines = {
+        packageManager: {
+          name: `pnpm`,
+          version: `^1.0.0`,
+        },
+      };
+
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines,
+      });
+
+      await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stderr: expect.stringContaining(`local project doesn't define a 'packageManager' field`),
+        stdout: `pnpm: Hello from custom registry\n`,
+      });
+
+      // The range from devEngines is left untouched.
+      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json` as Filename))).resolves.toMatchObject({
+        packageManager: expect.stringMatching(/^pnpm@1\.9998\.9999\+sha512\.[0-9a-z]{128}$/),
+        devEngines,
+      });
+    });
+  });
+});
+
+describe(`devEngines.packageManager without a version`, () => {
+  it(`should still enforce the package manager name`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      process.env.FORCE_COLOR = `0`;
+
+      await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: expect.stringContaining(`This project is configured to use yarn`),
+        exitCode: 1,
+      });
+
+      // The matching package manager runs, using the default version as no range is given.
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+        stderr: ``,
+        exitCode: 0,
+      });
+    });
+  });
+
+  it(`should not claim the devEngines.packageManager field is missing`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        devEngines: {
+          packageManager: {
+            name: `yarn`,
+          },
+        },
+      });
+
+      await expect(runCli(cwd, [`pack`])).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: expect.stringContaining(`The local project doesn't feature a 'packageManager' field - please specify the package manager to pack, or update the manifest to reference it`),
+        stderr: ``,
       });
     });
   });
@@ -855,7 +989,7 @@ it(`should support disabling the network accesses from the environment`, async (
 
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      packageManager: `yarn@2.2.2`,
+      packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
     });
 
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
@@ -880,12 +1014,12 @@ describe(`read-only and offline environment`, () => {
 
       // Prepare fake project
       await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-        packageManager: `yarn@2.2.2`,
+        packageManager: `yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11`,
       });
 
       // $ corepack install
       await expect(runCli(cwd, [`install`])).resolves.toMatchObject({
-        stdout: `Adding yarn@2.2.2 to the cache...\n`,
+        stdout: `Adding yarn@2.2.2+sha1.9aede2626b101719cbc1314d61def0742852ba11 to the cache...\n`,
         stderr: ``,
         exitCode: 0,
       });
@@ -1321,6 +1455,95 @@ it(`should download latest pnpm from custom registry`, async () => {
   });
 });
 
+it(`should use COREPACK_NPM_REGISTRY from .corepack.env for "corepack use" command`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://custom-registry.example.com\n`);
+
+    // "corepack use pnpm" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(cwd, [`use`, `pnpm`])).resolves.toMatchObject({
+      stderr: ``,
+      stdout: expect.stringContaining(`custom-registry.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should use closest .corepack.env`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // Set COREPACK_NPM_REGISTRY in .corepack.env
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `subdir`));
+    await xfs.writeFilePromise(ppath.join(cwd, `subdir`, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://subdir.example.com\n`);
+
+    // "corepack yarn --version" should read .corepack.env and use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `subdir`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.stringContaining(`subdir.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should ignore .corepack.env outside of the root`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    // Set COREPACK_NPM_REGISTRY in a .corepack.env outside of the repo root
+    await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://above-root.example.com\n`);
+    await xfs.mkdirPromise(ppath.join(cwd, `repo-root`));
+    await xfs.writeJsonPromise(ppath.join(cwd, `repo-root`, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // "corepack yarn --version" should NOT read .corepack.env and NOT use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `repo-root`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.not.stringContaining(`above-root.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
+it(`should ignore .corepack.env inside a node_modules folder`, async () => {
+  process.env.COREPACK_ENABLE_NETWORK = `0`;
+  process.env.DEBUG = `corepack`;
+
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`,
+    });
+
+    // Set COREPACK_NPM_REGISTRY in a .corepack.env from a node_modules package
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules`));
+    await xfs.mkdirPromise(ppath.join(cwd, `node_modules`, `pkg`));
+    await xfs.writeFilePromise(ppath.join(cwd, `node_modules`, `pkg`, `.corepack.env` as Filename), `COREPACK_NPM_REGISTRY=http://npm-pkg.example.com\n`);
+
+    // "corepack yarn --version" should NOT read .corepack.env and NOT use the custom registry
+    // When network is disabled, the error message should contain the custom registry URL
+    await expect(runCli(ppath.join(cwd, `node_modules`, `pkg`), [`yarn`, `--version`])).resolves.toMatchObject({
+      stdout: ``,
+      stderr: expect.not.stringContaining(`npm-pkg.example.com`),
+      exitCode: 1,
+    });
+  });
+});
+
 describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
@@ -1453,6 +1676,196 @@ describe(`should pick up COREPACK_INTEGRITY_KEYS from env`, () => {
       await expect(runCli(cwd, [`pnpm`, `--version`], true)).resolves.toMatchObject({
         exitCode: 0,
         stdout: `pnpm: Hello from custom registry\n`,
+        stderr: ``,
+      });
+    });
+  });
+});
+
+describe(`unverified downloads`, () => {
+  beforeEach(() => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+    process.env.COREPACK_INTEGRITY_KEYS = `0`;
+  });
+
+  it(`from env variable`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `error`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `ignore`;
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // No warning expected
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // Already cached, no warning expected
+      });
+    });
+  });
+
+  it(`from .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=ignore\n`);
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // No warning expected
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=warn\n`);
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+      await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `yarn: Hello from custom registry\n`,
+        stderr: ``, // Already cached, no warning expected
+      });
+    });
+  });
+
+  it(`from env file defined by COREPACK_ENV_FILE`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      });
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+      await xfs.writeFilePromise(ppath.join(cwd, `.other.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=warn\n`);
+
+      // By default, Corepack should be using .corepack.env and fail.
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ENV_FILE = `.other.env`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified.`),
+      });
+    });
+  });
+
+  it(`from env even if there's a .corepack.env file`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {});
+
+      await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env` as Filename), `COREPACK_ON_UNVERIFIED_DOWNLOAD=error\n`);
+
+      // By default, Corepack should be using .corepack.env (or the built-in ones on Node.js 18.x) and fail.
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable`),
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: expect.stringContaining(`Integrity of pnpm@1.9998.9999 could not be verified`),
+      });
+    });
+  });
+});
+
+describe(`downloads not pinned by a hash`, () => {
+  it(`should not warn in non-strict mode when the signature can be verified`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `warn`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: ``,
+      });
+    });
+  });
+
+  it(`should warn when COREPACK_ON_UNVERIFIED_DOWNLOAD is set to strict-warn`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `strict-warn`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
+        stderr: `Integrity of yarn@1.22.4 is not pinned by a hash. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.\n`,
+      });
+    });
+  });
+
+  it(`should fail when COREPACK_ON_UNVERIFIED_DOWNLOAD is set to STRICT-ERROR`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `STRICT-ERROR`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: ``,
+        stderr: expect.stringContaining(`Integrity of yarn@1.22.4 is not pinned by a hash. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable.`),
+      });
+    });
+  });
+
+  it(`should not interfere with versions pinned by a hash in strict mode`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+        packageManager: `yarn@1.22.4+sha224.0d6eecaf4d82ec12566fdd97143794d0f0c317e0d652bd4d1b305430`,
+      });
+
+      process.env.COREPACK_ON_UNVERIFIED_DOWNLOAD = `strict-error`;
+      await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `1.22.4\n`,
         stderr: ``,
       });
     });
@@ -1651,8 +2064,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
-        stderr: ``,
+        stderr: expect.stringContaining(`Signature does not match`),
+        stdout: `Installing pnpm@1.9998.9999 in the project...\n`,
       });
     });
   });
@@ -1667,8 +2080,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stdout: expect.stringContaining(`Signature does not match`),
-        stderr: ``,
+        stderr: expect.stringContaining(`Signature does not match`),
+        stdout: `Installing yarn@1.9998.9999 in the project...\n`,
       });
     });
   });
@@ -1733,25 +2146,4 @@ describe(`allow range versions in devEngines.packageManager.version when user sp
       });
     });
   }
-});
-
-it(`should still validate devEngines.packageManager.version format when no user version specified`, async () => {
-  await xfs.mktempPromise(async cwd => {
-    // When no user version is specified, range versions in devEngines should still cause error
-    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
-      devEngines: {
-        packageManager: {
-          name: `npm`,
-          version: `^6.14.2`,
-        },
-      },
-    });
-
-    // Without user-specified version, should still fail due to range version in devEngines
-    await expect(runCli(cwd, [`npm`, `--version`])).resolves.toMatchObject({
-      exitCode: 1,
-      stderr: expect.stringContaining(`Invalid package manager specification in package.json (npm@^6.14.2); expected a semver version`),
-      stdout: ``,
-    });
-  });
 });

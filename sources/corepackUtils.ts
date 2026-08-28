@@ -1,23 +1,23 @@
-import {createHash}                                            from 'crypto';
-import {once}                                                  from 'events';
-import fs                                                      from 'fs';
-import type {Dir}                                              from 'fs';
-import Module                                                  from 'module';
-import path                                                    from 'path';
-import Range                                                   from 'semver/classes/range';
-import SemVer                                                  from 'semver/classes/semver';
-import semverLt                                                from 'semver/functions/lt';
-import semverParse                                             from 'semver/functions/parse';
-import {setTimeout as setTimeoutPromise}                       from 'timers/promises';
+import {createHash}                                                 from 'crypto';
+import {once}                                                       from 'events';
+import fs                                                           from 'fs';
+import type {Dir}                                                   from 'fs';
+import Module                                                       from 'module';
+import path                                                         from 'path';
+import Range                                                        from 'semver/classes/range.js';
+import SemVer                                                       from 'semver/classes/semver.js';
+import semverLt                                                     from 'semver/functions/lt.js';
+import semverParse                                                  from 'semver/functions/parse.js';
+import {setTimeout as setTimeoutPromise}                            from 'timers/promises';
 
-import * as engine                                             from './Engine';
-import * as debugUtils                                         from './debugUtils';
-import * as folderUtils                                        from './folderUtils';
-import * as httpUtils                                          from './httpUtils';
-import * as nodeUtils                                          from './nodeUtils';
-import * as npmRegistryUtils                                   from './npmRegistryUtils';
-import {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types';
-import {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types';
+import * as engine                                                  from './Engine.ts';
+import * as debugUtils                                              from './debugUtils.ts';
+import * as folderUtils                                             from './folderUtils.ts';
+import * as httpUtils                                               from './httpUtils.ts';
+import * as nodeUtils                                               from './nodeUtils.ts';
+import * as npmRegistryUtils                                        from './npmRegistryUtils.ts';
+import type {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types.ts';
+import type {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types.ts';
 
 const YARN_SWITCH_REGEX = /[/\\]switch[/\\]bin[/\\]/;
 
@@ -231,6 +231,31 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
+  const registry = getRegistryFromPackageManagerSpec(spec);
+  const canVerifySignature = registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck();
+  if (!build[1]) {
+    const {COREPACK_ON_UNVERIFIED_DOWNLOAD} = process.env;
+    debugUtils.log(`No hash provided${canVerifySignature ? `` : `, and signature cannot be verified`}; checking COREPACK_ON_UNVERIFIED_DOWNLOAD, set to: ${COREPACK_ON_UNVERIFIED_DOWNLOAD}`);
+    const mode = COREPACK_ON_UNVERIFIED_DOWNLOAD?.toUpperCase();
+    // In strict mode, a hash is required even when the signature can be verified.
+    const isStrict = mode === `STRICT-ERROR` || mode === `STRICT-WARN`;
+    if (isStrict || !canVerifySignature) {
+      const reason = canVerifySignature
+        ? `is not pinned by a hash`
+        : `could not be verified`;
+
+      switch (mode) {
+        case `ERROR`:
+        case `STRICT-ERROR`:
+          throw new Error(`Integrity of ${locator.name}@${version} ${reason}. Downloading unverified versions is disabled by the COREPACK_ON_UNVERIFIED_DOWNLOAD env variable. Please provide a hash.`);
+
+        case `WARN`:
+        case `STRICT-WARN`:
+          console.warn(`Integrity of ${locator.name}@${version} ${reason}. Consider providing a hash. Set COREPACK_ON_UNVERIFIED_DOWNLOAD to 'ignore' to remove this warning.`);
+      }
+    }
+  }
+
   let url: string;
   let signatures: Array<{keyid: string, sig: string}>;
   let integrity: string;
@@ -238,7 +263,6 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   if (locatorIsASupportedPackageManager) {
     url = spec.url.replace(`{}`, version);
     if (process.env.COREPACK_NPM_REGISTRY) {
-      const registry = getRegistryFromPackageManagerSpec(spec);
       if (registry.type === `npm`) {
         ({tarball: url, signatures, integrity} = await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version));
         if (registry.bin) {
@@ -294,19 +318,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     }
   }
 
-  if (!build[1]) {
-    const registry = getRegistryFromPackageManagerSpec(spec);
-    if (registry.type === `npm` && !registry.bin && !shouldSkipIntegrityCheck()) {
-      if (signatures! == null || integrity! == null)
-        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+  if (!build[1] && canVerifySignature && registry.type === `npm`) {
+    if (signatures! == null || integrity! == null)
+      ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-      npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
-      // @ts-expect-error ignore readonly
-      build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
-    }
+    npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+    // @ts-expect-error ignore readonly
+    build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
   }
-  if (build[1] && actualHash !== build[1])
+  if (build[1] && actualHash !== build[1]) {
+    await fs.promises.rm(tmpFolder, {recursive: true, force: true});
     throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+  }
 
   const serializedHash = `${algo}.${actualHash}`;
 

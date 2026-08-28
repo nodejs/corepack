@@ -2,9 +2,9 @@ import {Command, Option, UsageError} from 'clipanion';
 import {mkdir}                       from 'fs/promises';
 import path                          from 'path';
 
-import * as folderUtils              from '../folderUtils';
+import * as folderUtils              from '../folderUtils.ts';
 
-import {BaseCommand}                 from './Base';
+import {BaseCommand}                 from './Base.ts';
 
 export class PackCommand extends BaseCommand {
   static paths = [
