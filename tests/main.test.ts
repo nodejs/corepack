@@ -755,6 +755,24 @@ it(`should allow using transparent commands on npm-configured projects`, async (
   });
 });
 
+it(`should allow using pnpm alias transparent commands on npm-configured projects`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `npm@6.14.2`,
+    });
+
+    await expect(runCli(cwd, [`pn`, `dlx`, `--help`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+    });
+
+    await expect(runCli(cwd, [`pnx`, `--help`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+    });
+  });
+});
+
 it(`should transparently use the preconfigured version when there is no local project`, async () => {
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
