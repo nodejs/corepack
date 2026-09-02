@@ -1,8 +1,9 @@
-import {Command}          from 'clipanion';
-import fs                 from 'fs';
+import {Command}                                 from 'clipanion';
+import fs                                        from 'fs';
+import path                                      from 'path';
 
-import {getInstallFolder} from '../folderUtils.ts';
-import type {Context}     from '../main.ts';
+import {getCorepackHomeFolder, getInstallFolder} from '../folderUtils.ts';
+import type {Context}                            from '../main.ts';
 
 export class CacheCommand extends Command<Context> {
   static paths = [
@@ -18,6 +19,9 @@ export class CacheCommand extends Command<Context> {
   });
 
   async execute() {
-    await fs.promises.rm(getInstallFolder(), {recursive: true, force: true});
+    await Promise.all([
+      fs.promises.rm(getInstallFolder(), {recursive: true, force: true}),
+      fs.promises.rm(path.join(getCorepackHomeFolder(), `lastKnownGood.json`), {force: true}),
+    ]);
   }
 }
