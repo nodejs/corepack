@@ -55,13 +55,6 @@ jobs:
           - macos-latest
           - windows-latest
 
-      # Temporarily skipping Node.js 24 under Windows due to issue
-      # https://github.com/nodejs/corepack/issues/715
-      # vitest fails "handle integrity checks" on Windows with Node.js 24.x
-        exclude:
-          - node: 24
-            platform: windows-latest
-
     name: "${{matrix.platform}} w/ Node.js ${{matrix.node}}.x"
     runs-on: ${{matrix.platform}}
 
