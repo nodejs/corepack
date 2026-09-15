@@ -1929,6 +1929,20 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
   });
 }
 
+it(`should download from COREPACK_NPM_REGISTRY when the registry advertises the tarball on another host`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
+    process.env.COREPACK_INTEGRITY_KEYS = ``;
+    process.env.TEST_TARBALL_HOST = `https://cdn.example.org`; // See `_registryServer.mjs`
+
+    await expect(runCli(cwd, [`pnpm@1.x`, `--version`], true)).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `pnpm: Hello from custom registry\n`,
+      stderr: ``,
+    });
+  });
+});
+
 describe(`handle integrity checks`, () => {
   beforeEach(() => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
