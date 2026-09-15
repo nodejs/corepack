@@ -13,11 +13,15 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
-export async function fetchAsJson(packageName: string, version?: string) {
+function getRegistryURL() {
   // Strip any trailing slashes so a `COREPACK_NPM_REGISTRY` with a trailing
   // slash does not produce a double slash in the request URL (some registries,
   // e.g. registry.npmmirror.com, reject `//package` with a 404).
-  const npmRegistryUrl = (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).replace(/\/+$/, ``);
+  return (process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL).replace(/\/+$/, ``);
+}
+
+export async function fetchAsJson(packageName: string, version?: string) {
+  const npmRegistryUrl = getRegistryURL();
 
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach npm repository ${npmRegistryUrl}`);
@@ -116,5 +120,11 @@ export async function fetchTarballURLAndSignature(packageName: string, version: 
   if (tarball === undefined || !tarball.startsWith(`http`))
     throw new Error(`${packageName}@${version} does not have a valid tarball.`);
 
-  return {tarball, signatures, integrity};
+  const tarballPath = tarball.indexOf(`/${packageName}/-/`);
+
+  return {
+    tarball: tarballPath === -1 ? tarball : getRegistryURL() + tarball.slice(tarballPath),
+    signatures,
+    integrity,
+  };
 }
