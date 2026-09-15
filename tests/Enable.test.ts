@@ -89,6 +89,32 @@ describe(`EnableCommand`, () => {
     });
   });
 
+  it(`should add pnpm alias binaries`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      const corepackBin = await makeBin(cwd, `corepack` as Filename);
+
+      await expect(runCli(cwd, [`enable`, `--install-directory=${npath.fromPortablePath(cwd)}`, `pnpm`])).resolves.toMatchObject({
+        stdout: ``,
+        stderr: ``,
+        exitCode: 0,
+      });
+
+      const sortedEntries = xfs.readdirPromise(cwd).then(entries => {
+        return entries.sort();
+      });
+
+      const expectedEntries: Array<string> = [
+        ppath.basename(corepackBin),
+        ...getBinaryNames(`pn`),
+        ...getBinaryNames(`pnpm`),
+        ...getBinaryNames(`pnpx`),
+        ...getBinaryNames(`pnx`),
+      ];
+
+      await expect(sortedEntries).resolves.toEqual(expectedEntries.sort());
+    });
+  });
+
   test.skipIf(process.platform === `win32`)(`should overwrite existing files`, async () => {
     await xfs.mktempPromise(async cwd => {
       await xfs.writeFilePromise(ppath.join(cwd, `yarn`), `hello`);
