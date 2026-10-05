@@ -69,7 +69,7 @@ if (process.env.NOCK_ENV === `record`) {
       headers: minimalHeaders,
     });
   };
-} else if (process.env.NOCK_ENV === `replay`) {
+} else {
   const getNockStatement = db.prepare(`SELECT body, json(headers) as headers, status FROM nocks WHERE hash = ?`);
 
   globalThis.fetch = async (input, init) => {
