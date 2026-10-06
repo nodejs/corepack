@@ -1235,6 +1235,33 @@ it(`should handle parallel installs`, async () => {
   });
 });
 
+it(`should reinstall a cached package manager whose recorded bin is missing`, async () => {
+  await xfs.mktempPromise(async cwd => {
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {
+      packageManager: `pnpm@6.6.2+sha224.eb5c0acad3b0f40ecdaa2db9aa5a73134ad256e17e22d1419a2ab073`,
+    });
+
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `6.6.2\n`,
+    });
+
+    // Simulate a record written by an older Corepack that pointed to a file the package doesn't ship.
+    const corepackFile = ppath.join(npath.toPortablePath(folderUtils.getInstallFolder()), `pnpm/6.6.2/.corepack` as PortablePath);
+    const record = await xfs.readJsonPromise(corepackFile);
+    await xfs.writeJsonPromise(corepackFile, {...record, bin: {pnpm: `./bin/missing.cjs`, pnpx: `./bin/missing.cjs`}});
+
+    await expect(runCli(cwd, [`pnpm`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stderr: ``,
+      stdout: `6.6.2\n`,
+    });
+
+    await expect(xfs.readJsonPromise(corepackFile)).resolves.toMatchObject({bin: record.bin});
+  });
+});
+
 it(`should not override the package manager exit code`, async () => {
   await xfs.mktempPromise(async cwd => {
     await xfs.writeJsonPromise(ppath.join(cwd, `package.json` as Filename), {

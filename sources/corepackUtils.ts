@@ -218,13 +218,24 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
     const corepackData = JSON.parse(corepackContent);
 
-    debugUtils.log(`Reusing ${locator.name}@${locator.reference} found in ${installFolder}`);
+    // An older Corepack may have recorded bin paths that the package doesn't
+    // ship (e.g. `bin/pnpm.cjs` for pnpm 12). Reinstall instead of running them.
+    const recordedBin: unknown = corepackData.bin;
+    const isStale = isValidBinSpec(recordedBin) &&
+      Object.values(recordedBin).every(dest => !fs.existsSync(path.join(installFolder, dest)));
 
-    return {
-      hash: corepackData.hash as string,
-      location: installFolder,
-      bin: corepackData.bin,
-    };
+    if (!isStale) {
+      debugUtils.log(`Reusing ${locator.name}@${locator.reference} found in ${installFolder}`);
+
+      return {
+        hash: corepackData.hash as string,
+        location: installFolder,
+        bin: corepackData.bin,
+      };
+    }
+
+    debugUtils.log(`Reinstalling ${locator.name}@${locator.reference}: none of its bins exist in ${installFolder}`);
+    await fs.promises.rm(installFolder, {recursive: true, force: true});
   } catch (err) {
     if (nodeUtils.isNodeError(err) && err.code !== `ENOENT`) {
       throw err;
