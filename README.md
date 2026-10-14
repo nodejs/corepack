@@ -277,6 +277,11 @@ When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
 perform an install.
 
+With `COREPACK_ENABLE_NETWORK=0`, omitting the version uses the default release
+instead, such as the Last Known Good version selected by
+`corepack install -g yarn@4.8.0`. The selected release must already be cached.
+Explicit tags and version ranges still require registry access.
+
 ### `corepack up`
 
 Retrieve the latest available version for the current major release line of

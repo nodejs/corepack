@@ -1,5 +1,7 @@
 import {Command, Option, UsageError} from 'clipanion';
 
+import {isSupportedPackageManager}   from '../types.ts';
+
 import {BaseCommand}                 from './Base.ts';
 
 export class UseCommand extends BaseCommand {
@@ -13,6 +15,9 @@ export class UseCommand extends BaseCommand {
       When run, this command will retrieve the latest release matching the
       provided descriptor, assign it to the project's package.json file, and
       automatically perform an install.
+
+      When network access is disabled, omitting the version selects the default
+      release, which must already be cached.
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,
@@ -26,6 +31,10 @@ export class UseCommand extends BaseCommand {
     const [descriptor] = await this.resolvePatternsToDescriptors({
       patterns: [this.pattern],
     });
+
+    const versionIsOmitted = this.pattern === descriptor.name || this.pattern === `${descriptor.name}@`;
+    if (versionIsOmitted && process.env.COREPACK_ENABLE_NETWORK === `0` && isSupportedPackageManager(descriptor.name))
+      descriptor.range = await this.context.engine.getDefaultVersion(descriptor.name);
 
     const resolved = await this.context.engine.resolveDescriptor(descriptor, {allowTags: true, useCache: false});
     if (resolved === null)

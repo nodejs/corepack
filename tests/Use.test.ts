@@ -17,6 +17,135 @@ beforeEach(async () => {
 });
 
 describe(`UseCommand`, () => {
+  describe(`default version selection`, () => {
+    const defaultPackageManager = `yarn@1.22.4+sha1.01c1197ca5b27f21edc8bc472cd4c8ce0e5a470e`;
+
+    beforeEach(async () => {
+      await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`install`, `-g`, defaultPackageManager])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+
+        // The most recent cached version must not replace the selected default.
+        await expect(runCli(cwd, [`install`, `-g`, `--cache-only`, `yarn@2.4.3`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+      });
+
+      delete process.env.COREPACK_DEFAULT_TO_LATEST;
+    });
+
+    it.each([`yarn`, `yarn@`])(`should use the default for %s when the network is disabled`, async pattern => {
+      process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+          packageManager: `yarn@2.4.3`,
+          license: `MIT`,
+        });
+
+        await expect(runCli(cwd, [`use`, pattern])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: expect.stringContaining(`Installing ${defaultPackageManager} in the project...\n`),
+          stderr: ``,
+        });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          packageManager: defaultPackageManager,
+        });
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `1.22.4\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should read the network setting from .corepack.env before selecting the default`, async () => {
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {license: `MIT`});
+        await xfs.writeFilePromise(ppath.join(cwd, `.corepack.env`), `COREPACK_ENABLE_NETWORK=0\n`);
+
+        await expect(runCli(cwd, [`use`, `yarn`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          packageManager: defaultPackageManager,
+        });
+      });
+    });
+
+    it.each([`yarn@*`, `yarn@latest`, `yarn@2`])(`should not replace an explicit %s with the default offline`, async pattern => {
+      process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        const manifest = {packageManager: defaultPackageManager, license: `MIT`};
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), manifest);
+
+        await expect(runCli(cwd, [`use`, pattern])).resolves.toMatchObject({
+          exitCode: 1,
+          stdout: expect.stringContaining(`Network access disabled by the environment`),
+          stderr: ``,
+        });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toEqual(manifest);
+      });
+    });
+
+    it(`should keep using an explicitly requested cached version offline`, async () => {
+      process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {license: `MIT`});
+
+        await expect(runCli(cwd, [`use`, `yarn@2.4.3`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+        await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `2.4.3\n`,
+          stderr: ``,
+        });
+      });
+    });
+
+    it(`should not select an arbitrary cached version without a default offline`, async () => {
+      const home = npath.toPortablePath(process.env.COREPACK_HOME!);
+      await xfs.unlinkPromise(ppath.join(home, `lastKnownGood.json`));
+      process.env.COREPACK_ENABLE_NETWORK = `0`;
+
+      await xfs.mktempPromise(async cwd => {
+        const manifest = {license: `MIT`};
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), manifest);
+
+        await expect(runCli(cwd, [`use`, `yarn`])).resolves.toMatchObject({
+          exitCode: 1,
+          stdout: expect.stringContaining(`Network access disabled by the environment`),
+          stderr: ``,
+        });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toEqual(manifest);
+      });
+    });
+
+    it(`should still resolve the latest version when the network is enabled`, async () => {
+      process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = `false`;
+
+      await xfs.mktempPromise(async cwd => {
+        await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {license: `MIT`});
+
+        await expect(runCli(cwd, [`use`, `yarn`])).resolves.toMatchObject({
+          exitCode: 0,
+          stderr: ``,
+        });
+        await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toMatchObject({
+          packageManager: expect.not.stringMatching(/^yarn@(?:1\.22\.4|2\.4\.3)\+/),
+        });
+      });
+    });
+  });
+
   describe(`should set the package manager in the current project`, () => {
     it(`With an existing 'packageManager' field`, async () => {
       await xfs.mktempPromise(async cwd => {
