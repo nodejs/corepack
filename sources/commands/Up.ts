@@ -1,5 +1,6 @@
 import {Command, UsageError}           from 'clipanion';
 import semverMajor                     from 'semver/functions/major.js';
+import semverPrerelease                from 'semver/functions/prerelease.js';
 import semverValid                     from 'semver/functions/valid.js';
 import semverValidRange                from 'semver/ranges/valid.js';
 
@@ -43,7 +44,10 @@ export class UpCommand extends BaseCommand {
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
     const majorVersion = semverMajor(resolved.reference);
-    const majorDescriptor = {name: descriptor.name as SupportedPackageManagers, range: `^${majorVersion}.0.0`};
+    const range = semverPrerelease(resolved.reference)
+      ? `>=${resolved.reference} <${majorVersion + 1}.0.0-0`
+      : `^${majorVersion}.0.0`;
+    const majorDescriptor = {name: descriptor.name as SupportedPackageManagers, range};
 
     const highestVersion = await this.context.engine.resolveDescriptor(majorDescriptor, {useCache: false});
     if (!highestVersion)

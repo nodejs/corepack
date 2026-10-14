@@ -65,6 +65,40 @@ describe(`prerelease resolution`, () => {
   });
 
   it.each([
+    {current: `2.0.0-rc.0`, version: `2.0.0-rc.1`},
+    {current: `1.9999.0-beta.0`, version: `1.9999.0-beta.1`},
+    {current: `1.9998.9999-beta.0`, version: `1.9998.9999`},
+  ])(`should upgrade an explicitly selected prerelease from $current to $version`, async ({current, version}) => {
+    await xfs.mktempPromise(async cwd => {
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+        packageManager: `pnpm@${current}`,
+      });
+
+      await expect(runCli(cwd, [`up`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `Installing pnpm@${version} in the project...\n\npnpm: Hello from custom registry\n`,
+        stderr: ``,
+      });
+      const manifest = await xfs.readJsonPromise(ppath.join(cwd, `package.json`));
+      expect(manifest.packageManager.split(`+`, 1)[0]).toBe(`pnpm@${version}`);
+    });
+  });
+
+  it(`should not downgrade an explicitly selected prerelease`, async () => {
+    await xfs.mktempPromise(async cwd => {
+      const manifest = {packageManager: `pnpm@1.9999.0-beta.2`};
+      await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), manifest);
+
+      await expect(runCli(cwd, [`up`], true)).resolves.toMatchObject({
+        exitCode: 1,
+        stdout: expect.stringContaining(`Failed to find the highest release for pnpm 1.x`),
+        stderr: ``,
+      });
+      await expect(xfs.readJsonPromise(ppath.join(cwd, `package.json`))).resolves.toEqual(manifest);
+    });
+  });
+
+  it.each([
     {range: `2.0.0-rc.1`, version: `2.0.0-rc.1`},
     {range: `^2.0.0-rc.0`, version: `2.0.0-rc.1`},
     {range: `1.9999.0-beta.0 - 1.9999.0-beta.9`, version: `1.9999.0-beta.1`},
