@@ -84,6 +84,9 @@ const registry = {
   customPkgManager: [`1.0.0`],
 };
 
+if (process.env.TEST_PRERELEASES === `1`)
+  registry.pnpm.unshift(`2.0.0-rc.1`, `1.9999.0-beta.1`);
+
 function generateSignature(packageName, version) {
   if (privateKey == null) return undefined;
   const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
@@ -133,6 +136,7 @@ const server = createServer((req, res) => {
     if (req.url === `/${packageName}`) {
       res.end(JSON.stringify({"dist-tags": {
         latest: registry[packageName].at(-1),
+        ...(process.env.TEST_PRERELEASES === `1` && packageName === `pnpm` ? {next: registry.pnpm[0]} : {}),
       }, versions: Object.fromEntries(registry[packageName].map(version =>
         [version, generateVersionMetadata(packageName, version)],
       ))}));
@@ -141,9 +145,10 @@ const server = createServer((req, res) => {
     const isDownloadingRequest = req.url.slice(packageName.length + 1, packageName.length + 4) === `/-/`;
     let version;
     if (isDownloadingRequest) {
-      const match = /^(.+)-(.+)\.tgz$/.exec(req.url.slice(packageName.length + 4));
-      if (match?.[1] === packageName) {
-        version = match[2];
+      const fileName = req.url.slice(packageName.length + 4);
+      const prefix = `${packageName}-`;
+      if (fileName.startsWith(prefix) && fileName.endsWith(`.tgz`)) {
+        version = fileName.slice(prefix.length, -4);
       }
     } else {
       version = req.url.slice(packageName.length + 2);

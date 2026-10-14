@@ -3,6 +3,7 @@ import fs                                              from 'fs';
 import path                                            from 'path';
 import process                                         from 'process';
 import semverRcompare                                  from 'semver/functions/rcompare.js';
+import semverSatisfies                                 from 'semver/functions/satisfies.js';
 import semverValid                                     from 'semver/functions/valid.js';
 import semverValidRange                                from 'semver/ranges/valid.js';
 
@@ -424,7 +425,7 @@ export class Engine {
       const registry = corepackUtils.getRegistryFromPackageManagerSpec(packageManagerSpec);
 
       const versions = await corepackUtils.fetchAvailableVersions(registry);
-      return versions.filter(version => semverUtils.satisfiesWithPrereleases(version, finalDescriptor.range));
+      return versions.filter(version => semverSatisfies(version, finalDescriptor.range));
     }));
 
     const highestVersion = [...new Set(versions.flat())].sort(semverRcompare);

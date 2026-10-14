@@ -182,6 +182,12 @@ The utility commands detailed in the next section.
 
 ## Utility Commands
 
+When resolving version ranges from a registry, Corepack follows semver rules:
+prereleases are excluded unless the range explicitly includes them. For example,
+`pnpm@12` selects stable releases, while `pnpm@^12.0.0-rc.0` also allows compatible
+prereleases. Exact prerelease versions and tags pointing to prereleases are
+supported as well.
+
 ### `corepack <binary name>[@<version>] [... args]`
 
 This meta-command runs the specified package manager in the local folder. You
