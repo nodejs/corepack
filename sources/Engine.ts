@@ -12,6 +12,7 @@ import * as corepackUtils                              from './corepackUtils.ts'
 import * as debugUtils                                 from './debugUtils.ts';
 import * as folderUtils                                from './folderUtils.ts';
 import type {NodeError}                                from './nodeUtils.ts';
+import * as releaseAgeUtils                            from './releaseAgeUtils.ts';
 import * as semverUtils                                from './semverUtils.ts';
 import * as specUtils                                  from './specUtils.ts';
 import type {Config, Descriptor, LazyLocator, Locator} from './types.ts';
@@ -386,6 +387,9 @@ export class Engine {
     if (typeof definition === `undefined`)
       throw new UsageError(`This package manager (${descriptor.name}) isn't supported by this corepack build`);
 
+    // An explicit version is a deliberate choice. Tags and ranges must still
+    // be checked against registry timestamps, even when a version is cached.
+    const minimumReleaseAge = semverValid(descriptor.range) ? 0 : releaseAgeUtils.getMinimumReleaseAge();
     let finalDescriptor = descriptor;
     if (!semverValid(descriptor.range) && !semverValidRange(descriptor.range)) {
       if (!allowTags)
@@ -398,21 +402,20 @@ export class Engine {
       const packageManagerSpec = definition.ranges[tagRange];
       const registry = corepackUtils.getRegistryFromPackageManagerSpec(packageManagerSpec);
 
-      const tags = await corepackUtils.fetchAvailableTags(registry);
-      if (!Object.hasOwn(tags, descriptor.range))
-        throw new UsageError(`Tag not found (${descriptor.range})`);
-
       finalDescriptor = {
         name: descriptor.name,
-        range: tags[descriptor.range],
+        range: await corepackUtils.fetchTagVersion(registry, descriptor.range),
       };
     }
 
     // If a compatible version is already installed, no need to query one
     // from the remote listings
-    const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
-    if (cachedVersion !== null && useCache)
-      return {name: finalDescriptor.name, reference: cachedVersion};
+    if (useCache && (minimumReleaseAge === 0 || semverValid(finalDescriptor.range))) {
+      const cachedVersion = await corepackUtils.findInstalledVersion(folderUtils.getInstallFolder(), finalDescriptor);
+      if (cachedVersion !== null) {
+        return {name: finalDescriptor.name, reference: cachedVersion};
+      }
+    }
 
     // If the user asked for a specific version, no need to request the list of
     // available versions from the registry.
@@ -428,6 +431,9 @@ export class Engine {
     }));
 
     const highestVersion = [...new Set(versions.flat())].sort(semverRcompare);
+    if (highestVersion.length === 0 && minimumReleaseAge > 0)
+      throw new UsageError(`No ${descriptor.name} release older than ${minimumReleaseAge} minutes is available for range ${descriptor.range}`);
+
     if (highestVersion.length === 0)
       return null;
 

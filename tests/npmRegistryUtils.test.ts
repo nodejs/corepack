@@ -6,6 +6,7 @@ import {describe, beforeEach, it, expect, vi}                   from 'vitest';
 import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
 import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL}              from '../sources/npmRegistryUtils';
 import {fetchLatestStableVersion, fetchAsJson, verifySignature} from '../sources/npmRegistryUtils';
+import {fetchAvailableVersions, fetchTagVersion}                from '../sources/npmRegistryUtils';
 
 vi.mock(`../sources/httpUtils.ts`);
 
@@ -99,6 +100,49 @@ describe(`npm registry utils fetchAsJson`, () => {
 
     expect(httpFetchAsJson).toBeCalled();
     expect(httpFetchAsJson).lastCalledWith(`${DEFAULT_NPM_REGISTRY_URL}/package-name`, {headers: DEFAULT_HEADERS});
+  });
+});
+
+describe(`npm registry release age`, () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    process.env.COREPACK_MINIMUM_RELEASE_AGE = `60`;
+  });
+
+  it.each([`tag`, `range`, `latest`])(`requests full metadata for %s resolution`, async mode => {
+    process.env.COREPACK_INTEGRITY_KEYS = `0`;
+    vi.mocked(httpFetchAsJson).mockResolvedValue({
+      'dist-tags': {latest: `1.1.0`},
+      versions: {
+        '1.0.0': {version: `1.0.0`, dist: {shasum: `abc`}},
+        '1.1.0': {version: `1.1.0`, dist: {shasum: `def`}},
+      },
+      time: {'1.0.0': `2000-01-01T00:00:00Z`, '1.1.0': new Date().toISOString()},
+    });
+
+    if (mode === `tag`)
+      await expect(fetchTagVersion(`pnpm`, `latest`)).resolves.toBe(`1.0.0`);
+    else if (mode === `range`)
+      await expect(fetchAvailableVersions(`pnpm`)).resolves.toEqual([`1.0.0`]);
+    else
+      await expect(fetchLatestStableVersion(`pnpm`)).resolves.toBe(`1.0.0+sha1.abc`);
+
+    expect(httpFetchAsJson).toHaveBeenCalledExactlyOnceWith(`${DEFAULT_NPM_REGISTRY_URL}/pnpm`, {headers: {Accept: `application/json`}});
+  });
+
+  it.each([`tag`, `range`, `latest`])(`rejects an invalid age before fetching %s metadata`, async mode => {
+    process.env.COREPACK_MINIMUM_RELEASE_AGE = `invalid`;
+    const result = mode === `tag` ? fetchTagVersion(`pnpm`, `latest`) : mode === `range` ? fetchAvailableVersions(`pnpm`) : fetchLatestStableVersion(`pnpm`);
+    await expect(result).rejects.toThrow(`COREPACK_MINIMUM_RELEASE_AGE must be a non-negative integer number of minutes`);
+    expect(httpFetchAsJson).not.toHaveBeenCalled();
+  });
+
+  it(`reports no eligible latest release without suggesting disabling integrity checks`, async () => {
+    vi.mocked(httpFetchAsJson).mockResolvedValue({
+      'dist-tags': {latest: `1.0.0`},
+      versions: {'1.0.0': {version: `1.0.0`, dist: {}}},
+    });
+    await expect(fetchLatestStableVersion(`pnpm`)).rejects.toThrow(`No pnpm release older than 60 minutes is available for tag latest`);
   });
 });
 

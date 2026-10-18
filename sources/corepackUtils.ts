@@ -16,6 +16,7 @@ import * as folderUtils                                             from './fold
 import * as httpUtils                                               from './httpUtils.ts';
 import * as nodeUtils                                               from './nodeUtils.ts';
 import * as npmRegistryUtils                                        from './npmRegistryUtils.ts';
+import * as releaseAgeUtils                                         from './releaseAgeUtils.ts';
 import type {RegistrySpec, Descriptor, Locator, PackageManagerSpec} from './types.ts';
 import type {BinList, BinSpec, InstallSpec, DownloadSpec}           from './types.ts';
 
@@ -37,8 +38,7 @@ export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<stri
       return await npmRegistryUtils.fetchLatestStableVersion(spec.package);
     }
     case `url`: {
-      const data = await httpUtils.fetchAsJson(spec.url);
-      return data[spec.fields.tags].stable;
+      return await fetchTagVersion(spec, `stable`);
     }
     default: {
       throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
@@ -46,14 +46,20 @@ export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<stri
   }
 }
 
-export async function fetchAvailableTags(spec: RegistrySpec): Promise<Record<string, string>> {
+export async function fetchTagVersion(spec: RegistrySpec, tag: string): Promise<string> {
   switch (spec.type) {
     case `npm`: {
-      return await npmRegistryUtils.fetchAvailableTags(spec.package);
+      return await npmRegistryUtils.fetchTagVersion(spec.package, tag);
     }
     case `url`: {
+      const minimumReleaseAge = releaseAgeUtils.getMinimumReleaseAge();
       const data = await httpUtils.fetchAsJson(spec.url);
-      return data[spec.fields.tags];
+      const field = data[spec.fields.versions];
+      return releaseAgeUtils.resolveTag(spec.url, tag, {
+        tags: data[spec.fields.tags],
+        versions: minimumReleaseAge > 0 ? (Array.isArray(field) ? field : Object.keys(field)) : [],
+        time: data.time,
+      }, minimumReleaseAge);
     }
     default: {
       throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);
@@ -67,9 +73,10 @@ export async function fetchAvailableVersions(spec: RegistrySpec): Promise<Array<
       return await npmRegistryUtils.fetchAvailableVersions(spec.package);
     }
     case `url`: {
+      const minimumReleaseAge = releaseAgeUtils.getMinimumReleaseAge();
       const data = await httpUtils.fetchAsJson(spec.url);
       const field = data[spec.fields.versions];
-      return Array.isArray(field) ? field : Object.keys(field);
+      return releaseAgeUtils.filterVersionsByAge(Array.isArray(field) ? field : Object.keys(field), data.time, minimumReleaseAge);
     }
     default: {
       throw new Error(`Unsupported specification ${JSON.stringify(spec)}`);

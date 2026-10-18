@@ -351,6 +351,21 @@ same major line. Should you need to upgrade to a new major, use an explicit
 - `COREPACK_NPM_REGISTRY` sets the registry base url used when retrieving
   package managers from npm. Default value is `https://registry.npmjs.org`
 
+- `COREPACK_MINIMUM_RELEASE_AGE` sets the minimum publish age, in integer
+  minutes, when resolving tags (including `latest`) or version ranges. For
+  example, `COREPACK_MINIMUM_RELEASE_AGE=1440 corepack install -g pnpm@latest`
+  selects the highest eligible version published at least one day ago.
+  Unset, empty, or `0` disables the gate; invalid or negative values cause an
+  error. Explicit exact versions bypass the gate. Registry metadata must
+  provide valid publish timestamps in its `time` field; versions with missing
+  or invalid timestamps are excluded, and resolution fails if none qualify.
+  This also applies to cached versions selected through ranges. Registries
+  without publish timestamps (such as Yarn's default modern release index)
+  cannot resolve releases with the gate enabled; use an exact version instead.
+  Tag fallback never exceeds the tagged version: stable tags select stable
+  releases, and prerelease tags stay within the same release and prerelease
+  channel. Version ranges retain their existing prerelease matching behavior.
+
 - `COREPACK_NPM_TOKEN` sets a Bearer token authorization header when connecting
   to a npm type registry.
 

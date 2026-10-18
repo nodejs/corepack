@@ -5,15 +5,16 @@ import defaultConfig              from '../config.json' with {type: 'json'};
 
 import {shouldSkipIntegrityCheck} from './corepackUtils.ts';
 import * as httpUtils             from './httpUtils.ts';
+import * as releaseAgeUtils       from './releaseAgeUtils.ts';
 
-// load abbreviated metadata as that's all we need for these calls
+// Load abbreviated metadata unless publish timestamps are needed.
 // see: https://github.com/npm/registry/blob/cfe04736f34db9274a780184d1cdb2fb3e4ead2a/docs/responses/package-metadata.md
 export const DEFAULT_HEADERS: Record<string, string> = {
   [`Accept`]: `application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8`,
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
-export async function fetchAsJson(packageName: string, version?: string) {
+export async function fetchAsJson(packageName: string, version?: string, {fullMetadata = false}: {fullMetadata?: boolean} = {}) {
   // Strip any trailing slashes so a `COREPACK_NPM_REGISTRY` with a trailing
   // slash does not produce a double slash in the request URL (some registries,
   // e.g. registry.npmmirror.com, reject `//package` with a 404).
@@ -23,6 +24,8 @@ export async function fetchAsJson(packageName: string, version?: string) {
     throw new UsageError(`Network access disabled by the environment; can't reach npm repository ${npmRegistryUrl}`);
 
   const headers = {...DEFAULT_HEADERS};
+  if (fullMetadata)
+    headers.Accept = `application/json`;
 
   if (`COREPACK_NPM_TOKEN` in process.env) {
     headers.authorization = `Bearer ${process.env.COREPACK_NPM_TOKEN}`;
@@ -77,7 +80,19 @@ export async function verifySignature({signatures, integrity, packageName, versi
 }
 
 export async function fetchLatestStableVersion(packageName: string) {
-  const metadata = await fetchAsJson(packageName, `latest`);
+  const minimumReleaseAge = releaseAgeUtils.getMinimumReleaseAge();
+  let metadata;
+  if (minimumReleaseAge > 0) {
+    const rootMetadata = await fetchAsJson(packageName, undefined, {fullMetadata: true});
+    const version = releaseAgeUtils.resolveTag(packageName, `latest`, {
+      tags: rootMetadata[`dist-tags`],
+      versions: Object.keys(rootMetadata.versions),
+      time: rootMetadata.time,
+    }, minimumReleaseAge);
+    metadata = rootMetadata.versions[version];
+  } else {
+    metadata = await fetchAsJson(packageName, `latest`);
+  }
 
   const {version, dist: {integrity, signatures, shasum}} = metadata;
 
@@ -100,14 +115,20 @@ export async function fetchLatestStableVersion(packageName: string) {
   }`;
 }
 
-export async function fetchAvailableTags(packageName: string) {
-  const metadata = await fetchAsJson(packageName);
-  return metadata[`dist-tags`];
+export async function fetchTagVersion(packageName: string, tag: string) {
+  const minimumReleaseAge = releaseAgeUtils.getMinimumReleaseAge();
+  const metadata = await fetchAsJson(packageName, undefined, {fullMetadata: minimumReleaseAge > 0});
+  return releaseAgeUtils.resolveTag(packageName, tag, {
+    tags: metadata[`dist-tags`],
+    versions: minimumReleaseAge > 0 ? Object.keys(metadata.versions) : [],
+    time: metadata.time,
+  }, minimumReleaseAge);
 }
 
 export async function fetchAvailableVersions(packageName: string) {
-  const metadata = await fetchAsJson(packageName);
-  return Object.keys(metadata.versions);
+  const minimumReleaseAge = releaseAgeUtils.getMinimumReleaseAge();
+  const metadata = await fetchAsJson(packageName, undefined, {fullMetadata: minimumReleaseAge > 0});
+  return releaseAgeUtils.filterVersionsByAge(Object.keys(metadata.versions), metadata.time, minimumReleaseAge);
 }
 
 export async function fetchTarballURLAndSignature(packageName: string, version: string) {

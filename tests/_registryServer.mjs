@@ -78,7 +78,7 @@ const integrity = `sha512-${createHash(`sha512`).update(
 const registry = {
   __proto__: null,
   yarn: [`1.9998.9999`],
-  pnpm: [`1.9998.9999`],
+  pnpm: [`1.9998.9997`, `1.9998.9998`, `1.9998.9999`],
 
   '@yarnpkg/cli-dist': [`5.9999.9999`],
   customPkgManager: [`1.0.0`],
@@ -133,7 +133,9 @@ const server = createServer((req, res) => {
     if (req.url === `/${packageName}`) {
       res.end(JSON.stringify({"dist-tags": {
         latest: registry[packageName].at(-1),
-      }, versions: Object.fromEntries(registry[packageName].map(version =>
+      }, time: req.headers.accept === `application/json` ? Object.fromEntries(registry[packageName].map((version, index) =>
+        [version, new Date(Date.now() - (registry[packageName].length - index - 1) * 24 * 60 * 60 * 1000).toISOString()],
+      )) : undefined, versions: Object.fromEntries(registry[packageName].map(version =>
         [version, generateVersionMetadata(packageName, version)],
       ))}));
       return;
