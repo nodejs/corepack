@@ -128,8 +128,8 @@ function parsePackageJSON(packageJSONContent: CorepackPackageJSON): ParsedPackag
   return {packageManagerField: pm};
 }
 
-export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo) {
-  const lookup = await loadSpecAndEnv(cwd);
+export async function setLocalPackageManager(cwd: string, info: PreparedPackageManagerInfo, {localOnly = false} = {}) {
+  const lookup = await loadSpecAndEnv(cwd, {localOnly});
 
   const projectFound = lookup.type !== `NoProject`;
   const devEnginesValue = projectFound ? lookup.devEnginesValue : undefined;
@@ -193,7 +193,7 @@ async function loadEnvFileIfExists(cwd: string): Promise<{env: LocalEnvFile, pat
   return void 0;
 }
 
-export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: false}): Promise<LoadSpecResult> {
+export async function loadSpecAndEnv(initialCwd: string, {envOnly = false, localOnly = false} = {}): Promise<LoadSpecResult> {
   let nextCwd = initialCwd;
   let currCwd = ``;
 
@@ -205,9 +205,9 @@ export async function loadSpecAndEnv(initialCwd: string, {envOnly} = {envOnly: f
 
   while (nextCwd !== currCwd && (!selection || !selection.data.packageManager)) {
     currCwd = nextCwd;
-    nextCwd = path.dirname(currCwd);
+    nextCwd = localOnly ? currCwd : path.dirname(currCwd);
 
-    if (nodeModulesRegExp.test(currCwd))
+    if (!localOnly && nodeModulesRegExp.test(currCwd))
       continue;
 
     if (process.env.COREPACK_ENV_FILE !== `0` && !localEnv)

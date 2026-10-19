@@ -6,11 +6,11 @@ import type {Context}                    from '../main.ts';
 import * as specUtils                    from '../specUtils.ts';
 
 export abstract class BaseCommand extends Command<Context> {
-  async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
+  async resolvePatternsToDescriptors({patterns, localOnly = false}: {patterns: Array<string>, localOnly?: boolean}) {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 
     if (resolvedSpecs.length === 0) {
-      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd);
+      const lookup = await specUtils.loadSpecAndEnv(this.context.cwd, {localOnly});
       switch (lookup.type) {
         case `NoProject`:
           throw new UsageError(`Couldn't find a project in the local directory - please specify the package manager to pack, or run this command from a valid project`);
@@ -29,16 +29,16 @@ export abstract class BaseCommand extends Command<Context> {
         }
       }
     } else {
-      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true});
+      await specUtils.loadSpecAndEnv(this.context.cwd, {envOnly: true, localOnly});
     }
 
     return resolvedSpecs;
   }
 
-  async setAndInstallLocalPackageManager(info: PreparedPackageManagerInfo) {
+  async setAndInstallLocalPackageManager(info: PreparedPackageManagerInfo, {localOnly = false} = {}) {
     const {
       previousPackageManager,
-    } = await specUtils.setLocalPackageManager(this.context.cwd, info);
+    } = await specUtils.setLocalPackageManager(this.context.cwd, info, {localOnly});
 
     const command = this.context.engine.getPackageManagerSpecFor(info.locator).commands?.use ?? null;
     if (command === null)

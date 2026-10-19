@@ -271,11 +271,19 @@ calling their respective binaries outside of projects defining the
 Download the selected package managers and store them inside a tarball
 suitable for use with `corepack install -g`.
 
-### `corepack use <name[@<version>]>`
+### `corepack use <name[@<version>]> [--here]`
 
 When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
 perform an install.
+
+Use `--here` for an independent project nested inside another project. For
+example, running `corepack use pnpm@latest --here` from `examples/pnpm` updates
+or creates `examples/pnpm/package.json`, even if a parent directory already
+defines a package manager. Corepack validates the current manifest's
+`devEngines.packageManager` and reads the current directory's `.corepack.env`,
+without searching parent directories. Installation runs in the current directory.
+Without `--here`, Corepack uses its normal project lookup.
 
 ### `corepack up`
 

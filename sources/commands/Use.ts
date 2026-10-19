@@ -13,6 +13,10 @@ export class UseCommand extends BaseCommand {
       When run, this command will retrieve the latest release matching the
       provided descriptor, assign it to the project's package.json file, and
       automatically perform an install.
+
+      With \`--here\`, treat the current directory as the project root. Update
+      or create its package.json and read its local .corepack.env without
+      searching parent directories.
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,
@@ -22,9 +26,14 @@ export class UseCommand extends BaseCommand {
 
   pattern = Option.String();
 
+  here = Option.Boolean(`--here`, false, {
+    description: `Update or create package.json in the current directory`,
+  });
+
   async execute() {
     const [descriptor] = await this.resolvePatternsToDescriptors({
       patterns: [this.pattern],
+      localOnly: this.here,
     });
 
     const resolved = await this.context.engine.resolveDescriptor(descriptor, {allowTags: true, useCache: false});
@@ -34,6 +43,6 @@ export class UseCommand extends BaseCommand {
     this.context.stdout.write(`Installing ${resolved.name}@${resolved.reference} in the project...\n`);
 
     const packageManagerInfo = await this.context.engine.ensurePackageManager(resolved);
-    await this.setAndInstallLocalPackageManager(packageManagerInfo);
+    await this.setAndInstallLocalPackageManager(packageManagerInfo, {localOnly: this.here});
   }
 }
