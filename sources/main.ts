@@ -10,6 +10,7 @@ import {DisableCommand}               from './commands/Disable.ts';
 import {EnableCommand}                from './commands/Enable.ts';
 import {InstallGlobalCommand}         from './commands/InstallGlobal.ts';
 import {InstallLocalCommand}          from './commands/InstallLocal.ts';
+import {ListCommand}                  from './commands/List.ts';
 import {PackCommand}                  from './commands/Pack.ts';
 import {UpCommand}                    from './commands/Up.ts';
 import {UseCommand}                   from './commands/Use.ts';
@@ -67,6 +68,7 @@ export async function runMain(argv: Array<string>) {
     cli.register(EnableCommand);
     cli.register(InstallGlobalCommand);
     cli.register(InstallLocalCommand);
+    cli.register(ListCommand);
     cli.register(PackCommand);
     cli.register(UpCommand);
     cli.register(UseCommand);

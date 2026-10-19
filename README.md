@@ -261,6 +261,18 @@ Package managers thus installed will be configured as the new default when
 calling their respective binaries outside of projects defining the
 `packageManager` field.
 
+### `corepack list <-g,--global>`
+
+List the versions of npm, pnpm, and Yarn installed in the local `COREPACK_HOME`
+cache, sorted by name and then by version (newest first). `corepack ls -g` and
+`corepack -g ls` are equivalent. Add `--json` to print an array of objects with
+`name`, `version`, and `isDefault` fields.
+
+The recorded global default from `lastKnownGood.json` is marked with `(default)`.
+Only cached versions are listed; an uncached default is not included. This command
+does not contact the registry, install anything, or update the defaults. It does
+not report package managers installed outside Corepack or the project's selection.
+
 ### `corepack pack [... name[@<version>]]`
 
 | Option                | Description                                |
