@@ -54,7 +54,7 @@ describe(`UseCommand`, () => {
         await expect(runCli(cwd, [`use`, `yarn@1.22.4`])).resolves.toMatchObject({
           exitCode: 1,
           stderr: ``,
-          stdout: `Installing yarn@1.22.4 in the project...\nUsage Error: The requested version of yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18 does not match the devEngines specification (yarn@2.x)\n\n$ corepack use <pattern>\n`,
+          stdout: `Installing yarn@1.22.4 in the project...\nUsage Error: The requested version of yarn@1.22.4+sha512.a1833b862fe52169bd6c2a033045a07df5bc6a23595c259e675fed1b2d035ab37abe6ce309720abb6636d68f03615054b6292dc0a70da31c8697fda228b50d18 does not match the devEngines specification (yarn@2.x)\n\n$ corepack use [--skip-install] <pattern>\n`,
         });
 
         // Should accept setting to a compatible version:

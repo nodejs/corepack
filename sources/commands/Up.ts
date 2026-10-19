@@ -1,4 +1,4 @@
-import {Command, UsageError}           from 'clipanion';
+import {Command, Option, UsageError}   from 'clipanion';
 import semverMajor                     from 'semver/functions/major.js';
 import semverValid                     from 'semver/functions/valid.js';
 import semverValidRange                from 'semver/ranges/valid.js';
@@ -19,6 +19,9 @@ export class UpCommand extends BaseCommand {
       of the package manager used in the local project, and update the project
       to use it.
 
+      With \`--skip-install\`, update the package manager without installing
+      the project's dependencies.
+
       Unlike \`corepack use\` this command doesn't take a package manager name
       nor a version range, as it will always select the latest available
       version from the same major line. Should you need to upgrade to a new
@@ -28,6 +31,10 @@ export class UpCommand extends BaseCommand {
       `Configure the project to use the latest Yarn release`,
       `corepack up`,
     ]],
+  });
+
+  skipInstall = Option.Boolean(`--skip-install`, false, {
+    description: `Skip installing the project's dependencies`,
   });
 
   async execute() {
@@ -52,6 +59,6 @@ export class UpCommand extends BaseCommand {
     this.context.stdout.write(`Installing ${highestVersion.name}@${highestVersion.reference} in the project...\n`);
 
     const packageManagerInfo = await this.context.engine.ensurePackageManager(highestVersion);
-    await this.setAndInstallLocalPackageManager(packageManagerInfo);
+    await this.setAndInstallLocalPackageManager(packageManagerInfo, {skipInstall: this.skipInstall});
   }
 }

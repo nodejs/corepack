@@ -277,6 +277,9 @@ When run, this command will retrieve the latest release matching the provided
 descriptor, assign it to the project's package.json file, and automatically
 perform an install.
 
+Pass `--skip-install` to update `package.json` without installing the project's
+dependencies. The selected package manager is still downloaded and verified.
+
 ### `corepack up`
 
 Retrieve the latest available version for the current major release line of
@@ -288,6 +291,9 @@ version range, as it will always select the latest available version from the
 range specified in `devEngines.packageManager.version`, or fallback to the
 same major line. Should you need to upgrade to a new major, use an explicit
 `corepack use {name}@latest` call (or simply `corepack use {name}`).
+
+Pass `--skip-install` to update `package.json` without installing the project's
+dependencies. The selected package manager is still downloaded and verified.
 
 ## Environment Variables
 

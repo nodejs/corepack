@@ -13,6 +13,9 @@ export class UseCommand extends BaseCommand {
       When run, this command will retrieve the latest release matching the
       provided descriptor, assign it to the project's package.json file, and
       automatically perform an install.
+
+      With \`--skip-install\`, update the package manager without installing
+      the project's dependencies.
     `,
     examples: [[
       `Configure the project to use the latest Yarn release`,
@@ -21,6 +24,10 @@ export class UseCommand extends BaseCommand {
   });
 
   pattern = Option.String();
+
+  skipInstall = Option.Boolean(`--skip-install`, false, {
+    description: `Skip installing the project's dependencies`,
+  });
 
   async execute() {
     const [descriptor] = await this.resolvePatternsToDescriptors({
@@ -34,6 +41,6 @@ export class UseCommand extends BaseCommand {
     this.context.stdout.write(`Installing ${resolved.name}@${resolved.reference} in the project...\n`);
 
     const packageManagerInfo = await this.context.engine.ensurePackageManager(resolved);
-    await this.setAndInstallLocalPackageManager(packageManagerInfo);
+    await this.setAndInstallLocalPackageManager(packageManagerInfo, {skipInstall: this.skipInstall});
   }
 }
