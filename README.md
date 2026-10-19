@@ -340,8 +340,12 @@ same major line. Should you need to upgrade to a new major, use an explicit
   will be taken into account.
 
 - `COREPACK_HOME` can be set in order to define where Corepack should install
-  the package managers. By default it is set to `%LOCALAPPDATA%\node\corepack`
-  on Windows, and to `$HOME/.cache/node/corepack` everywhere else.
+  the package managers. Otherwise, Corepack uses `$XDG_CACHE_HOME/node/corepack`
+  if `XDG_CACHE_HOME` is set. Without either override, it uses
+  `%LOCALAPPDATA%\node\corepack` on Windows (falling back to
+  `%USERPROFILE%\AppData\Local\node\corepack` if `LOCALAPPDATA` is unset), and
+  `$HOME/.cache/node/corepack` everywhere else. `LOCALAPPDATA` is ignored on
+  non-Windows platforms, including Linux running under WSL.
 
 - `COREPACK_ROOT` has no functional impact on Corepack itself; it's
   automatically being set in your environment by Corepack when it shells out to

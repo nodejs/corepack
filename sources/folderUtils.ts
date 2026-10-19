@@ -16,7 +16,7 @@ export function getCorepackHomeFolder() {
     process.env.COREPACK_HOME ??
     join(
       process.env.XDG_CACHE_HOME ??
-        process.env.LOCALAPPDATA ??
+        (process.platform === `win32` ? process.env.LOCALAPPDATA : undefined) ??
         join(homedir(), process.platform === `win32` ? `AppData/Local` : `.cache`),
       `node/corepack`,
     )
