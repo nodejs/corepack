@@ -182,6 +182,20 @@ The utility commands detailed in the next section.
 
 ## Utility Commands
 
+### `corepack --dir <path> <command> [... args]`
+
+Run a Corepack command or package manager from the specified directory. Relative
+paths are resolved from the current directory; `--dir=<path>` is also supported.
+Place this option before the command, for example:
+
+```sh
+corepack --dir ./my-project install
+corepack --dir ./my-project pnpm install
+```
+
+Corepack looks up the project's configuration in that directory, and the package
+manager runs there. Arguments after the package manager name are passed to it.
+
 ### `corepack <binary name>[@<version>] [... args]`
 
 This meta-command runs the specified package manager in the local folder. You

@@ -6,6 +6,7 @@ import pJSON                          from '../package.json' with {type: 'json'}
 import type {PackageManagerRequest}   from './Engine.ts';
 import {Engine}                       from './Engine.ts';
 import {CacheCommand}                 from './commands/Cache.ts';
+import {DirCommand}                   from './commands/Dir.ts';
 import {DisableCommand}               from './commands/Disable.ts';
 import {EnableCommand}                from './commands/Enable.ts';
 import {InstallGlobalCommand}         from './commands/InstallGlobal.ts';
@@ -22,7 +23,7 @@ export type Context = BaseContext & CustomContext;
 const {version: corepackVersion} = pJSON;
 
 function getPackageManagerRequestFromCli(parameter: string | undefined, engine: Engine): PackageManagerRequest | null {
-  if (!parameter)
+  if (!parameter || parameter.startsWith(`-`))
     return null;
 
   const match = parameter.match(/^([^@]*)(?:@(.*))?$/);
@@ -64,6 +65,7 @@ export async function runMain(argv: Array<string>) {
 
     cli.register(CacheCommand);
     cli.register(DisableCommand);
+    cli.register(DirCommand);
     cli.register(EnableCommand);
     cli.register(InstallGlobalCommand);
     cli.register(InstallLocalCommand);
