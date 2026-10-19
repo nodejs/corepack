@@ -5,10 +5,11 @@ import path                                                              from 'p
 import which                                                             from 'which';
 
 import * as corepackUtils                                                from '../corepackUtils.ts';
-import type {Context}                                                    from '../main.ts';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types.ts';
 
-export class EnableCommand extends Command<Context> {
+import {BaseCommand}                                                     from './Base.ts';
+
+export class EnableCommand extends BaseCommand {
   static paths = [
     [`enable`],
   ];

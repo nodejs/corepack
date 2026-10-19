@@ -13,6 +13,7 @@ import {InstallLocalCommand}          from './commands/InstallLocal.ts';
 import {PackCommand}                  from './commands/Pack.ts';
 import {UpCommand}                    from './commands/Up.ts';
 import {UseCommand}                   from './commands/Use.ts';
+import {VerboseCommand}               from './commands/Verbose.ts';
 import {HydrateCommand}               from './commands/deprecated/Hydrate.ts';
 import {PrepareCommand}               from './commands/deprecated/Prepare.ts';
 
@@ -70,6 +71,7 @@ export async function runMain(argv: Array<string>) {
     cli.register(PackCommand);
     cli.register(UpCommand);
     cli.register(UseCommand);
+    cli.register(VerboseCommand);
 
     // Deprecated commands
     cli.register(HydrateCommand);

@@ -1,12 +1,12 @@
-import {Command, Option, UsageError} from 'clipanion';
-import {mkdir}                       from 'fs/promises';
-import path                          from 'path';
+import {Option, UsageError}        from 'clipanion';
+import {mkdir}                     from 'fs/promises';
+import path                        from 'path';
 
-import * as folderUtils              from '../../folderUtils.ts';
-import type {Context}                from '../../main.ts';
-import {isSupportedPackageManager}   from '../../types.ts';
+import * as folderUtils            from '../../folderUtils.ts';
+import {isSupportedPackageManager} from '../../types.ts';
+import {BaseCommand}               from '../Base.ts';
 
-export class HydrateCommand extends Command<Context> {
+export class HydrateCommand extends BaseCommand {
   static paths = [
     [`hydrate`],
   ];

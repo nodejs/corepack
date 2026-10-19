@@ -1,11 +1,33 @@
-import {Command, UsageError}             from 'clipanion';
+import {Command, Option, UsageError}     from 'clipanion';
 
 import type {PreparedPackageManagerInfo} from '../Engine.ts';
 import * as corepackUtils                from '../corepackUtils.ts';
+import * as debugUtils                   from '../debugUtils.ts';
 import type {Context}                    from '../main.ts';
 import * as specUtils                    from '../specUtils.ts';
 
 export abstract class BaseCommand extends Command<Context> {
+  verbose = Option.Boolean(`--verbose`, false, {
+    description: `Print Corepack diagnostic information on stderr`,
+  });
+
+  async validateAndExecute() {
+    const wasEnabled = debugUtils.log.enabled;
+    if (this.verbose)
+      debugUtils.log.enabled = true;
+
+    try {
+      if (this.path.length > 0)
+        debugUtils.log(`Running ${this.path.join(` `)}`);
+
+      return await super.validateAndExecute();
+    } finally {
+      if (this.verbose) {
+        debugUtils.log.enabled = wasEnabled;
+      }
+    }
+  }
+
   async resolvePatternsToDescriptors({patterns}: {patterns: Array<string>}) {
     const resolvedSpecs = patterns.map(pattern => specUtils.parseSpec(pattern, `CLI arguments`, {enforceExactVersion: false}));
 

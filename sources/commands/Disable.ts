@@ -4,11 +4,12 @@ import path                                                              from 'p
 import which                                                             from 'which';
 
 import * as corepackUtils                                                from '../corepackUtils.ts';
-import type {Context}                                                    from '../main.ts';
 import type {NodeError}                                                  from '../nodeUtils.ts';
 import {isSupportedPackageManager, SupportedPackageManagerSetWithoutNpm} from '../types.ts';
 
-export class DisableCommand extends Command<Context> {
+import {BaseCommand}                                                     from './Base.ts';
+
+export class DisableCommand extends BaseCommand {
   static paths = [
     [`disable`],
   ];

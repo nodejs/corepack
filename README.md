@@ -182,6 +182,16 @@ The utility commands detailed in the next section.
 
 ## Utility Commands
 
+Add `--verbose` to a Corepack utility command to print diagnostics on stderr,
+for example `corepack cache clean --verbose`. Cache cleaning reports its target
+directory and whether that cache exists; other commands include their package
+manager resolution and download diagnostics. Normal stdout is unchanged.
+
+To enable Corepack diagnostics when running a package manager, put the option
+before its name: `corepack --verbose pnpm install`. Arguments after the package
+manager name are passed to that manager. Setting `DEBUG=corepack` remains
+supported.
+
 ### `corepack <binary name>[@<version>] [... args]`
 
 This meta-command runs the specified package manager in the local folder. You

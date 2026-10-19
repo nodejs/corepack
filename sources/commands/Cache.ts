@@ -1,10 +1,13 @@
 import {Command}          from 'clipanion';
 import fs                 from 'fs';
 
+import * as debugUtils    from '../debugUtils.ts';
 import {getInstallFolder} from '../folderUtils.ts';
-import type {Context}     from '../main.ts';
+import {isNodeError}      from '../nodeUtils.ts';
 
-export class CacheCommand extends Command<Context> {
+import {BaseCommand}      from './Base.ts';
+
+export class CacheCommand extends BaseCommand {
   static paths = [
     [`cache`, `clean`],
     [`cache`, `clear`],
@@ -18,6 +21,19 @@ export class CacheCommand extends Command<Context> {
   });
 
   async execute() {
-    await fs.promises.rm(getInstallFolder(), {recursive: true, force: true});
+    const folder = getInstallFolder();
+    try {
+      await fs.promises.lstat(folder);
+    } catch (error) {
+      if (isNodeError(error) && error.code === `ENOENT`) {
+        debugUtils.log(`Package manager cache does not exist at ${folder}`);
+        return;
+      }
+      throw error;
+    }
+
+    debugUtils.log(`Removing package manager cache at ${folder}`);
+    await fs.promises.rm(folder, {recursive: true, force: true});
+    debugUtils.log(`Finished cleaning package manager cache at ${folder}`);
   }
 }
