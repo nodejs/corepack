@@ -301,6 +301,11 @@ same major line. Should you need to upgrade to a new major, use an explicit
   doesn't list it. In general we recommend to always list a `packageManager`
   field (which you can easily set through `corepack use [name]@[version]`), as
   it ensures that your project installs are always deterministic.
+  When standard input is a TTY and no CI environment is detected, Corepack asks
+  for confirmation before adding the field. Enter `y` or `yes` to accept;
+  declining leaves the manifest unchanged and still runs the requested command.
+  In CI or with non-interactive input, explicitly enabling auto-pinning adds the
+  field without prompting.
 
 - `COREPACK_ENABLE_DOWNLOAD_PROMPT` can be set to `0` to
   prevent Corepack showing the URL when it needs to download software, or can be

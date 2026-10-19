@@ -2,6 +2,7 @@ import {UsageError}                                    from 'clipanion';
 import fs                                              from 'fs';
 import path                                            from 'path';
 import process                                         from 'process';
+import {createInterface}                               from 'readline';
 import semverRcompare                                  from 'semver/functions/rcompare.js';
 import semverValid                                     from 'semver/functions/valid.js';
 import semverValidRange                                from 'semver/ranges/valid.js';
@@ -294,11 +295,29 @@ export class Engine {
 
             const installSpec = await this.ensurePackageManager(resolved);
 
-            console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
-            console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
-            console.error();
+            let shouldPin = true;
+            if (process.stdin.isTTY && !process.env.CI) {
+              shouldPin = false;
+              const input = createInterface({input: process.stdin});
+              try {
+                process.stderr.write(`? Add a 'packageManager' field referencing ${installSpec.locator.name}@${installSpec.locator.reference} to ${result.target}? [y/N] `);
+                for await (const answer of input) {
+                  shouldPin = /^y(?:es)?$/i.test(answer.trim());
+                  break;
+                }
+              } finally {
+                input.close();
+                process.stderr.write(`\n`);
+              }
+            }
 
-            await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+            if (shouldPin) {
+              console.error(`! The local project doesn't define a 'packageManager' field. Corepack will now add one referencing ${installSpec.locator.name}@${installSpec.locator.reference}.`);
+              console.error(`! For more details about this field, consult the documentation at https://nodejs.org/api/packages.html#packagemanager`);
+              console.error();
+
+              await specUtils.setLocalPackageManager(path.dirname(result.target), installSpec);
+            }
           }
 
           debugUtils.log(`Falling back to ${fallbackDescriptor.name}@${fallbackDescriptor.range} in the absence of "packageManager" field in ${result.target}`);
