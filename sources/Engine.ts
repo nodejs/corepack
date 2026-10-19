@@ -95,6 +95,27 @@ export async function activatePackageManager(lastKnownGood: Record<string, strin
   await createLastKnownGoodFile(lastKnownGood);
 }
 
+function hasConflictingLockfile(cwd: string, packageManager: string) {
+  const lockfiles = {
+    npm: [`package-lock.json`, `npm-shrinkwrap.json`],
+    pnpm: [`pnpm-lock.yaml`],
+    yarn: [`yarn.lock`],
+  };
+
+  for (const [name, filenames] of Object.entries(lockfiles)) {
+    if (name === packageManager)
+      continue;
+
+    const lockfile = filenames.find(filename => fs.existsSync(path.join(cwd, filename)));
+    if (lockfile) {
+      debugUtils.log(`Skipping auto-pin of ${packageManager} because ${path.join(cwd, lockfile)} belongs to ${name}`);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export class Engine {
   config: Config;
 
@@ -287,7 +308,7 @@ export class Engine {
           else if (typeof locator.reference === `function`)
             fallbackDescriptor.range = await locator.reference();
 
-          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1`) {
+          if (process.env.COREPACK_ENABLE_AUTO_PIN === `1` && !hasConflictingLockfile(path.dirname(result.target), fallbackDescriptor.name)) {
             const resolved = await this.resolveDescriptor(fallbackDescriptor, {allowTags: true});
             if (resolved === null)
               throw new UsageError(`Failed to successfully resolve '${fallbackDescriptor.range}' to a valid ${fallbackDescriptor.name} release`);

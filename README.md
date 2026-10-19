@@ -298,9 +298,13 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 - `COREPACK_ENABLE_AUTO_PIN` can be set to `1` to instruct Corepack to
   update the `packageManager` field when it detects that the local package
-  doesn't list it. In general we recommend to always list a `packageManager`
-  field (which you can easily set through `corepack use [name]@[version]`), as
-  it ensures that your project installs are always deterministic.
+  doesn't list it. Auto-pinning is skipped if a lockfile for another package
+  manager (`package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, or
+  `yarn.lock`) exists alongside that `package.json`. Use `corepack use` to
+  explicitly select a different package manager. In general we recommend to
+  always list a `packageManager` field (which you can easily set through
+  `corepack use [name]@[version]`), as it ensures that your project installs
+  are always deterministic.
 
 - `COREPACK_ENABLE_DOWNLOAD_PROMPT` can be set to `0` to
   prevent Corepack showing the URL when it needs to download software, or can be
