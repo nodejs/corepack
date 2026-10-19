@@ -1934,6 +1934,55 @@ describe(`handle integrity checks`, () => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
   });
 
+  it.each([
+    [`unsigned`, `No compatible signature found`],
+    [`missing_integrity`, `Missing or invalid dist.integrity`],
+    [`malformed_signatures`, `Invalid dist.signatures`],
+    [`invalid_keys`, `Invalid COREPACK_INTEGRITY_KEYS`],
+    [`untrusted_key`, `not signed by any trusted keys`],
+    [`invalid_signature`, `Signature does not match`],
+  ])(`rejects %s metadata without caching or running the package manager`, async (mode, message) => {
+    process.env.TEST_INTEGRITY = mode; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      // A second attempt must also fail, rather than execute a cached download.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = await runCli(cwd, [`pnpm@1.9998.9999`, `--version`], true);
+        expect(result).toMatchObject({exitCode: 1, stdout: ``});
+        expect(result.stderr).toContain(message);
+        expect(result.stderr).toContain(`pnpm@1.9998.9999`);
+        expect(result.stderr).toContain(`https://github.com/nodejs/corepack/blob/main/INTEGRITY.md`);
+        expect(result.stderr).not.toMatch(/TypeError|UnhandledPromiseRejection|\bat .+:\d+:\d+/);
+      }
+
+      expect(await xfs.readdirPromise(npath.toPortablePath(folderUtils.getInstallFolder()))).toEqual([]);
+    });
+  });
+
+  it(`explains missing signatures when resolving the latest version`, async () => {
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+      const result = await runCli(cwd, [`pnpm`, `--version`], true);
+      expect(result).toMatchObject({exitCode: 1, stdout: ``});
+      expect(result.stderr).toContain(`No compatible signature found`);
+      expect(result.stderr).toContain(`https://github.com/nodejs/corepack/blob/main/INTEGRITY.md`);
+      expect(result.stderr).not.toMatch(/TypeError|UnhandledPromiseRejection|\bat .+:\d+:\d+/);
+    });
+  });
+
+  it(`waits for signatures from the package-root endpoint before installing`, async () => {
+    process.env.TEST_INTEGRITY = `missing_version_signatures`; // See `_registryServer.mjs`
+
+    await xfs.mktempPromise(async cwd => {
+      await expect(runCli(cwd, [`pnpm@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
+        exitCode: 0,
+        stdout: `pnpm: Hello from custom registry\n`,
+        stderr: ``,
+      });
+    });
+  });
+
   describe(`when signature matches`, () => {
     beforeEach(() => {
       process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
@@ -2064,8 +2113,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
-        stdout: `Installing pnpm@1.9998.9999 in the project...\n`,
+        stderr: ``,
+        stdout: expect.stringContaining(`Usage Error: Signature does not match`),
       });
     });
   });
@@ -2080,8 +2129,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
-        stdout: `Installing yarn@1.9998.9999 in the project...\n`,
+        stderr: ``,
+        stdout: expect.stringContaining(`Usage Error: Signature does not match`),
       });
     });
   });

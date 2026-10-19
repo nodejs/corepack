@@ -375,13 +375,16 @@ same major line. Should you need to upgrade to a new major, use an explicit
 - `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` are supported through
   [`NODE_USE_ENV_PROXY=1`](https://nodejs.org/api/cli.html#node_use_env_proxy1).
 
-- `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
-  instruct Corepack to skip integrity checks, or to a JSON string containing
-  custom keys.
+- `COREPACK_INTEGRITY_KEYS` can be set to a JSON string containing custom trusted
+  keys. Setting it to an empty string disables signature verification and can
+  allow malicious package managers to run. See [Integrity checks](./INTEGRITY.md)
+  for the key format, troubleshooting, and the risks of disabling verification.
 
 ## Troubleshooting
 
 The environment variable `DEBUG` can be set to `corepack` to enable additional debug logging.
+
+For signature verification or hash mismatch errors, see [Integrity checks](./INTEGRITY.md).
 
 ### Networking
 

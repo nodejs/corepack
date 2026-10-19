@@ -322,13 +322,18 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     if (signatures! == null || integrity! == null)
       ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-    npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+    try {
+      await npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+    } catch (error) {
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
+      throw error;
+    }
     // @ts-expect-error ignore readonly
     build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
   }
   if (build[1] && actualHash !== build[1]) {
     await fs.promises.rm(tmpFolder, {recursive: true, force: true});
-    throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}`);
+    throw new Error(`Mismatch hashes. Expected ${build[1]}, got ${actualHash}. See ${npmRegistryUtils.INTEGRITY_KEYS_URL} for troubleshooting.`);
   }
 
   const serializedHash = `${algo}.${actualHash}`;

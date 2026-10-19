@@ -13,6 +13,11 @@ switch (process.env.TEST_INTEGRITY) {
     }));
   }
   // eslint-disable-next-line no-fallthrough
+  case `missing_version_signatures`:
+  case `missing_integrity`:
+  case `malformed_signatures`:
+  case `invalid_keys`:
+  case `untrusted_key`:
   case `invalid_integrity`:
   case `valid`: {
     const {privateKey: p, publicKey} = generateKeyPairSync(`ec`, {
@@ -31,6 +36,10 @@ switch (process.env.TEST_INTEGRITY) {
       scheme: `ecdsa-sha2-sect239k1`,
       key: publicKey.split(`\n`).slice(1, -2).join(``),
     }]});
+    if (process.env.TEST_INTEGRITY === `invalid_keys`)
+      process.env.COREPACK_INTEGRITY_KEYS = `{"npm":{}}`;
+    if (process.env.TEST_INTEGRITY === `untrusted_key`)
+      keyid = `SHA256:untrusted-key`;
     break;
   }
 }
@@ -87,10 +96,13 @@ const registry = {
 function generateSignature(packageName, version) {
   if (privateKey == null) return undefined;
   const sign = createSign(`SHA256`).end(`${packageName}@${version}:${integrity}`);
-  return {integrity, signatures: [{
-    keyid,
-    sig: sign.sign(privateKey, `base64`),
-  }]};
+  return {
+    integrity: process.env.TEST_INTEGRITY === `missing_integrity` ? undefined : integrity,
+    signatures: process.env.TEST_INTEGRITY === `malformed_signatures` ? [null] : [{
+      keyid,
+      sig: sign.sign(privateKey, `base64`),
+    }],
+  };
 }
 function generateVersionMetadata(packageName, version) {
   return {
@@ -150,10 +162,13 @@ const server = createServer((req, res) => {
     }
     if (version === `latest`) version = registry[packageName].at(-1);
     if (registry[packageName].includes(version)) {
+      const metadata = generateVersionMetadata(packageName, version);
+      if (process.env.TEST_INTEGRITY === `missing_version_signatures`)
+        delete metadata.dist.signatures;
       res.end(
         isDownloadingRequest ?
           mockPackageTarGz :
-          JSON.stringify(generateVersionMetadata(packageName, version)),
+          JSON.stringify(metadata),
       );
     } else {
       res.writeHead(404).end(`Not Found`);
