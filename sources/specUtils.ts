@@ -143,12 +143,10 @@ export async function setLocalPackageManager(cwd: string, info: PreparedPackageM
     ? await fs.promises.readFile(lookup.target, `utf8`)
     : ``;
 
-  const {data, indent} = nodeUtils.readPackageJson(content);
+  const {data} = nodeUtils.readPackageJson(content);
 
   const previousPackageManager = data.packageManager ?? (devEnginesValue ? `${devEnginesValue.name}@${devEnginesValue.version ?? `*`}` : `unknown`);
-  data.packageManager = `${info.locator.name}@${info.locator.reference}`;
-
-  const newContent = nodeUtils.normalizeLineEndings(content, `${JSON.stringify(data, null, indent)}\n`);
+  const newContent = nodeUtils.setPackageManager(content, `${info.locator.name}@${info.locator.reference}`);
   await fs.promises.writeFile(lookup.target, newContent, `utf8`);
 
   return {

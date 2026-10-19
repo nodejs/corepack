@@ -17,6 +17,33 @@ beforeEach(async () => {
 });
 
 describe(`UseCommand`, () => {
+  it.each([
+    {command: [`use`, `pnpm@1.9998.9999`], existing: false},
+    {command: [`use`, `pnpm@1.9998.9999`], existing: true},
+    {command: [`up`], existing: true},
+    {command: [`pnpm`, `--version`], existing: false},
+  ])(`preserves manifest formatting with $command (existing: $existing)`, async ({command, existing}) => {
+    process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`;
+    process.env.TEST_INTEGRITY = `valid`;
+    process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+    process.env.COREPACK_ENABLE_AUTO_PIN = `1`;
+
+    await xfs.mktempPromise(async cwd => {
+      const manifest = ppath.join(cwd, `package.json`);
+      const before = `{\r\n\t"name" : "example",\r\n\r\n\t"scripts": {"test": "echo ok"}${existing ? `,\r\n\t"packageManager" : "pnpm@1.0.0"` : ``}\r\n}\r\n`;
+      await xfs.writeFilePromise(manifest, before);
+
+      await expect(runCli(cwd, command, true)).resolves.toMatchObject({exitCode: 0});
+
+      const after = await xfs.readFilePromise(manifest, `utf8`);
+      const {packageManager} = JSON.parse(after);
+      expect(packageManager).toMatch(/^pnpm@1\.9998\.9999\+sha512\.[0-9a-f]{128}$/);
+      expect(after).toBe(existing
+        ? before.replace(`pnpm@1.0.0`, packageManager)
+        : before.replace(`}\r\n}`, `},\r\n\t"packageManager": "${packageManager}"\r\n}`));
+    });
+  });
+
   describe(`should set the package manager in the current project`, () => {
     it(`With an existing 'packageManager' field`, async () => {
       await xfs.mktempPromise(async cwd => {
