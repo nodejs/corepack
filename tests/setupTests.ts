@@ -12,6 +12,7 @@ const processEnv = Object.fromEntries(
 
 beforeEach(() => {
   process.env = {...processEnv};
+  process.env.COREPACK_CONFIG_FILE = `0`;
 });
 
 afterAll(() => {

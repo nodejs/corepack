@@ -15,6 +15,7 @@ import {UpCommand}                    from './commands/Up.ts';
 import {UseCommand}                   from './commands/Use.ts';
 import {HydrateCommand}               from './commands/deprecated/Hydrate.ts';
 import {PrepareCommand}               from './commands/deprecated/Prepare.ts';
+import * as envUtils                  from './envUtils.ts';
 
 export type CustomContext = {cwd: string, engine: Engine};
 export type Context = BaseContext & CustomContext;
@@ -45,7 +46,10 @@ function isUsageError(error: any): error is UsageError {
   return error?.name === `UsageError`;
 }
 
-export async function runMain(argv: Array<string>) {
+export async function runMain(argv: Array<string>, {enableDownloadPrompt = false} = {}) {
+  await envUtils.loadUserConfig();
+  process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT ??= enableDownloadPrompt ? `1` : `0`;
+
   const engine = new Engine();
 
   const [firstArg, ...restArgs] = argv;

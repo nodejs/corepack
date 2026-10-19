@@ -4,10 +4,10 @@ import path                              from 'path';
 import semverSatisfies                   from 'semver/functions/satisfies.js';
 import semverValid                       from 'semver/functions/valid.js';
 import semverValidRange                  from 'semver/ranges/valid.js';
-import {parseEnv}                        from 'util';
 
 import type {PreparedPackageManagerInfo} from './Engine.ts';
 import * as debugUtils                   from './debugUtils.ts';
+import * as envUtils                     from './envUtils.ts';
 import type {NodeError}                  from './nodeUtils.ts';
 import * as nodeUtils                    from './nodeUtils.ts';
 import {isSupportedPackageManager}       from './types.ts';
@@ -178,10 +178,7 @@ async function loadEnvFileIfExists(cwd: string): Promise<{env: LocalEnvFile, pat
   }
   debugUtils.log(`Checking ${envFilePath}`);
   try {
-    const localEnv = {
-      ...Object.fromEntries(Object.entries(parseEnv(await fs.promises.readFile(envFilePath, `utf8`))).filter(e => e[0].startsWith(`COREPACK_`))),
-      ...process.env,
-    };
+    const localEnv = envUtils.mergeProjectEnv(await fs.promises.readFile(envFilePath, `utf8`));
     debugUtils.log(`Successfully loaded env file found at ${envFilePath}`);
     return {env: localEnv, path: envFilePath};
   } catch (err) {

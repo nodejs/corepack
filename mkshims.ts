@@ -21,7 +21,6 @@ async function main() {
   const corepackPath = path.join(distDir, `corepack.js`);
   fs.writeFileSync(corepackPath, [
     `#!/usr/bin/env node`,
-    `process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT??='0';`,
     `require('module').enableCompileCache?.();`,
     `require('./lib/corepack.cjs').runMain(process.argv.slice(2));`,
   ].join(`\n`));
@@ -34,9 +33,8 @@ async function main() {
       const entryPath = path.join(distDir, `${binaryName}.js`);
       const entryScript = [
         `#!/usr/bin/env node`,
-        `process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT??='1'`,
         `require('module').enableCompileCache?.();`,
-        `require('./lib/corepack.cjs').runMain(['${binaryName}', ...process.argv.slice(2)]);`,
+        `require('./lib/corepack.cjs').runMain(['${binaryName}', ...process.argv.slice(2)], {enableDownloadPrompt: true});`,
       ].join(`\n`);
 
       fs.writeFileSync(entryPath, entryScript);

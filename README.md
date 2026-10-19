@@ -291,6 +291,28 @@ same major line. Should you need to upgrade to a new major, use an explicit
 
 ## Environment Variables
 
+Corepack also reads user-wide defaults from `.corepackrc` in your home directory.
+The file uses the same dotenv syntax and `COREPACK_` variable names as
+`.corepack.env`, for example:
+
+```dotenv
+# Apply to interactive shells, Git hooks, and Corepack utility commands
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+COREPACK_DEFAULT_TO_LATEST=0
+```
+
+Explicit environment variables take precedence over project `.corepack.env`
+settings, which take precedence over `.corepackrc`, followed by built-in defaults.
+Only keys beginning with `COREPACK_` are read. Unlike project `.corepack.env`,
+the user configuration can set `COREPACK_ENABLE_DOWNLOAD_PROMPT` and
+`COREPACK_ENV_FILE`. Relative paths in configuration values are resolved from
+the command's working directory, as they are for environment variables.
+
+- `COREPACK_CONFIG_FILE` can be set in the environment to an alternative user
+  configuration file, or to `0` to disable user configuration. An absent default
+  `.corepackrc` is ignored; an explicitly selected file must exist and be readable.
+  This setting is ignored inside configuration files.
+
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
   not to lookup on the remote registry for the latest version of the selected
   package manager, and to not update the Last Known Good version when it
