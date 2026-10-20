@@ -6,8 +6,44 @@ import {describe, beforeEach, it, expect, vi}                   from 'vitest';
 import {fetchAsJson as httpFetchAsJson}                         from '../sources/httpUtils';
 import {DEFAULT_HEADERS, DEFAULT_NPM_REGISTRY_URL}              from '../sources/npmRegistryUtils';
 import {fetchLatestStableVersion, fetchAsJson, verifySignature} from '../sources/npmRegistryUtils';
+import {overrideRegistryURL}                                    from '../sources/npmRegistryUtils';
 
 vi.mock(`../sources/httpUtils.ts`);
+
+describe(`npm registry utils overrideRegistryURL`, () => {
+  it.each([`https://registry.npmjs.org`, `https://registry.yarnpkg.com`])(`rewrites tarballs on %s to the configured registry`, registry => {
+    process.env.COREPACK_NPM_REGISTRY = `https://mirror.example.org/npm///`;
+
+    expect(overrideRegistryURL(`${registry}/yarn/-/yarn-1.22.22.tgz?download=1#sha224.abc`))
+      .toBe(`https://mirror.example.org/npm/yarn/-/yarn-1.22.22.tgz?download=1#sha224.abc`);
+  });
+
+  it(`preserves registry credentials and scoped package paths`, () => {
+    process.env.COREPACK_NPM_REGISTRY = `https://user:pass@mirror.example.org/npm/`;
+
+    expect(overrideRegistryURL(`https://registry.yarnpkg.com/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz`))
+      .toBe(`https://user:pass@mirror.example.org/npm/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz`);
+  });
+
+  it.each([
+    `https://registry.yarnpkg.com/yarn/-/yarn-1.22.22.tgz`,
+    `https://registry.npmjs.org/pnpm/-/pnpm-10.0.0.tgz`,
+  ])(`preserves %s when no custom registry is configured`, url => {
+    expect(overrideRegistryURL(url)).toBe(url);
+  });
+
+  it.each([
+    `https://repo.yarnpkg.com/4.0.0/packages/yarnpkg-cli/bin/yarn.js`,
+    `https://cdn.example.org/yarn.tgz?registry=https://registry.yarnpkg.com`,
+    `https://registry.yarnpkg.com.example.org/yarn.tgz`,
+    `https://registry.npmjs.org.example.org/yarn.tgz`,
+    `https://example.org/https://registry.npmjs.org/yarn.tgz`,
+  ])(`preserves URLs from other origins: %s`, url => {
+    process.env.COREPACK_NPM_REGISTRY = `https://mirror.example.org`;
+
+    expect(overrideRegistryURL(url)).toBe(url);
+  });
+});
 
 describe(`npm registry utils fetchAsJson`, () => {
   beforeEach(() => {

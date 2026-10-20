@@ -269,19 +269,11 @@ export async function installVersion(installTarget: string, locator: Locator, {s
           binPath = registry.bin;
         }
       }
-      url = url.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      );
+      url = npmRegistryUtils.overrideRegistryURL(url);
     }
   } else {
     url = decodeURIComponent(version);
-    if (process.env.COREPACK_NPM_REGISTRY && url.startsWith(npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL)) {
-      url = url.replace(
-        npmRegistryUtils.DEFAULT_NPM_REGISTRY_URL,
-        () => process.env.COREPACK_NPM_REGISTRY!,
-      );
-    }
+    url = npmRegistryUtils.overrideRegistryURL(url);
   }
 
   debugUtils.log(`Installing ${locator.name}@${version} from ${url}`);

@@ -13,6 +13,18 @@ export const DEFAULT_HEADERS: Record<string, string> = {
 };
 export const DEFAULT_NPM_REGISTRY_URL = `https://registry.npmjs.org`;
 
+export function overrideRegistryURL(url: string) {
+  if (!process.env.COREPACK_NPM_REGISTRY)
+    return url;
+
+  const parsedUrl = new URL(url);
+  if (parsedUrl.origin !== DEFAULT_NPM_REGISTRY_URL && parsedUrl.origin !== `https://registry.yarnpkg.com`)
+    return url;
+
+  const registry = process.env.COREPACK_NPM_REGISTRY.replace(/\/+$/, ``);
+  return `${registry}${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+}
+
 export async function fetchAsJson(packageName: string, version?: string) {
   // Strip any trailing slashes so a `COREPACK_NPM_REGISTRY` with a trailing
   // slash does not produce a double slash in the request URL (some registries,

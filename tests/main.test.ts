@@ -1883,7 +1883,8 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
       process.env.COREPACK_INTEGRITY_KEYS = ``;
     });
 
-    it(`should download yarn classic`, async () => {
+    it.each([`https://registry.npmjs.org`, `https://registry.yarnpkg.com`])(`should download yarn classic with tarballs on %s`, async registry => {
+      process.env.TEST_TARBALL_REGISTRY = registry;
       await xfs.mktempPromise(async cwd => {
         await expect(runCli(cwd, [`yarn@1.x`, `--version`], true)).resolves.toMatchObject({
           exitCode: 0,
@@ -1917,9 +1918,9 @@ for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK
       });
     });
 
-    it(`should download custom package manager`, async () => {
+    it.each([`https://registry.npmjs.org`, `https://registry.yarnpkg.com`])(`should download custom package manager from %s`, async registry => {
       await xfs.mktempPromise(async cwd => {
-        await expect(runCli(cwd, [`customPkgManager@https://registry.npmjs.org/customPkgManager/-/customPkgManager-1.0.0.tgz`, `--version`], true)).resolves.toMatchObject({
+        await expect(runCli(cwd, [`customPkgManager@${registry}/customPkgManager/-/customPkgManager-1.0.0.tgz`, `--version`], true)).resolves.toMatchObject({
           exitCode: 0,
           stdout: `customPkgManager: Hello from custom registry\n`,
           stderr: ``,
