@@ -1,7 +1,9 @@
 import {createHash, createSign, generateKeyPairSync} from 'node:crypto';
 import {once}                                        from 'node:events';
+import {writeFile}                                   from 'node:fs/promises';
 import {createServer}                                from 'node:http';
 import {connect}                                     from 'node:net';
+import path                                          from 'node:path';
 import {gzipSync}                                    from 'node:zlib';
 
 let privateKey, keyid;
@@ -113,6 +115,14 @@ const TOKEN_MOCK = `SOME_DUMMY_VALUE`;
 const server = createServer((req, res) => {
   res.setHeader(`connection`, `close`);
 
+  if (process.env.AUTH_TYPE.startsWith(`NPMRC_`)) {
+    if (!req.url.startsWith(`/npm/`)) {
+      res.writeHead(404).end(`Not Found`);
+      return;
+    }
+    req.url = req.url.slice(`/npm`.length);
+  }
+
   const auth = req.headers.authorization;
 
   if (
@@ -223,6 +233,23 @@ switch (process.env.AUTH_TYPE) {
     process.env.COREPACK_NPM_USERNAME = `user`;
     process.env.COREPACK_NPM_PASSWORD = `pass`;
     break;
+
+  case `NPMRC_PROJECT_TOKEN`:
+  case `NPMRC_USER_TOKEN`:
+  case `NPMRC_PROJECT_BASIC`:
+  case `NPMRC_USER_BASIC`: {
+    process.env.COREPACK_NPM_REGISTRY = `http://${address.includes(`:`) ? `[${address}]` : address}:${port}/npm`;
+    const registryUrl = new URL(process.env.COREPACK_NPM_REGISTRY);
+    const registryScope = `//${registryUrl.host}${registryUrl.pathname}/`;
+    const filename = process.env.AUTH_TYPE.includes(`USER`) ? path.join(process.cwd(), `user.npmrc`) : path.join(process.cwd(), `.npmrc`);
+    if (process.env.AUTH_TYPE.includes(`USER`))
+      process.env.npm_config_userconfig = filename;
+    process.env.TEST_NPM_TOKEN = TOKEN_MOCK;
+    await writeFile(filename, process.env.AUTH_TYPE.endsWith(`TOKEN`) ?
+      `${registryScope}:_authToken=\${TEST_NPM_TOKEN}\n` :
+      `${registryScope}:username=user\n${registryScope}:_password=cGFzcw==\n`);
+    break;
+  }
 
   default: throw new Error(`Invalid AUTH_TYPE in env`, {cause: process.env.AUTH_TYPE});
 }

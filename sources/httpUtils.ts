@@ -1,39 +1,25 @@
-import assert                     from 'assert';
-import {UsageError}               from 'clipanion';
-import {once}                     from 'events';
-import {stderr, stdin}            from 'process';
-import {Readable}                 from 'stream';
+import assert                               from 'assert';
+import {UsageError}                         from 'clipanion';
+import {once}                               from 'events';
+import {stderr, stdin}                      from 'process';
+import {Readable}                           from 'stream';
 
-import {DEFAULT_NPM_REGISTRY_URL} from './npmRegistryUtils.ts';
+import {getAuthentication, matchesRegistry} from './npmConfigUtils.ts';
 
-async function fetch(input: string | URL, init?: RequestInit) {
+async function fetch(input: string | URL, init?: RequestInit, redirects = 0, authorizationScope?: URL): Promise<Response> {
   if (process.env.COREPACK_ENABLE_NETWORK === `0`)
     throw new UsageError(`Network access disabled by the environment; can't reach ${input}`);
 
-  if (typeof input === `string`)
-    input = new URL(input);
+  input = new URL(input);
+  authorizationScope ??= new URL(`.`, input);
 
   let headers = init?.headers;
 
-  const username: string | undefined = input.username || process.env.COREPACK_NPM_USERNAME;
-  const password: string | undefined = input.password || process.env.COREPACK_NPM_PASSWORD;
-
-  if (username || password) {
-    headers =  {
-      ...headers,
-      authorization: `Basic ${Buffer.from(`${username}:${password}`).toString(`base64`)}`,
-    };
-
-    input.username = input.password = ``;
-  }
-
-  const registry = process.env.COREPACK_NPM_TOKEN && new URL(process.env.COREPACK_NPM_REGISTRY || DEFAULT_NPM_REGISTRY_URL);
-
-  if (registry && input.origin === registry.origin) {
-    headers =  {
-      ...headers,
-      authorization: `Bearer ${process.env.COREPACK_NPM_TOKEN}`,
-    };
+  const authorization = await getAuthentication(input);
+  input.username = input.password = ``;
+  if (authorization !== undefined) {
+    headers = new Headers(headers);
+    headers.set(`authorization`, authorization);
   }
 
   let response;
@@ -41,12 +27,34 @@ async function fetch(input: string | URL, init?: RequestInit) {
     response = await globalThis.fetch(input, {
       ...init,
       headers,
+      redirect: `manual`,
     });
   } catch (error) {
     throw new Error(
       `Error when performing the request to ${input}; for troubleshooting help, see https://github.com/nodejs/corepack#troubleshooting`,
       {cause: error},
     );
+  }
+
+  if ([301, 302, 303, 307, 308].includes(response.status) && response.headers.has(`location`) && init?.redirect !== `manual`) {
+    await response.arrayBuffer();
+    if (init?.redirect === `error`)
+      throw new Error(`Unexpected redirect when performing the request to ${input}`);
+    if (redirects === 20)
+      throw new Error(`Too many redirects when performing the request to ${input}`);
+    const target = new URL(response.headers.get(`location`)!, input);
+    const redirectHeaders = new Headers(init?.headers);
+    if (!matchesRegistry(target, authorizationScope))
+      redirectHeaders.delete(`authorization`);
+
+    const method = init?.method?.toUpperCase() ?? `GET`;
+    if (((response.status === 301 || response.status === 302) && method === `POST`) || (response.status === 303 && method !== `GET` && method !== `HEAD`)) {
+      init = {...init, method: `GET`, body: undefined};
+      for (const header of [`content-encoding`, `content-language`, `content-location`, `content-type`, `content-length`]) {
+        redirectHeaders.delete(header);
+      }
+    }
+    return fetch(target, {...init, headers: redirectHeaders}, redirects + 1, authorizationScope);
   }
 
   if (!response.ok) {

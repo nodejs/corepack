@@ -352,12 +352,15 @@ same major line. Should you need to upgrade to a new major, use an explicit
   package managers from npm. Default value is `https://registry.npmjs.org`
 
 - `COREPACK_NPM_TOKEN` sets a Bearer token authorization header when connecting
-  to a npm type registry.
+  to the registry configured by `COREPACK_NPM_REGISTRY`. It takes precedence
+  over Basic authentication and `.npmrc` credentials.
 
 - `COREPACK_NPM_USERNAME` and `COREPACK_NPM_PASSWORD` to set a Basic
   authorization header when connecting to a npm type registry. Note that both
   environment variables are required and as plain text. If you want to send an
   empty password, explicitly set `COREPACK_NPM_PASSWORD` to an empty string.
+  These credentials take precedence over `.npmrc` credentials. Both token and
+  Basic credentials are restricted to the configured registry's origin and path.
 
 - `COREPACK_ON_UNVERIFIED_DOWNLOAD` can be set to:
   - `warn` (case insensitive): attempting to download an unsigned version without
@@ -378,6 +381,16 @@ same major line. Should you need to upgrade to a new major, use an explicit
 - `COREPACK_INTEGRITY_KEYS` can be set to an empty string or `0` to
   instruct Corepack to skip integrity checks, or to a JSON string containing
   custom keys.
+
+Corepack also reads registry-scoped authentication from the project's `.npmrc`
+and the user's `~/.npmrc` (or `npm_config_userconfig` / `NPM_CONFIG_USERCONFIG`).
+Project settings override user settings; the most specific matching registry
+path is used. Supported settings are `_authToken`, `_auth`, and `username` with
+a base64-encoded `_password`, scoped like `//registry.example.com/npm/:_authToken`.
+Values may reference environment variables with `${VARIABLE_NAME}`. These
+credentials apply to both package metadata and tarball downloads, including
+redirects, only within their registry host, port, and path. Unscoped credentials
+are ignored.
 
 ## Troubleshooting
 

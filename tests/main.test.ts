@@ -1872,7 +1872,7 @@ describe(`downloads not pinned by a hash`, () => {
   });
 });
 
-for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`]) {
+for (const authType of [`COREPACK_NPM_REGISTRY`, `COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`, `PROXY`, `NPMRC_PROJECT_TOKEN`, `NPMRC_USER_TOKEN`, `NPMRC_PROJECT_BASIC`, `NPMRC_USER_BASIC`]) {
   describe(`custom registry with auth ${authType}`, () => {
     beforeEach(() => {
       if (authType === `PROXY`) {

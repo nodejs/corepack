@@ -29,6 +29,9 @@ function getRequestHash(input, init) {
       if (init[key] === undefined) continue;
 
       switch (key) {
+        case `redirect`:
+          if (init[key] !== `manual`) throw new Error(`Hashing for redirect mode "${init[key]}" not implemented`);
+          break;
         case `headers`:
           hash.update(`${JSON.stringify(Object.fromEntries(new Headers(init.headers || {})))}\0`);
           break;
@@ -49,7 +52,7 @@ if (process.env.NOCK_ENV === `record`) {
     const data = await response.arrayBuffer();
 
     const minimalHeaders = new Headers();
-    for (const headerName of [`content-type`, `content-length`]) {
+    for (const headerName of [`content-type`, `content-length`, `location`]) {
       const headerValue = response.headers.get(headerName);
       if (headerValue != null) {
         minimalHeaders.set(headerName, headerValue);
