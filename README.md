@@ -158,8 +158,10 @@ When running Corepack within projects that don't list a supported package
 manager, it will default to a set of Known Good Releases.
 
 If there is no Known Good Release for the requested package manager, Corepack
-looks up the npm registry for the latest available version and cache it for
-future use.
+looks up the package manager's registry for the latest available version and
+caches it for future use. Yarn defaults to Yarn Modern. Projects that pin Yarn
+Classic, or users who select it with `corepack install -g yarn@1`, continue to
+use Yarn Classic.
 
 The Known Good Releases can be updated system-wide using `corepack install -g`.
 When Corepack downloads a new version of a given package manager on the same

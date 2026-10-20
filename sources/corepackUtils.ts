@@ -34,7 +34,10 @@ export function getRegistryFromPackageManagerSpec(spec: PackageManagerSpec) {
 export async function fetchLatestStableVersion(spec: RegistrySpec): Promise<string> {
   switch (spec.type) {
     case `npm`: {
-      return await npmRegistryUtils.fetchLatestStableVersion(spec.package);
+      const reference = await npmRegistryUtils.fetchLatestStableVersion(spec.package);
+      // A registry tarball's hash cannot be used to verify a single file
+      // extracted from it (such as Yarn Modern's bin/yarn.js).
+      return spec.bin ? reference.replace(/\+.*/, ``) : reference;
     }
     case `url`: {
       const data = await httpUtils.fetchAsJson(spec.url);
@@ -140,7 +143,7 @@ function isValidBinSpec(x: unknown): x is BinSpec {
   return typeof x === `object` && x !== null && !Array.isArray(x) && Object.keys(x).length > 0;
 }
 
-async function download(installTarget: string, url: string, algo: string, binPath: string | null = null): Promise<DownloadSpec> {
+async function download(installTarget: string, url: string, algo: string, binPath: string | null = null, expectedTarballHash: string | null = null): Promise<DownloadSpec> {
   // Creating a temporary folder inside the install folder means that we
   // are sure it'll be in the same drive as the destination, so we can
   // just move it there atomically once we are done
@@ -173,7 +176,16 @@ async function download(installTarget: string, url: string, algo: string, binPat
   stream.pipe(sendTo);
 
   let hash = !binPath ? stream.pipe(createHash(algo)) : null;
+  const tarballHash = expectedTarballHash ? stream.pipe(createHash(`sha512`)) : null;
   await once(sendTo, `finish`);
+
+  if (tarballHash) {
+    const actualTarballHash = tarballHash.digest(`hex`);
+    if (actualTarballHash !== expectedTarballHash) {
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
+      throw new Error(`Mismatch hashes. Expected ${expectedTarballHash}, got ${actualTarballHash}`);
+    }
+  }
 
   if (binPath) {
     const downloadedBin = path.join(tmpFolder, binPath);
@@ -286,7 +298,12 @@ export async function installVersion(installTarget: string, locator: Locator, {s
 
   debugUtils.log(`Installing ${locator.name}@${version} from ${url}`);
   const algo = build[0] ?? `sha512`;
-  const {tmpFolder, outputFile, hash: actualHash} = await download(installTarget, url, algo, binPath);
+  // npm metadata describes the tarball, while the locator hash describes
+  // the extracted binary. Verify both when downloading a single-file manager.
+  const expectedTarballHash = binPath && integrity!
+    ? Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`)
+    : null;
+  const {tmpFolder, outputFile, hash: actualHash} = await download(installTarget, url, algo, binPath, expectedTarballHash);
 
   let bin: BinSpec | BinList;
   const isSingleFile = outputFile !== null;

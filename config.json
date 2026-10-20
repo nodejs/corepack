@@ -113,10 +113,14 @@
       }
     },
     "yarn": {
-      "default": "1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
+      "default": "4.18.0+sha224.5707fce90df5d8720fae4e85a07ab55e90aa20fded8914893e2ba225",
       "fetchLatestFrom": {
-        "type": "npm",
-        "package": "yarn"
+        "type": "url",
+        "url": "https://repo.yarnpkg.com/tags",
+        "fields": {
+          "tags": "aliases",
+          "versions": "tags"
+        }
       },
       "transparent": {
         "default": "4.18.0+sha224.5707fce90df5d8720fae4e85a07ab55e90aa20fded8914893e2ba225",

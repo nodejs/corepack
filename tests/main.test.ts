@@ -1369,12 +1369,29 @@ describe(`should show a warning on stderr before downloading when enable`, () =>
   });
 });
 
-it(`should be able to show the latest version`, async () => {
+it(`should offer Yarn Modern on a fresh install, including create`, async () => {
+  process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+  await xfs.mktempPromise(async cwd => {
+    await expect(runCli(cwd, [`yarn`, `create`, `--help`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: expect.stringContaining(`yarn create`),
+      stderr: `! Corepack is about to download https://repo.yarnpkg.com/${config.definitions.yarn.default.split(`+`, 1)[0]}/packages/yarnpkg-cli/bin/yarn.js\n`,
+    });
+    process.env.COREPACK_ENABLE_NETWORK = `0`;
+    await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
+      exitCode: 0,
+      stdout: `${config.definitions.yarn.default.split(`+`, 1)[0]}\n`,
+      stderr: ``,
+    });
+  });
+});
+
+it(`should be able to show the latest Yarn Modern version`, async () => {
   process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
   await xfs.mktempPromise(async cwd => {
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stdout: /^(?:[4-9]|[1-9]\d+)\.\d+\.\d+\r?\n$/,
       stderr: ``,
     });
 
@@ -1382,7 +1399,7 @@ it(`should be able to show the latest version`, async () => {
     await xfs.rmPromise(process.env.COREPACK_HOME as any, {recursive: true});
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
-      stdout: /^1\.\d+\.\d+\r?\n$/,
+      stdout: /^(?:[4-9]|[1-9]\d+)\.\d+\.\d+\r?\n$/,
       stderr: ``,
     });
   });
@@ -1392,6 +1409,9 @@ it(`should download yarn classic from custom registry`, async () => {
   await xfs.mktempPromise(async cwd => {
     process.env.COREPACK_NPM_REGISTRY = `https://registry.npmmirror.com`;
     process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = `1`;
+    await xfs.writeJsonPromise(ppath.join(cwd, `package.json`), {
+      packageManager: `yarn@1.22.22`,
+    });
     await expect(runCli(cwd, [`yarn`, `--version`])).resolves.toMatchObject({
       exitCode: 0,
       stdout: expect.stringMatching(/^1\.\d+\.\d+\r?\n$/),
@@ -1937,6 +1957,26 @@ describe(`handle integrity checks`, () => {
   describe(`when signature matches`, () => {
     beforeEach(() => {
       process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
+    });
+
+    it(`should resolve and cache Yarn Modern by default from a custom registry`, async () => {
+      process.env.COREPACK_DEFAULT_TO_LATEST = `1`;
+      await xfs.mktempPromise(async cwd => {
+        await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        });
+        const lastKnownGood = await xfs.readJsonPromise(ppath.join(npath.toPortablePath(process.env.COREPACK_HOME!), `lastKnownGood.json`));
+        expect(lastKnownGood.yarn).toMatch(/^5\.9999\.9999(?:\+|$)/);
+
+        process.env.COREPACK_ENABLE_NETWORK = `0`;
+        await expect(runCli(cwd, [`yarn`, `--version`], true)).resolves.toMatchObject({
+          exitCode: 0,
+          stdout: `yarn: Hello from custom registry\n`,
+          stderr: ``,
+        });
+      });
     });
 
     it(`should return no error when calling 'corepack use'`, async () => {

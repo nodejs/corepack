@@ -189,7 +189,10 @@ export class Engine {
       return definition.default;
     }
 
-    const reference = await corepackUtils.fetchLatestStableVersion(definition.fetchLatestFrom);
+    const registry = process.env.COREPACK_NPM_REGISTRY
+      ? corepackUtils.getRegistryFromPackageManagerSpec(this.getPackageManagerSpecFor({name: packageManager, reference: definition.default}))
+      : definition.fetchLatestFrom;
+    const reference = await corepackUtils.fetchLatestStableVersion(registry);
     debugUtils.log(`Search for default version: found in remote registry ${packageManager}@${reference}`);
 
     try {
