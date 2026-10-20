@@ -92,8 +92,8 @@ function generateSignature(packageName, version) {
     sig: sign.sign(privateKey, `base64`),
   }]};
 }
-function generateVersionMetadata(packageName, version) {
-  return {
+function generateVersionMetadata(packageName, version, isPackageRoot = false) {
+  const metadata = {
     name: packageName,
     version,
     bin: {
@@ -106,6 +106,9 @@ function generateVersionMetadata(packageName, version) {
       ...generateSignature(packageName, version),
     },
   };
+  if (process.env.TEST_SIGNATURES === `none` || (process.env.TEST_SIGNATURES && !isPackageRoot))
+    delete metadata.dist.signatures;
+  return metadata;
 }
 
 const TOKEN_MOCK = `SOME_DUMMY_VALUE`;
@@ -131,11 +134,20 @@ const server = createServer((req, res) => {
   const packageName = req.url.slice(1, slashPosition === -1 ? undefined : slashPosition);
   if (packageName in registry) {
     if (req.url === `/${packageName}`) {
-      res.end(JSON.stringify({"dist-tags": {
+      if (process.env.TEST_SIGNATURES === `root-error`) {
+        res.writeHead(503).end(`Service Unavailable`);
+        return;
+      }
+      const metadata = JSON.stringify({"dist-tags": {
         latest: registry[packageName].at(-1),
       }, versions: Object.fromEntries(registry[packageName].map(version =>
-        [version, generateVersionMetadata(packageName, version)],
-      ))}));
+        [version, generateVersionMetadata(packageName, version, true)],
+      ))});
+      // Simulate a slow proxy so verification must finish before the CLI runs.
+      if (process.env.TEST_SIGNATURES === `package-root`)
+        setTimeout(() => res.end(metadata), 100);
+      else
+        res.end(metadata);
       return;
     }
     const isDownloadingRequest = req.url.slice(packageName.length + 1, packageName.length + 4) === `/-/`;

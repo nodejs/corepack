@@ -319,10 +319,15 @@ export async function installVersion(installTarget: string, locator: Locator, {s
   }
 
   if (!build[1] && canVerifySignature && registry.type === `npm`) {
-    if (signatures! == null || integrity! == null)
-      ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
+    try {
+      if (signatures! == null || integrity! == null)
+        ({signatures, integrity} = (await npmRegistryUtils.fetchTarballURLAndSignature(registry.package, version)));
 
-    npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+      await npmRegistryUtils.verifySignature({signatures, integrity, packageName: registry.package, version});
+    } catch (error) {
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
+      throw error;
+    }
     // @ts-expect-error ignore readonly
     build[1] = Buffer.from(integrity.slice(`sha512-`.length), `base64`).toString(`hex`);
   }

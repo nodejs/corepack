@@ -1934,6 +1934,60 @@ describe(`handle integrity checks`, () => {
     process.env.AUTH_TYPE = `COREPACK_NPM_TOKEN`; // See `_registryServer.mjs`
   });
 
+  describe(`verify signatures before installing exact versions`, () => {
+    for (const authType of [`COREPACK_NPM_TOKEN`, `COREPACK_NPM_PASSWORD`]) {
+      for (const packageManager of [`pnpm`, `yarn`]) {
+        it(`should await package-root signatures for ${packageManager} with ${authType}`, async () => {
+          process.env.AUTH_TYPE = authType;
+          process.env.TEST_INTEGRITY = `valid`;
+          process.env.TEST_SIGNATURES = `package-root`;
+
+          await xfs.mktempPromise(async cwd => {
+            await expect(runCli(cwd, [`${packageManager}@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
+              exitCode: 0,
+              stdout: `${packageManager}: Hello from custom registry\n`,
+              stderr: ``,
+            });
+
+            const installFolder = npath.toPortablePath(folderUtils.getInstallFolder());
+            const cached = await xfs.readJsonPromise(ppath.join(installFolder, packageManager as Filename, `1.9998.9999`, `.corepack`));
+            expect(cached.hash).toMatch(/^sha512\.[a-f0-9]{128}$/);
+          });
+        });
+      }
+    }
+
+    for (const {integrity, signatures, error} of [
+      {integrity: `invalid_signature`, signatures: undefined, error: `Signature does not match`},
+      {integrity: `invalid_signature`, signatures: `package-root`, error: `Signature does not match`},
+      {integrity: `valid`, signatures: `none`, error: `No compatible signature found in package metadata`},
+      {integrity: `valid`, signatures: `root-error`, error: `Server answered with HTTP 503`},
+    ]) {
+      for (const packageManager of [`pnpm`, `yarn`]) {
+        it(`should reject ${integrity} with ${signatures ?? `version-endpoint`} signatures without running or caching ${packageManager}`, async () => {
+          process.env.TEST_INTEGRITY = integrity;
+          if (signatures)
+            process.env.TEST_SIGNATURES = signatures;
+
+          await xfs.mktempPromise(async cwd => {
+            // Retry the command to detect a rejected download being reused from cache.
+            for (let attempt = 0; attempt < 2; attempt++) {
+              await expect(runCli(cwd, [`${packageManager}@1.9998.9999`, `--version`], true)).resolves.toMatchObject({
+                exitCode: 1,
+                stdout: ``,
+                stderr: expect.stringContaining(error),
+              });
+
+              const installFolder = npath.toPortablePath(folderUtils.getInstallFolder());
+              expect(await xfs.readdirPromise(installFolder)).toEqual([]);
+              expect(await xfs.existsPromise(ppath.join(npath.toPortablePath(folderUtils.getCorepackHomeFolder()), `lastKnownGood.json`))).toBe(false);
+            }
+          });
+        });
+      }
+    }
+  });
+
   describe(`when signature matches`, () => {
     beforeEach(() => {
       process.env.TEST_INTEGRITY = `valid`; // See `_registryServer.mjs`
@@ -2064,8 +2118,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `pnpm`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
-        stdout: `Installing pnpm@1.9998.9999 in the project...\n`,
+        stderr: ``,
+        stdout: expect.stringContaining(`Signature does not match`),
       });
     });
   });
@@ -2080,8 +2134,8 @@ describe(`handle integrity checks`, () => {
       });
       await expect(runCli(cwd, [`use`, `yarn@1.9998.9999`], true)).resolves.toMatchObject({
         exitCode: 1,
-        stderr: expect.stringContaining(`Signature does not match`),
-        stdout: `Installing yarn@1.9998.9999 in the project...\n`,
+        stderr: ``,
+        stdout: expect.stringContaining(`Signature does not match`),
       });
     });
   });
