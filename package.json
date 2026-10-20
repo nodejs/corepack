@@ -13,6 +13,10 @@
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "exports": {
+    "./api": {
+      "types": "./api.d.ts",
+      "default": "./dist/lib/api.cjs"
+    },
     "./package.json": "./package.json"
   },
   "license": "MIT",
@@ -45,7 +49,7 @@
   },
   "scripts": {
     "build": "run clean && run build:bundle && node ./mkshims.ts",
-    "build:bundle": "esbuild ./sources/_lib.ts --bundle --platform=node --target=node22.22.2 --external:corepack --outfile='./dist/lib/corepack.cjs' --resolve-extensions='.ts,.mjs,.js'",
+    "build:bundle": "esbuild corepack=./sources/_lib.ts api=./sources/api.ts --bundle --platform=node --target=node22.22.2 --external:corepack --outdir='./dist/lib' --out-extension:.js=.cjs --resolve-extensions='.ts,.mjs,.js'",
     "clean": "run rimraf dist shims",
     "corepack": "node ./sources/_cli.ts",
     "lint": "eslint",
@@ -56,6 +60,7 @@
     "test": "vitest"
   },
   "files": [
+    "api.d.ts",
     "dist",
     "shims",
     "LICENSE.md"

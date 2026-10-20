@@ -289,6 +289,51 @@ range specified in `devEngines.packageManager.version`, or fallback to the
 same major line. Should you need to upgrade to a new major, use an explicit
 `corepack use {name}@latest` call (or simply `corepack use {name}`).
 
+## JavaScript API
+
+Install Corepack as a dependency to use its version-resolution API without
+spawning the CLI:
+
+```js
+import {
+  getSupportedPackageManagers,
+  parsePackageManagerSpec,
+  resolvePackageManager,
+} from 'corepack/api';
+
+getSupportedPackageManagers(); // ['npm', 'pnpm', 'yarn']
+parsePackageManagerSpec('npm@latest'); // {name: 'npm', range: 'latest'}
+await resolvePackageManager('yarn@3.2.3'); // {name: 'yarn', reference: '3.2.3'}
+```
+
+CommonJS callers can use `require('corepack/api')`. TypeScript declarations are
+included. The API exports these functions and types:
+
+- `getSupportedPackageManagers(): SupportedPackageManager[]` returns a new array
+  of the supported names; changing it does not affect Corepack.
+- `parsePackageManagerSpec(raw, {enforceExactVersion = false} = {})` returns a
+  `PackageManagerDescriptor` with `name` and `range` fields. It accepts exact
+  versions (including hashes), semver ranges, registry tags, and bare names
+  (equivalent to `*`). Set `enforceExactVersion: true` to apply the same exact
+  version requirement as the project's `packageManager` field. Invalid input
+  throws an error. Parsing does not access the network or check release existence.
+- `resolvePackageManager(raw, {allowTags = true, useCache = true} = {})` returns
+  a promise for a `PackageManagerLocator` with `name` and `reference` fields, or
+  `null` when no release matches a range. It prefers a cached matching version;
+  set `useCache: false` to query the registry for ranges. Tags always require a
+  registry lookup; set `allowTags: false` to reject them. Exact versions are
+  returned without checking whether the release exists. Registry and input
+  errors reject the promise.
+
+Both functions accept the same custom URL specifications as the CLI, including
+its `COREPACK_ENABLE_UNSAFE_CUSTOM_URLS` restriction for known package managers.
+Resolving a URL returns it without fetching or validating its contents. Resolution
+honors the process's Corepack environment variables, including `COREPACK_HOME`,
+`COREPACK_NPM_REGISTRY`, authentication, and `COREPACK_ENABLE_NETWORK`. It does not
+read project manifests or `.corepack.env` files, install or execute a package
+manager, or update the Last Known Good versions. Importing the API has no CLI
+side effects.
+
 ## Environment Variables
 
 - `COREPACK_DEFAULT_TO_LATEST` can be set to `0` in order to instruct Corepack
