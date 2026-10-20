@@ -107,6 +107,13 @@ CommonJS module) or a `.tgz` file (which will be interpreted as a package, and
 the `"bin"` field of the `package.json` will be used to determine which file to
 use in the archive).
 
+For tarball installations of npm, pnpm, and Yarn, Corepack also reads executable
+paths from the downloaded package's `package.json`, so changes to the package's
+binary layout do not require an update to Corepack. Only command names supported
+by Corepack are exposed. Entry points must resolve to files inside the package;
+missing optional aliases are omitted. Single-file Yarn distributions continue to
+use Corepack's configured command names.
+
 ```json
 {
   "packageManager": "yarn@https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b"

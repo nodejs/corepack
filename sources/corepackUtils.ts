@@ -11,6 +11,7 @@ import semverParse                                                  from 'semver
 import {setTimeout as setTimeoutPromise}                            from 'timers/promises';
 
 import * as engine                                                  from './Engine.ts';
+import * as binUtils                                                from './binUtils.ts';
 import * as debugUtils                                              from './debugUtils.ts';
 import * as folderUtils                                             from './folderUtils.ts';
 import * as httpUtils                                               from './httpUtils.ts';
@@ -303,18 +304,14 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       bin = [locator.name];
     }
   } else {
-    if (locatorIsASupportedPackageManager && isValidBinSpec(spec.bin)) {
-      bin = spec.bin;
-    } else {
-      const {name: packageName, bin: packageBin} = require(path.join(tmpFolder, `package.json`));
-      if (typeof packageBin === `string`) {
-        // When `bin` is a string, the name of the executable is the name of the package.
-        bin = {[packageName]: packageBin};
-      } else if (isValidBinSpec(packageBin)) {
-        bin = packageBin;
-      } else {
-        throw new Error(`Unable to locate bin in package.json`);
-      }
+    const allowedNames = locatorIsASupportedPackageManager
+      ? isValidBinList(spec.bin) ? spec.bin : isValidBinSpec(spec.bin) ? Object.keys(spec.bin) : undefined
+      : undefined;
+    try {
+      bin = await binUtils.readPackageBin(tmpFolder, allowedNames);
+    } catch (error) {
+      await fs.promises.rm(tmpFolder, {recursive: true, force: true});
+      throw error;
     }
   }
 

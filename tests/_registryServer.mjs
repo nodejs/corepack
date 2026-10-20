@@ -61,7 +61,13 @@ function createSimpleTarArchive(fileName, fileContent, mode = 0o644) {
   ]);
 }
 
-const mockPackageTarGz = gzipSync(Buffer.concat([
+const changedPnpmBin = process.env.TEST_PNPM_BIN_LAYOUT;
+const mockPackageTarGz = gzipSync(Buffer.concat(changedPnpmBin ? [
+  createSimpleTarArchive(`package/dist/pnpm.mjs`, `#!/usr/bin/env node\nconsole.log("pnpm: moved entry " + process.argv.slice(2).join(" "));\n`, 0o755),
+  createSimpleTarArchive(`package/dist/pnpx.mjs`, `#!/usr/bin/env node\nconsole.log("pnpx: moved entry " + process.argv.slice(2).join(" "));\n`, 0o755),
+  createSimpleTarArchive(`package/package.json`, JSON.stringify({name: `pnpm`, type: `module`, bin: JSON.parse(changedPnpmBin)})),
+  Buffer.alloc(1024),
+] : [
   createSimpleTarArchive(`package/bin/customPkgManager.js`, `#!/usr/bin/env node\nconsole.log("customPkgManager: Hello from custom registry");\n`, 0o755),
   createSimpleTarArchive(`package/bin/pnpm.js`, `#!/usr/bin/env node\nconsole.log("pnpm: Hello from custom registry");\n`, 0o755),
   createSimpleTarArchive(`package/bin/yarn.js`, `#!/usr/bin/env node\nconsole.log("yarn: Hello from custom registry");\n`, 0o755),
@@ -78,7 +84,7 @@ const integrity = `sha512-${createHash(`sha512`).update(
 const registry = {
   __proto__: null,
   yarn: [`1.9998.9999`],
-  pnpm: [`1.9998.9999`],
+  pnpm: changedPnpmBin ? [`11.9998.9999`] : [`1.9998.9999`],
 
   '@yarnpkg/cli-dist': [`5.9999.9999`],
   customPkgManager: [`1.0.0`],
