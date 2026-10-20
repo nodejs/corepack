@@ -224,6 +224,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
       hash: corepackData.hash as string,
       location: installFolder,
       bin: corepackData.bin,
+      isAlreadyInstalled: true,
     };
   } catch (err) {
     if (nodeUtils.isNodeError(err) && err.code !== `ENOENT`) {
@@ -374,6 +375,7 @@ export async function installVersion(installTarget: string, locator: Locator, {s
     location: installFolder,
     bin,
     hash: serializedHash,
+    isAlreadyInstalled: false,
   };
 }
 

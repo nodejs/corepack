@@ -53,6 +53,8 @@ export interface InstallSpec {
   location: string;
   bin?: BinList | BinSpec;
   hash: string;
+  /** Whether the package manager was reused from the cache without downloading it. */
+  isAlreadyInstalled: boolean;
 }
 
 export interface DownloadSpec {
