@@ -2,6 +2,7 @@ import {Command, Option, UsageError} from 'clipanion';
 import fs                            from 'fs';
 import path                          from 'path';
 
+import {getLastKnownGood}            from '../Engine.ts';
 import * as folderUtils              from '../folderUtils.ts';
 import * as specUtils                from '../specUtils.ts';
 import type {Descriptor, Locator}    from '../types.ts';
@@ -66,8 +67,21 @@ export class InstallGlobalCommand extends BaseCommand {
     if (resolved === null)
       throw new UsageError(`Failed to successfully resolve '${descriptor.range}' to a valid ${descriptor.name} release`);
 
-    this.log(resolved);
-    await this.context.engine.ensurePackageManager(resolved);
+    const lastKnownGood = this.cacheOnly ? null : await getLastKnownGood();
+    const isCurrentVersion = lastKnownGood?.[resolved.name] === resolved.reference;
+
+    if (!isCurrentVersion)
+      this.log(resolved);
+
+    const info = await this.context.engine.ensurePackageManager(resolved);
+
+    if (isCurrentVersion) {
+      if (info.isAlreadyInstalled) {
+        this.context.stdout.write(`${resolved.name}@${resolved.reference} is the current version\n`);
+      } else {
+        this.log(resolved);
+      }
+    }
 
     if (!this.cacheOnly) {
       await this.context.engine.activatePackageManager(resolved);
