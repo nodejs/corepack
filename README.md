@@ -41,10 +41,6 @@ npm install -g corepack
 This installs the Yarn and pnpm shims as well, so there's no need to run
 `corepack enable` afterwards.
 
-We do acknowledge the irony and overhead of using npm to install Corepack, which
-is part of why we recommend the bundled version on supported Node.js releases
-that still include it.
-
 ### Updating or Installing from Source
 
 <details><summary>Update Corepack using npm</summary>
