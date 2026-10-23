@@ -9,15 +9,18 @@ and pnpm without having to install them**.
 
 ## How to Install
 
-### Default Installs
+### Node.js 14.19.0 to 24.x
 
 Corepack is distributed with Node.js from version 14.19.0 up to (but not including) 25.0.0.
 Run `corepack enable` to install the required Yarn and pnpm binaries on your path.
+If you're on a supported Node.js release that still bundles Corepack, using the
+bundled version is the preferred option.
 
-### Manual Installs
+### Node.js versions without bundled Corepack
 
-<details>
-<summary>Install Corepack using npm</summary>
+Starting with Node.js 25, Corepack is no longer distributed with Node.js
+([nodejs/node#57617](https://github.com/nodejs/node/pull/57617)), so you need to
+install it from npm.
 
 First uninstall your global Yarn and pnpm binaries (just leave npm). In general,
 you'd do this by running the following command:
@@ -35,18 +38,18 @@ Then install Corepack:
 npm install -g corepack
 ```
 
-We do acknowledge the irony and overhead of using npm to install Corepack, which
-is at least part of why the preferred option is to use the Corepack version that
-is distributed along with Node.js itself.
+This installs the Yarn and pnpm shims as well, so there's no need to run
+`corepack enable` afterwards.
 
-</details>
+### Updating or Installing from Source
 
 <details><summary>Update Corepack using npm</summary>
 
-To install the latest version of Corepack, use:
+To update Corepack to the newest version compatible with your Node.js version,
+use:
 
 ```shell
-npm install -g corepack@latest
+npm install -g corepack
 ```
 
 If Corepack was installed on your system using a Node.js Windows Installer
@@ -243,7 +246,7 @@ echo 'function npx { corepack npx @args }'      >> $PROFILE
 | --------------------- | ------------------------------------------ |
 | `--install-directory` | Remove the shims to the specified location |
 
-This command will detect where Node.js is installed and will remove the shims
+This command will detect where Corepack is installed and will remove the shims
 from there.
 
 ### `corepack install`
