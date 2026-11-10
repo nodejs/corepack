@@ -274,8 +274,15 @@ suitable for use with `corepack install -g`.
 ### `corepack use <name[@<version>]>`
 
 When run, this command will retrieve the latest release matching the provided
-descriptor, assign it to the project's package.json file, and automatically
+descriptor, assign it to the project's `package.json` file, and automatically
 perform an install.
+
+Corepack locates the project manifest by searching the current directory and
+traversing parent directories until a `package.json` is found. In a monorepo or
+workspace structure, it searches upwards for an existing `package.json` that
+defines a `packageManager` field. If no `package.json` exists anywhere in the
+directory hierarchy, a new `package.json` with the assigned `packageManager`
+specification will be created in the current directory.
 
 ### `corepack up`
 
